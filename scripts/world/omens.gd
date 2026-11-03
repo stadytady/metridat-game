@@ -41,8 +41,8 @@ static func is_night(hour: float) -> bool:
 
 ## The light's wandering over the strait: slow loops well off the beach.
 static func wisp_at(t: float) -> Vector3:
-	var x := 106.0 + sin(t * 0.07) * 9.0 + sin(t * 0.19) * 2.0
-	var z := 14.0 + sin(t * 0.05 + 1.0) * 18.0
+	var x := 172.0 + sin(t * 0.07) * 6.0 + sin(t * 0.19) * 2.0
+	var z := 6.0 + sin(t * 0.05 + 1.0) * 30.0
 	return Vector3(x, 1.6 + sin(t * 0.9) * 0.3, z)
 
 
@@ -126,12 +126,13 @@ func _wisp() -> void:
 	wisp.add_child(mi)
 	var light := OmniLight3D.new()
 	light.light_color = Color(0.7, 0.88, 1.0)
-	light.omni_range = 16.0
+	light.omni_range = 10.0
 	light.set_script(preload("res://scripts/world/flicker.gd"))
 	light.base_energy = 3.0
 	light.amount = 0.2
 	wisp.add_child(light)
 	add_child(wisp)
+	wisp.scale = Vector3.ONE * 2.6  # far out past the ships: still a light, not a pixel
 	wisp.position = wisp_at(0.0)
 
 
