@@ -8,6 +8,7 @@ var _counter: Label
 var _toast: Label
 var _hint: Label
 var _toast_tween: Tween
+var _perf: Label
 
 
 func _ready() -> void:
@@ -48,6 +49,11 @@ func _ready() -> void:
 	_toast.modulate.a = 0.0
 	root.add_child(_toast)
 
+	_perf = UiStyle.label("", 20, UiStyle.HISTORY)
+	_perf.position = Vector2(40, 90)
+	_perf.visible = false
+	root.add_child(_perf)
+
 	_hint = UiStyle.label(HINT, 22, UiStyle.MUTED)
 	_hint.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -65,6 +71,22 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	_prompt.visible = not Game.ui_blocking
+	if Input.is_action_just_pressed(&"perf_overlay"):
+		_perf.visible = not _perf.visible
+	if _perf.visible:
+		_perf.text = perf_text()
+
+
+## F3 overlay: what to report when checking performance on real hardware.
+static func perf_text() -> String:
+	return "FPS %d   %.2f ms   draws %d   tris %dk   vram %d MB   %s" % [
+		Engine.get_frames_per_second(),
+		Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0,
+		Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
+		Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME) / 1000,
+		Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576,
+		RenderingServer.get_video_adapter_name(),
+	]
 
 
 func bind_interactor(interactor: Node) -> void:

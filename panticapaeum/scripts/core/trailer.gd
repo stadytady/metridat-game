@@ -22,6 +22,10 @@ const SHOTS := [
 ]
 
 var _t := 0.0
+## --benchmark: same camera path in real time (no fixed fps), frame times recorded.
+var benchmark := "--benchmark" in OS.get_cmdline_user_args()
+var _frame_ms := PackedFloat32Array()
+var _result: Label
 var _cam: Camera3D
 var _fade: ColorRect
 var _caption: Label
@@ -43,11 +47,15 @@ func _ready() -> void:
 	main.world.add_child(_cam)
 	_cam.make_current()
 	_build_overlay(main.viewport)
+	if benchmark:
+		Engine.max_fps = 0
+		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	var music := AudioStreamPlayer.new()
 	music.stream = preload("res://assets/audio/trailer_theme.wav")
 	music.volume_db = -3.0
 	add_child(music)
-	music.play()
+	if not benchmark:
+		music.play()
 	_apply(0.0)
 
 
@@ -92,10 +100,49 @@ func _label(size: int, color: Color, pos: Vector2) -> Label:
 
 func _process(delta: float) -> void:
 	_t += delta
+	if benchmark and _t > 0.5:  # skip warm-up (shader compilation)
+		_frame_ms.append(delta * 1000.0)
 	if _t >= DURATION:
-		get_tree().quit()
+		if benchmark:
+			_finish_benchmark()
+		else:
+			get_tree().quit()
 		return
 	_apply(_t)
+
+
+## Reports avg FPS, 1% low and worst frame on screen and in user://benchmark.txt.
+func _finish_benchmark() -> void:
+	set_process(false)
+	var sorted := _frame_ms.duplicate()
+	sorted.sort()
+	var n := sorted.size()
+	var total := 0.0
+	for v in sorted:
+		total += v
+	var avg_ms := total / maxi(n, 1)
+	var p99 := sorted[int(n * 0.99)] if n > 0 else 0.0
+	var worst := sorted[n - 1] if n > 0 else 0.0
+	var report := "Panticapaeum benchmark %s\n%s | %s\nframes %d  avg %.1f FPS (%.2f ms)  1%% low %.1f FPS  worst %.2f ms\n%s\n" % [
+		ProjectSettings.get_setting("application/config/version"), RenderingServer.get_video_adapter_name(),
+		OS.get_name(), n, 1000.0 / avg_ms, avg_ms, 1000.0 / maxf(p99, 0.001), worst,
+		preload("res://scripts/ui/hud.gd").perf_text()]
+	var path := "user://benchmark.txt"
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	if f:
+		f.store_string(report)
+		f.close()
+	print(report, "written to ", ProjectSettings.globalize_path(path))
+	_fade.modulate.a = 0.85
+	_title.modulate.a = 0.0
+	_subtitle.modulate.a = 0.0
+	_result = _label(12, Color("#e6d6b4"), Vector2(0, 120))
+	_result.size.y = 120
+	_result.modulate.a = 1.0
+	_result.text = report + "\n" + ProjectSettings.globalize_path(path)
+	_fade.get_parent().add_child(_result)
+	await get_tree().create_timer(6.0).timeout
+	get_tree().quit()
 
 
 static func _ease(x: float) -> float:
