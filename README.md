@@ -215,7 +215,7 @@ tools/                      генерация, тесты, скриншоты, 
 ### Проверка
 
 ```sh
-tools/test.sh                         # импорт, 36 unit-тестов, проход ботом по всей сцене
+tools/test.sh                         # импорт, 37 unit-тестов, проход ботом по всей сцене
 tools/shots.sh /tmp/shots             # скриншоты точек обзора и UI (--lang=ru, --time=0..1, --lamps)
 # клип одной точки обзора (например, прибой) через Movie Maker:
 #   godot --path . --write-movie out.png --fixed-fps 30 -- --clip=surf --seconds=5 (Forward+, на машине без GPU — lavapipe + Xvfb)
@@ -243,7 +243,7 @@ Panticapaeum.exe -- --benchmark
 
 | Что | Где проверено |
 |---|---|
-| Unit-тесты (36) и проход 8/8 находок с разговорами с гончаром и рыбаком | локально, Godot 4.5.1 headless |
+| Unit-тесты (37) и проход 8/8 находок с разговорами с гончаром и рыбаком | локально, Godot 4.5.1 headless |
 | Рендер Forward+ всех точек обзора и UI | локально, Mesa lavapipe (llvmpipe) под Xvfb, скриншоты выше |
 | Windows-сборка | `tools/smoke.sh` в CI на каждом PR и в релизе распаковывает zip и проходит игру под Wine (headless); рендер Forward+ через Vulkan (lavapipe) проверялся на v0.0.1. Релиз v0.0.1 у пользователя запустился. **На реальном Windows-железе силами CI не проверяется** |
 | Экспортированный пакет работает | Linux-экспорт тех же ресурсов прошёл `--walkthrough` и отрендерил кадры |

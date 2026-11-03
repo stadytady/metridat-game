@@ -3,7 +3,6 @@ UI_HINT,WASD move   MOUSE look   SHIFT run   SPACE jump   E inspect   J journal 
 UI_INSPECT,[E] Inspect  %s,[E] Осмотреть: %s
 UI_DISCOVERIES,DISCOVERIES  %d / %d,НАХОДКИ  %d / %d
 UI_ALL_FOUND,All discoveries found. The strait is yours to watch.,Все находки собраны. Теперь пролив — ваш.
-UI_CLICK_TO_PLAY,CLICK TO PLAY,"НАЖМИТЕ, ЧТОБЫ ИГРАТЬ"
 UI_HISTORY,HISTORICAL RECORD,ИСТОРИЧЕСКИЕ ДАННЫЕ
 UI_STORY,"STORY  (fiction, invented for this game)","ИСТОРИЯ  (вымысел, придуман для игры)"
 UI_SOURCES,Sources: %s,Источники: %s
