@@ -1,6 +1,6 @@
 # Panticapaeum: Echoes of the Bosporus
 
-**[Играть в браузере](https://stadytady.github.io/metridat-game/)** · **[Скачать v0.0.2](https://github.com/stadytady/metridat-game/releases/tag/v0.0.2)** (Windows, Linux) · **[Трейлер](docs/trailer.mp4)**
+**[Играть в браузере](https://stadytady.github.io/metridat-game/)** · **[Скачать v0.0.3](https://github.com/stadytady/metridat-game/releases/tag/v0.0.3)** (Windows, Linux) · **[Трейлер](docs/trailer.mp4)**
 
 Поздний день, IV век до нашей эры. Вы стоите на холме над Киммерийским Боспором — проливом между Чёрным и Азовским морями. Внизу Пантикапей: черепичные крыши, ступенчатые улицы, площадь, святилище на террасе. По проливу идут корабли с зерном. Дальний берег тонет в дымке.
 
@@ -222,10 +222,10 @@ tools/shots.sh /tmp/shots             # скриншоты точек обзор
 # клип одной точки обзора (например, прибой) через Movie Maker:
 #   godot --path . --write-movie out.png --fixed-fps 30 -- --clip=surf --seconds=5 (Forward+, на машине без GPU — lavapipe + Xvfb)
 tools/export.sh windows linux web     # нужны export templates 4.5.1 (tools/install-godot.sh --templates)
-tools/package.sh v0.0.2               # пакеты для игроков в dist/ (как в релизе)
+tools/package.sh v0.0.3               # пакеты для игроков в dist/ (как в релизе)
 tools/smoke.sh                        # распаковать пакеты и пройти игру в каждом (Windows — под Wine)
 tools/site.sh                         # сайт для Pages в build/site (лендинг + трейлер + web-сборка в play/)
-# релиз: Actions → release → Run workflow с тегом (v0.0.2): тег создастся сам
+# релиз: Actions → release → Run workflow с тегом (v0.0.3): тег создастся сам
 ```
 
 - **Unit-тесты.** Нормали MeshKit смотрят наружу (с `cull_back` вывернутый треугольник становится дырой). Корпус судна замкнут ниже планширя. Мощение не протыкается рельефом. Улица проходима для контроллера. Шаг через бордюр 0,3 м работает, а стену 0,6 м перешагнуть нельзя. Гравитация. У каждой находки заполнены все поля, включая подсказку, есть сцена, история не совпадает с вымыслом. Переводы полные, с кириллицей и одинаковыми плейсхолдерами. Сутки непрерывны и к ночи темнеют. Риг `Figure` и анимация с шагом 15 кадров/с. Куры не уходят со двора и не бегут к игроку.
@@ -266,7 +266,7 @@ Panticapaeum.exe -- --benchmark
 | Мастерская и гончар | локально: тесты `Figure` (риг, позы, шаг 15 кадров/с). Проход: бот говорит с гончаром через луч (4 реплики) и осматривает форму. Скриншоты мастерской днём и на закате, панель разговора на EN и RU |
 | Локализация EN/RU | локально: тесты и проход (живое переключение), скриншоты UI на русском через `tools/shots.sh DIR --lang=ru` |
 | Web-сборка (Compatibility) | локально: headless Chromium (WebGL2 через SwiftShader), сцена рендерится, ходьба работает, ошибок в консоли нет (кроме штатных требований браузера к клику для звука и захвата мыши) |
-| GitHub Pages и Releases | работают: Pages деплоится из `main` (`ci.yml` → `pages`), релизы v0.0.1 и v0.0.2 опубликованы через `release.yml` (Windows zip, Linux tar.gz, web zip, трейлер, SHA256SUMS) |
+| GitHub Pages и Releases | работают: Pages деплоится из `main` (`ci.yml` → `pages`), релизы v0.0.1, v0.0.2 и v0.0.3 опубликованы через `release.yml` (Windows zip, Linux tar.gz, web zip, трейлер, SHA256SUMS) |
 | CI (`.github/workflows/ci.yml`) | ✅ зелёный в Actions: тесты + проход, экспорт Windows/Linux со смоуком экспортированного пакета, скриншоты на lavapipe |
 
 Известное: при выходе из headless-режима с dummy-драйвером звука Godot пишет об «утечке» playback'ов зацикленных потоков. С реальным аудиодрайвером это не воспроизводилось: проверить негде.
