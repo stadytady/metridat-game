@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3]
+[gd_scene load_steps=22 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/world.gd" id="1_world"]
 [ext_resource type="Script" path="res://scripts/world/atmosphere.gd" id="2_atm"]
@@ -20,6 +20,7 @@
 [ext_resource type="Script" path="res://scripts/world/dream.gd" id="18_dream"]
 [ext_resource type="Script" path="res://scripts/world/life.gd" id="19_life"]
 [ext_resource type="Script" path="res://scripts/world/birds.gd" id="20_birds"]
+[ext_resource type="Script" path="res://scripts/world/omens.gd" id="21_omens"]
 
 [node name="World" type="Node3D"]
 script = ExtResource("1_world")
@@ -71,6 +72,9 @@ script = ExtResource("19_life")
 
 [node name="Birds" type="Node3D" parent="."]
 script = ExtResource("20_birds")
+
+[node name="Omens" type="Node3D" parent="."]
+script = ExtResource("21_omens")
 
 [node name="Lamps" type="Node3D" parent="."]
 script = ExtResource("14_lamps")

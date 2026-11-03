@@ -4,6 +4,8 @@ extends Node3D
 ## boxes: it breathes and now and then twitches an ear (stepped at 15 fps,
 ## PS1-style). No collider: it is never in the way. Faces -Z, head on its paws.
 
+## Set by Omens at night: a point the dog lifts its head to watch. INF: asleep.
+var watch := Vector3.INF
 var _parts := {}
 var _t := 0.0
 var _twitch_at := 3.0
@@ -73,4 +75,14 @@ func _process(delta: float) -> void:
 		_twitch_at = _t + randf_range(3.0, 9.0)
 	var p := pose_at(_t, _twitch_at)
 	(_parts.body as Node3D).scale = Vector3(1, p.x, 1)
-	(_parts.ear_r as Node3D).rotation_degrees.x = -p.y
+	var head := _parts.head as Node3D
+	if watch == Vector3.INF:
+		head.position = Vector3(0, 0.15, -0.6)
+		head.rotation = Vector3.ZERO
+		(_parts.ear_r as Node3D).rotation_degrees.x = -p.y
+		return
+	# awake: head up off the paws, turned to what it hears, ears still
+	head.position = Vector3(0, 0.3, -0.52)
+	var to := global_transform.affine_inverse() * watch - head.position
+	head.rotation = Vector3(clampf(atan2(to.y, Vector2(to.x, to.z).length()), -0.2, 0.5), clampf(atan2(-to.x, -to.z), -1.2, 1.2), 0)
+	(_parts.ear_r as Node3D).rotation_degrees.x = 0.0
