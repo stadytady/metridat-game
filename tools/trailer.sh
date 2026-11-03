@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Renders the 25 s trailer with Godot's Movie Maker (frame-exact, any GPU),
+# Renders the 31 s trailer with Godot's Movie Maker (frame-exact, any GPU),
 # then encodes H.264 + AAC with ffmpeg.
 #   tools/trailer.sh [OUT.mp4]      default: docs/trailer.mp4
 #   SIZE=1920x1080 tools/trailer.sh out.mp4   (default 1280x720: an exact 2x of the
@@ -15,7 +15,7 @@ trap 'rm -rf "$frames"' EXIT
 
 "$godot" --headless --path . --import >/dev/null 2>&1 || true
 run=("$godot" --path . --rendering-driver vulkan --resolution 1920x1080
-  --write-movie "$frames/trailer.png" --fixed-fps 30 --quit-after 760 -- --trailer)
+  --write-movie "$frames/trailer.png" --fixed-fps 30 --quit-after 940 -- --trailer)
 if [[ -z "${DISPLAY:-}" ]]; then
   icd="$(compgen -G '/usr/share/vulkan/icd.d/lvp_icd*.json' | head -n1 || true)"
   export VK_ICD_FILENAMES="${VK_ICD_FILENAMES:-$icd}"

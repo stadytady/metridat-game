@@ -6,7 +6,6 @@ extends District
 ## an abaton where pilgrims sleep on fleeces, a basin for washing hands at
 ## the top of the stair, and "Hecate's supper" left at the gate below.
 
-const NPC := preload("res://scripts/npc/npc.gd")
 
 const COL_H := 3.0
 
@@ -41,7 +40,6 @@ func _ready() -> void:
 	_offerings(kit, altar_pos)
 	add_child(kit.build("Sanctuary"))
 	_cella(temple_xf)
-	_sleeper(x0, y)
 	for p: Vector3 in cols:
 		place("column_doric", temple_xf * p, 0.0, Vector3(1, COL_H / 3.6, 1), 0.3, COL_H)
 	place("tripod", altar_pos + Vector3(2.4, 0, 0.6), 20.0, Vector3.ONE, 0.4, 1.4)
@@ -122,7 +120,7 @@ func _cella(temple_xf: Transform3D) -> void:
 
 
 ## Abaton: a lean-to against the west wall where pilgrims sleep for a dream.
-## Fleeces on the floor; one pilgrim is already asleep.
+## Fleeces on the floor.
 const ABATON_Z := [-30.5, -24.5]
 
 func _abaton(kit: MeshKit, x0: float, y: float) -> void:
@@ -147,19 +145,6 @@ func _abaton(kit: MeshKit, x0: float, y: float) -> void:
 	spot.name = "SleepSpot"
 	spot.position = Vector3((xb + xf) / 2.0, y, z1 - 0.9)
 	add_child(spot)
-
-
-func _sleeper(x0: float, y: float) -> void:
-	var p: Npc = NPC.new()
-	p.npc_id = "pilgrim"
-	p.name_key = "NPC_PILGRIM_NAME"
-	p.pose = "sleep"
-	p.body_mat = "chiton_dark"
-	p.talkable = false
-	# lying along the fleece, head towards the north end
-	p.position = Vector3(x0 + 1.4, y + 0.06, (ABATON_Z[0] + ABATON_Z[1]) / 2.0 + 0.7)
-	p.rotation.y = PI
-	add_child(p)
 
 
 ## Wreaths on the altar, a washing basin at the top of the stair, and

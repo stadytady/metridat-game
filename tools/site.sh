@@ -9,7 +9,7 @@ mkdir -p build/site/play
 cp web/index.html build/site/
 cp docs/trailer.mp4 build/site/trailer.mp4
 # Poster: the title frame of the trailer (falls back to a screenshot).
-ffmpeg -v error -y -ss 23.5 -i docs/trailer.mp4 -frames:v 1 build/site/poster.png \
+ffmpeg -v error -y -ss 29.5 -i docs/trailer.mp4 -frames:v 1 build/site/poster.png \
   || cp docs/hill.png build/site/poster.png
 cp build/web/index.icon.png build/site/icon.png
 cp -r build/web/. build/site/play/
