@@ -24,6 +24,9 @@ var time_override := -1.0
 ## Lamps along the route: registered as they enter the tree.
 var lamps: Array[Node] = []
 signal lamp_lit(lit: int, total: int)
+signal dialogue_requested(npc: Node)
+## npc_id -> true once the whole conversation was heard.
+var talked := {}
 
 ## True while the info panel or pause menu owns the input.
 var ui_blocking := false

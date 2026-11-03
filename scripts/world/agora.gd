@@ -29,7 +29,8 @@ func _ready() -> void:
 	Arch.drum(kit, Arch.frame(Vector3(c.x + 8.5, y, 7.5), Vector3(1, 0, 0.3)), 0.3, 1.0)
 	Arch.drum(kit, Arch.frame(Vector3(c.x + 9.8, y, 6.2), Vector3(0.2, 0, 1)), 0.3, 0.8)
 	for i in 3:
-		kit.solid_box("limestone", Vector3(c.x - 9.5, y + 0.25 + i * 0.5, 8.0 - i * 0.1), Vector3(1.2 - i * 0.2, 0.5, 0.8), ["bottom"])
+		# east side: the south-west corner belongs to the potter's workshop
+		kit.solid_box("limestone", Vector3(c.x + 11.6, y + 0.25 + i * 0.5, 9.0 - i * 0.1), Vector3(1.2 - i * 0.2, 0.5, 0.8), ["bottom"])
 	add_child(kit.build("Agora"))
 	for p: Vector3 in cols:
 		var wp := stoa_xf * p

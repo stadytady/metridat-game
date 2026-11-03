@@ -5,7 +5,7 @@ extends RefCounted
 
 ## Baked to GLB. EXTRA kinds are small one-off models built at runtime.
 const MODELS := ["amphora", "pithos", "krater", "column_doric", "olive_tree", "cypress", "ship", "tripod", "figurine"]
-const EXTRA := ["coins", "sherds", "stele", "grain", "votive", "lampstand", "torch_post"]
+const EXTRA := ["coins", "sherds", "stele", "grain", "votive", "lampstand", "torch_post", "mould"]
 
 
 static func build(name: String) -> MeshKit:
@@ -41,6 +41,8 @@ static func build(name: String) -> MeshKit:
 			Arch.stele(kit, Transform3D.IDENTITY)
 		"grain":
 			grain(kit)
+		"mould":
+			mould(kit)
 		"lampstand":
 			lampstand(kit)
 		"torch_post":
@@ -198,6 +200,16 @@ static func grain(kit: MeshKit) -> void:
 	kit.color = Color(1.0, 0.85, 0.55)
 	kit.blob("basket", Vector3(-0.15, 1.33, 0), Vector3(0.24, 0.08, 0.24), 0.2, rng)
 	kit.color = Color.WHITE
+
+
+## Two-piece clay mould for a figurine, opened: the front half shows the
+## hollow of a seated goddess, the back half lies beside it.
+static func mould(kit: MeshKit) -> void:
+	kit.box("clay", Vector3(-0.09, 0.05, 0), Vector3(0.15, 0.1, 0.24), [])
+	kit.box("dark", Vector3(-0.09, 0.101, 0.01), Vector3(0.07, 0.002, 0.16), ["bottom"])
+	kit.box("dark", Vector3(-0.09, 0.101, -0.08), Vector3(0.04, 0.002, 0.04), ["bottom"])
+	kit.box("clay", Vector3(0.09, 0.05, 0.01), Vector3(0.15, 0.1, 0.24), [])
+	kit.blob("figurine", Vector3(0.0, 0.03, 0.2), Vector3(0.05, 0.03, 0.05), 0.2, RandomNumberGenerator.new())
 
 
 ## Bronze lampstand with a clay oil lamp on top (flame at FLAME_Y["lampstand"]).
