@@ -6,7 +6,7 @@ config_version=5
 
 config/name="Panticapaeum: Echoes of the Bosporus"
 config/description="First-person exploration of Panticapaeum, 4th century BCE. Vertical slice 0.1."
-config/version="0.1.0"
+config/version="0.0.2"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
@@ -67,4 +67,16 @@ psx_resolution={
 psx_affine={
 "type": "float",
 "value": 1.0
+}
+psx_light_tint={
+"type": "vec3",
+"value": Vector3(1, 1, 1)
+}
+psx_key_dir={
+"type": "vec3",
+"value": Vector3(-0.93, 0.34, 0.16)
+}
+psx_fog_color={
+"type": "color",
+"value": Color(0.851, 0.655, 0.455, 1)
 }

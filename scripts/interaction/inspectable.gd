@@ -60,6 +60,14 @@ func _process(delta: float) -> void:
 		_marker.position.y = marker_height + sin(_t * 2.4) * 0.05
 
 
+func get_prompt() -> String:
+	return tr("UI_INSPECT") % tr(discovery.title) if discovery else ""
+
+
+func interact() -> void:
+	inspect()
+
+
 func inspect() -> void:
 	Game.mark_found(discovery)
 

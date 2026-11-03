@@ -19,6 +19,12 @@ const LANGUAGES := ["en", "ru"]
 ## id -> Discovery, filled by inspectables as they enter the tree.
 var registry := {}
 var found := {}
+## Overrides the hour for automation (screenshots); negative = follow progress.
+var time_override := -1.0
+## Lamps along the route: registered as they enter the tree.
+var lamps: Array[Node] = []
+signal lamp_lit(lit: int, total: int)
+
 ## True while the info panel or pause menu owns the input.
 var ui_blocking := false
 ## Frame a UI layer closed on: the same Esc must not reopen another layer.
@@ -56,6 +62,16 @@ func _setup_input() -> void:
 			var ev := InputEventKey.new()
 			ev.physical_keycode = k
 			InputMap.action_add_event(action, ev)
+
+
+func time_target() -> float:
+	if time_override >= 0.0:
+		return time_override
+	return DayCycle.target_for(found_count(), total())
+
+
+func lamps_lit() -> int:
+	return lamps.filter(func(l: Node) -> bool: return l.lit).size()
 
 
 func register(d: Discovery) -> void:

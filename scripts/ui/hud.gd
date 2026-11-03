@@ -9,7 +9,9 @@ var _hint: Label
 var _toast_tween: Tween
 var _perf: Label
 var _click: Label
-var _target: Inspectable
+var _target: Node
+var _lamps: Label
+var _dusk_shown := false
 var _toast_key := ""
 
 
@@ -45,6 +47,14 @@ func _ready() -> void:
 	_counter.size = Vector2(430, 40)
 	root.add_child(_counter)
 
+	_lamps = UiStyle.label("", 22, UiStyle.MUTED)
+	_lamps.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	_lamps.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_lamps.position += Vector2(-460, 66)
+	_lamps.size = Vector2(430, 36)
+	_lamps.visible = false
+	root.add_child(_lamps)
+
 	_toast = UiStyle.label("", 34)
 	_toast.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 	_toast.position = Vector2(40, 28)
@@ -75,6 +85,7 @@ func _ready() -> void:
 	t.tween_property(_hint, "modulate:a", 0.0, 2.0)
 
 	Game.discovered.connect(_on_discovered)
+	Game.lamp_lit.connect(_on_lamp_lit)
 	Game.location_entered.connect(func(title: String) -> void: show_toast(title))
 	_update_counter.call_deferred()
 
@@ -112,22 +123,32 @@ func bind_interactor(interactor: Node) -> void:
 	interactor.target_changed.connect(_on_target)
 
 
-func _on_target(target: Inspectable) -> void:
+func _on_target(target: Node) -> void:
 	_target = target
-	if target == null or target.discovery == null:
-		_prompt.text = ""
-	else:
-		_prompt.text = tr("UI_INSPECT") % tr(target.discovery.title)
+	_prompt.text = target.get_prompt() if target != null else ""
 
 
 func _update_counter() -> void:
 	_counter.text = tr("UI_DISCOVERIES") % [Game.found_count(), Game.total()]
+	_lamps.text = tr("UI_LAMPS") % [Game.lamps_lit(), Game.lamps.size()]
+	_lamps.visible = not Game.lamps.is_empty() and (Game.lamps_lit() > 0 or Game.time_target() >= 0.45)
 
 
 func _on_discovered(_d: Discovery, is_new: bool) -> void:
 	_update_counter()
-	if is_new and Game.found_count() == Game.total():
-		show_toast("UI_ALL_FOUND")
+	if not is_new:
+		return
+	if Game.found_count() == Game.total():
+		show_toast("UI_NIGHT_HINT")
+	elif Game.time_target() >= 0.45 and not _dusk_shown:
+		_dusk_shown = true
+		show_toast("UI_DUSK_HINT")
+
+
+func _on_lamp_lit(lit: int, total: int) -> void:
+	_update_counter()
+	if lit == total:
+		show_toast("UI_ALL_LIT")
 
 
 ## `key` is a translation key, so a language switch can re-render it.

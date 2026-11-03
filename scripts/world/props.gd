@@ -5,7 +5,7 @@ extends RefCounted
 
 ## Baked to GLB. EXTRA kinds are small one-off models built at runtime.
 const MODELS := ["amphora", "pithos", "krater", "column_doric", "olive_tree", "cypress", "ship", "tripod", "figurine"]
-const EXTRA := ["coins", "sherds", "stele", "grain", "votive"]
+const EXTRA := ["coins", "sherds", "stele", "grain", "votive", "lampstand", "torch_post"]
 
 
 static func build(name: String) -> MeshKit:
@@ -41,6 +41,10 @@ static func build(name: String) -> MeshKit:
 			Arch.stele(kit, Transform3D.IDENTITY)
 		"grain":
 			grain(kit)
+		"lampstand":
+			lampstand(kit)
+		"torch_post":
+			torch_post(kit)
 		"votive":
 			kit.xform = Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * 1.3), Vector3.ZERO)
 			figurine(kit)
@@ -194,6 +198,30 @@ static func grain(kit: MeshKit) -> void:
 	kit.color = Color(1.0, 0.85, 0.55)
 	kit.blob("basket", Vector3(-0.15, 1.33, 0), Vector3(0.24, 0.08, 0.24), 0.2, rng)
 	kit.color = Color.WHITE
+
+
+## Bronze lampstand with a clay oil lamp on top (flame at FLAME_Y["lampstand"]).
+static func lampstand(kit: MeshKit) -> void:
+	for i in 3:
+		var ang := TAU * i / 3.0
+		kit.xform = align_y(Vector3(cos(ang) * 0.22, 0, sin(ang) * 0.22), Vector3(0, 0.18, 0))
+		kit.box("bronze", Vector3(0, 0.13, 0), Vector3(0.04, 0.26, 0.04), [])
+	kit.xform = Transform3D.IDENTITY
+	kit.lathe("bronze", PackedVector2Array([Vector2(0.035, 0.15), Vector2(0.025, 1.25), Vector2(0.11, 1.3)]), 6,
+			Vector3.ZERO, 1.0, true, "bronze", true)
+	kit.lathe("clay", PackedVector2Array([Vector2(0.05, 1.3), Vector2(0.08, 1.33), Vector2(0.06, 1.37)]), 6,
+			Vector3.ZERO, 1.0, true, "dark", true)
+	kit.box("clay", Vector3(0.1, 1.355, 0), Vector3(0.07, 0.025, 0.03), [])
+
+
+## Wooden post with a bronze torch cup (flame at FLAME_Y["torch_post"]).
+static func torch_post(kit: MeshKit) -> void:
+	kit.box("wood", Vector3(0, 0.9, 0), Vector3(0.11, 1.8, 0.11), ["bottom"])
+	kit.lathe("bronze", PackedVector2Array([Vector2(0.05, 1.78), Vector2(0.12, 1.92)]), 6,
+			Vector3.ZERO, 1.0, true, "dark", true)
+
+
+const FLAME_Y := {"lampstand": 1.4, "torch_post": 1.96}
 
 
 static var _scenes := {}

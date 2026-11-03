@@ -18,7 +18,10 @@ uniform float speed = 0.75;
 // R = waterline x for z in shore_z_range (see Topo.waterline_x)
 uniform sampler2D shore_tex : filter_linear, repeat_disable;
 uniform vec2 shore_z_range = vec2(-512.0, 512.0);
-uniform vec3 sun_dir = vec3(-0.93, 0.34, 0.16);
+// Direction to the key light (sun, or moon at night) and the light colour of
+// the hour: both come from DayCycle via global uniforms.
+global uniform vec3 psx_key_dir;
+global uniform vec3 psx_light_tint;
 uniform vec4 foam_color : source_color = vec4(0.84, 0.86, 0.80, 1.0);
 uniform vec4 crest_color : source_color = vec4(0.53, 0.66, 0.65, 1.0);
 
@@ -85,7 +88,7 @@ void fragment() {
 	// flat facet normal from screen derivatives: one shade per polygon
 	vec3 n = normalize(cross(dFdy(wpos), dFdx(wpos)));
 	n *= sign(n.y);
-	float lit = clamp(dot(n, normalize(sun_dir)), 0.0, 1.0);
+	float lit = clamp(dot(n, normalize(psx_key_dir)), 0.0, 1.0);
 	vec3 col = base * (0.62 + 0.75 * lit);
 	col = mix(col, crest_color.rgb, smoothstep(0.35, 0.8, crest) * 0.6);
 
@@ -101,5 +104,5 @@ void fragment() {
 	if (foam > th) {
 		col = foam_color.rgb * mix(0.85, 1.05, lit);
 	}
-	ALBEDO = col;
+	ALBEDO = col * psx_light_tint;
 }

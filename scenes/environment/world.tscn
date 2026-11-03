@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/world.gd" id="1_world"]
 [ext_resource type="Script" path="res://scripts/world/atmosphere.gd" id="2_atm"]
@@ -13,6 +13,7 @@
 [ext_resource type="Script" path="res://scripts/world/nature.gd" id="11_nature"]
 [ext_resource type="Script" path="res://scripts/world/ships.gd" id="12_ships"]
 [ext_resource type="PackedScene" path="res://scenes/environment/ambience.tscn" id="13_amb"]
+[ext_resource type="Script" path="res://scripts/world/lamps.gd" id="14_lamps"]
 
 [node name="World" type="Node3D"]
 script = ExtResource("1_world")
@@ -46,6 +47,9 @@ script = ExtResource("11_nature")
 
 [node name="Ships" type="Node3D" parent="."]
 script = ExtResource("12_ships")
+
+[node name="Lamps" type="Node3D" parent="."]
+script = ExtResource("14_lamps")
 
 [node name="Ambience" parent="." instance=ExtResource("13_amb")]
 

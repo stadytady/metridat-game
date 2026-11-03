@@ -110,7 +110,9 @@ static func path(kit: MeshKit, pts: Array[Vector3], half: float, mat: String = "
 			kit.xform = frame(a, dir)
 			kit.box(mat, Vector3(0, -skirt / 2.0, 0), Vector3(half * 2.0, skirt, half * 2.0), ["bottom"],
 					{"px": "limestone", "nx": "limestone", "pz": "limestone", "nz": "limestone"})
-			kit.add_collider(Vector3(0, -0.2, 0), Vector3((half + margin) * 2.0, 0.4, (half + margin) * 2.0))
+			# Only plugs the seam between two ramps: short along the path, or its
+			# flat top stands proud of a shallower ramp and blocks walking uphill.
+			kit.add_collider(Vector3(0, -0.2, 0), Vector3(0.6, 0.4, (half + margin) * 2.0))
 			kit.xform = Transform3D.IDENTITY
 
 
