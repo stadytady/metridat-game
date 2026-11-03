@@ -5,19 +5,73 @@ extends Node3D
 const HAZE := Color("#d9a774")
 
 
+## Grid: 4 m cells near the shore (where the swell is seen up close),
+## coarser towards the horizon, where fog hides it anyway.
+const SHORE_Z := Vector2(-512.0, 512.0)
+const SHORE_SAMPLES := 256
+
+
 func _ready() -> void:
-	var plane := PlaneMesh.new()
-	plane.size = Vector2(9000, 9000)
-	plane.subdivide_width = 90
-	plane.subdivide_depth = 90
 	var sea := MeshInstance3D.new()
 	sea.name = "Water"
-	sea.mesh = plane
-	sea.material_override = Mats.get_mat("water")
-	sea.position = Vector3(3500, Topo.SEA_LEVEL, 0)
+	sea.mesh = _grid()
+	var mat: ShaderMaterial = Mats.get_mat("water").duplicate()
+	mat.set_shader_parameter("shore_tex", _shore_texture())
+	mat.set_shader_parameter("shore_z_range", SHORE_Z)
+	var sun: DirectionalLight3D = get_parent().get_node_or_null("Atmosphere/Sun")
+	if sun:
+		mat.set_shader_parameter("sun_dir", sun.global_transform.basis.z)  # towards the sun
+	sea.material_override = mat
 	sea.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	# Waves move vertices; keep the sea from being culled when they rise.
+	sea.extra_cull_margin = 4.0
 	add_child(sea)
 	add_child(_far_shore())
+
+
+static func _axis(segments: Array) -> PackedFloat32Array:
+	var a := PackedFloat32Array()
+	for seg: Array in segments:
+		var v: float = seg[0]
+		while v < seg[1] - 0.001:
+			a.append(v)
+			v += seg[2]
+	a.append(segments[-1][1])
+	return a
+
+
+static func _grid() -> ArrayMesh:
+	var xs := _axis([[20.0, 420.0, 4.0], [420.0, 1620.0, 20.0], [1620.0, 8100.0, 300.0]])
+	var zs := _axis([[-4500.0, -1500.0, 300.0], [-1500.0, -300.0, 20.0], [-300.0, 300.0, 4.0],
+			[300.0, 1500.0, 20.0], [1500.0, 4500.0, 300.0]])
+	var verts := PackedVector3Array()
+	verts.resize(xs.size() * zs.size())
+	for j in zs.size():
+		for i in xs.size():
+			verts[j * xs.size() + i] = Vector3(xs[i], Topo.SEA_LEVEL, zs[j])
+	var idx := PackedInt32Array()
+	var nx := xs.size()
+	for j in zs.size() - 1:
+		for i in nx - 1:
+			var a := j * nx + i
+			# clockwise seen from above (Godot front faces), alternating diagonals
+			idx.append_array([a, a + 1, a + nx, a + 1, a + nx + 1, a + nx])
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	arrays[Mesh.ARRAY_INDEX] = idx
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
+
+
+## Waterline x per z as a 1-px-high float texture for the shader.
+static func _shore_texture() -> ImageTexture:
+	var img := Image.create(SHORE_SAMPLES, 1, false, Image.FORMAT_RF)
+	for i in SHORE_SAMPLES:
+		var z := lerpf(SHORE_Z.x, SHORE_Z.y, float(i) / (SHORE_SAMPLES - 1))
+		img.set_pixel(i, 0, Color(Topo.waterline_x(z), 0, 0))
+	return ImageTexture.create_from_image(img)
 
 
 ## The strait is narrowed for readability: the real one is wider than the fog allows.

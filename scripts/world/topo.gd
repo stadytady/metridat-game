@@ -153,6 +153,24 @@ static func street_z(x: float) -> float:
 	return STREET[-1].z
 
 
+## x where the terrain goes below sea level at this z (first crossing from the
+## city side). The sea shader foams along it; Nature's boundary follows it too.
+static func waterline_x(z: float) -> float:
+	var x := 30.0
+	while x < 200.0 and terrain(x, z) > SEA_LEVEL:
+		x += 0.5
+	# refine between the last dry and first wet sample
+	var lo := x - 0.5
+	var hi := x
+	for i in 8:
+		var mid := (lo + hi) * 0.5
+		if terrain(mid, z) > SEA_LEVEL:
+			lo = mid
+		else:
+			hi = mid
+	return hi
+
+
 static func in_rect(x: float, z: float, c: Vector2, half: Vector2, margin: float = 0.0) -> bool:
 	return absf(x - c.x) <= half.x + margin and absf(z - c.y) <= half.y + margin
 

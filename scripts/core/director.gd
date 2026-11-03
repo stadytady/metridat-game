@@ -2,6 +2,7 @@ extends Node
 ## Automation, started by user args after "--":
 ##   --shots [--out=DIR] [--only=a,b] [--lang=ru]   save a PNG per viewpoint of World.viewpoints()
 ##                                      (the final composited frame: world + post + UI)
+##   --clip=VIEW [--seconds=N]          hold a viewpoint for N s (record with --write-movie)
 ##   --walkthrough                       a bot walks the whole route with real physics,
 ##                                      inspects every discovery, exercises pause; exit 1 on failure
 ## Run the walkthrough with --fixed-fps 60 so it is not bound to wall-clock time.
@@ -24,6 +25,10 @@ func _ready() -> void:
 		_shots.call_deferred()
 	elif "--walkthrough" in OS.get_cmdline_user_args():
 		_walkthrough.call_deferred()
+	else:
+		for a in OS.get_cmdline_user_args():
+			if a.begins_with("--clip="):
+				_clip.call_deferred(a.substr(7))
 
 
 func _main() -> Node:
@@ -78,6 +83,22 @@ func _save(name: String) -> void:
 	var path := _out.path_join("%s.png" % name)
 	get_viewport().get_texture().get_image().save_png(path)
 	print("shot ", path)
+
+
+func _clip(view: String) -> void:
+	var seconds := 4.0
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--seconds="):
+			seconds = a.substr(10).to_float()
+	var player: CharacterBody3D = _main().player()
+	player.set_physics_process(false)
+	_main().get_node("HUD").visible = false
+	var vp: Array = _main().world.viewpoints()[view]
+	player.global_position = vp[0] - Vector3(0, 1.6, 0)
+	player.look_at_point(vp[1])
+	player.camera.position.y = 0.0
+	await get_tree().create_timer(seconds).timeout
+	get_tree().quit()
 
 
 func _report_perf() -> void:
