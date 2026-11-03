@@ -1,0 +1,52 @@
+[gd_scene load_steps=14 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/world.gd" id="1_world"]
+[ext_resource type="Script" path="res://scripts/world/atmosphere.gd" id="2_atm"]
+[ext_resource type="Script" path="res://scripts/world/terrain.gd" id="3_terrain"]
+[ext_resource type="Script" path="res://scripts/world/sea.gd" id="4_sea"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="5_player"]
+[ext_resource type="Script" path="res://scripts/world/hilltop.gd" id="6_hill"]
+[ext_resource type="Script" path="res://scripts/world/street.gd" id="7_street"]
+[ext_resource type="Script" path="res://scripts/world/agora.gd" id="8_agora"]
+[ext_resource type="Script" path="res://scripts/world/sanctuary.gd" id="9_sanct"]
+[ext_resource type="Script" path="res://scripts/world/backdrop.gd" id="10_backdrop"]
+[ext_resource type="Script" path="res://scripts/world/nature.gd" id="11_nature"]
+[ext_resource type="Script" path="res://scripts/world/ships.gd" id="12_ships"]
+[ext_resource type="PackedScene" path="res://scenes/environment/ambience.tscn" id="13_amb"]
+
+[node name="World" type="Node3D"]
+script = ExtResource("1_world")
+
+[node name="Atmosphere" type="Node3D" parent="."]
+script = ExtResource("2_atm")
+
+[node name="Terrain" type="Node3D" parent="."]
+script = ExtResource("3_terrain")
+
+[node name="Sea" type="Node3D" parent="."]
+script = ExtResource("4_sea")
+
+[node name="Hilltop" type="Node3D" parent="."]
+script = ExtResource("6_hill")
+
+[node name="Street" type="Node3D" parent="."]
+script = ExtResource("7_street")
+
+[node name="Agora" type="Node3D" parent="."]
+script = ExtResource("8_agora")
+
+[node name="Sanctuary" type="Node3D" parent="."]
+script = ExtResource("9_sanct")
+
+[node name="Backdrop" type="Node3D" parent="."]
+script = ExtResource("10_backdrop")
+
+[node name="Nature" type="Node3D" parent="."]
+script = ExtResource("11_nature")
+
+[node name="Ships" type="Node3D" parent="."]
+script = ExtResource("12_ships")
+
+[node name="Ambience" parent="." instance=ExtResource("13_amb")]
+
+[node name="Player" parent="." instance=ExtResource("5_player")]

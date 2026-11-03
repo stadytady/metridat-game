@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="Discovery" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/interaction/discovery.gd" id="1_d"]
+
+[resource]
+script = ExtResource("1_d")
+id = &"inscription_stele"
+title = "Dedication of Pairisades"
+location = "The Agora"
+description = "A limestone stele with lines of Greek capitals: PAIRISADES LEUKONOS ARCHON BOSPOROU ... APOLLONI, meaning \"Pairisades, son of Leukon, archon of the Bosporus, to Apollo\". The stone is a reconstruction made for this game."
+history = "From 438 to 109 BCE the Bosporus was ruled by the Spartocid dynasty. Their inscriptions use a double title: \"archon\" of the Greek cities (Bosporus and Theodosia) and \"king\" of local peoples such as the Sindoi, Toretai and Dandarioi. Pairisades I, son of Leukon I, ruled about 349-310 BCE. Dedications by Spartocid rulers to the gods are known from several Bosporan cities."
+sources = "Corpus Inscriptionum Regni Bosporani (CIRB, 1965); Strabo, Geography 7.4.4; Diodorus Siculus 20.22-26."
+narrative = "This exact stone and wording are invented, though they follow the known form of the title. The game imagines it was set up after a good harvest. Someone has scratched a little ship into its base."
