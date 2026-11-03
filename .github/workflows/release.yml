@@ -1,13 +1,18 @@
 name: release
 
-# Push a tag like v0.1.0 to build and publish a GitHub Release.
+# Two ways to release:
+#  - push a tag like v0.0.1;
+#  - run this workflow manually (Actions -> release -> Run workflow) with a tag
+#    name: if the tag does not exist yet, the release is built from the
+#    selected branch and `gh release create --target` creates the tag on
+#    GitHub. If it exists, that tag is rebuilt and its assets replaced.
 on:
   push:
     tags: ["v*"]
   workflow_dispatch:
     inputs:
       tag:
-        description: "Existing tag to (re)build the release for"
+        description: "Release tag, e.g. v0.0.1 (created from the selected branch if missing)"
         required: true
 
 permissions:
@@ -27,7 +32,14 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.tag || github.ref }}
+          fetch-depth: 0
+      - name: Select the commit to build
+        run: |
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            git checkout -q "refs/tags/$TAG"
+          fi
+          echo "TARGET=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          git log --oneline -1
       - name: Cache export templates
         uses: actions/cache@v4
         with:
@@ -69,5 +81,5 @@ jobs:
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" dist/* --clobber
           else
-            gh release create "$TAG" dist/* --title "Panticapaeum ${TAG}" --notes-file "$notes"
+            gh release create "$TAG" dist/* --target "$TARGET" --title "Panticapaeum ${TAG}" --notes-file "$notes"
           fi
