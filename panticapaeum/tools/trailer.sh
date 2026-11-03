@@ -2,11 +2,14 @@
 # Renders the 10 s trailer with Godot's Movie Maker (frame-exact, any GPU),
 # then encodes H.264 + AAC with ffmpeg.
 #   tools/trailer.sh [OUT.mp4]      default: docs/trailer.mp4
+#   SIZE=1920x1080 tools/trailer.sh out.mp4   (default 1280x720: an exact 2x of the
+#   640x360 internal image, crisp and a third of the size of 1080p)
 # Without a GPU it runs on Mesa lavapipe under Xvfb (a few minutes).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 out="$(realpath -m "${1:-docs/trailer.mp4}")"
 godot="${GODOT:-godot}"
+size="${SIZE:-1280x720}"
 frames="$(mktemp -d)"
 trap 'rm -rf "$frames"' EXIT
 
@@ -24,6 +27,7 @@ fi
 # Pixel art: keep chroma at full resolution would need yuv444p, which many
 # players reject; yuv420p at a low CRF is the compatible compromise.
 ffmpeg -y -loglevel error -framerate 30 -i "$frames/trailer%08d.png" -i "$frames/trailer.wav" \
+  -vf "scale=${size/x/:}:flags=neighbor" \
   -c:v libx264 -preset slow -crf 16 -pix_fmt yuv420p -movflags +faststart \
-  -c:a aac -b:a 192k -shortest "$out"
+  -af "loudnorm=I=-16:TP=-1.5:LRA=11" -c:a aac -b:a 192k -ar 48000 -shortest "$out"
 echo "trailer: $out"

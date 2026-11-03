@@ -14,9 +14,9 @@ const BAR := 46.0  # 2.39:1 inside 640x360
 
 ## [start, end, from_pos, to_pos, from_look, to_look, from_fov, to_fov, caption]
 const SHOTS := [
-	[0.0, 2.6, Vector3(205, 3.0, -38), Vector3(222, 2.2, -50), Vector3(258, 4, -68), Vector3(262, 5, -72), 50.0, 44.0,
+	[0.0, 2.6, Vector3(236, 2.4, -46), Vector3(244, 1.8, -55), Vector3(259, 4.5, -68), Vector3(261, 5.5, -71), 48.0, 44.0,
 		"The Cimmerian Bosporus, 4th century BCE"],
-	[2.6, 5.2, Vector3(-4, 8.2, -0.8), Vector3(-20, 13.5, 0.4), Vector3(-45, 15.5, 0), Vector3(-70, 26, 0), 62.0, 62.0, ""],
+	[2.6, 5.2, Vector3(-4, 8.0, -0.8), Vector3(-17, 12.4, 0.4), Vector3(-45, 15.0, 0), Vector3(-70, 23, 0), 62.0, 62.0, ""],
 	[5.2, 7.4, Vector3(43.5, 9.9, -16.0), Vector3(45.0, 10.2, -19.0), Vector3(46, 9.6, -23.2), Vector3(46, 10.0, -25.0), 55.0, 50.0, ""],
 	[7.4, 10.0, Vector3(-82.5, 29.4, 0), Vector3(-95, 32.5, 0), Vector3(25, 4, 0), Vector3(25, 4, 0), 64.0, 70.0, ""],
 ]
@@ -73,9 +73,9 @@ func _build_overlay(vp: SubViewport) -> void:
 	_fade.size = VIEW
 	layer.add_child(_fade)
 	_caption = _label(11, Color("#e6d6b4"), Vector2(0, VIEW.y - BAR + 17))
-	_title = _label(34, Color("#f2c48c"), Vector2(0, 128))
+	_title = _label(34, Color("#f2c48c"), Vector2(0, 62))
 	_title.text = "PANTICAPAEUM"
-	_subtitle = _label(13, Color("#e6d6b4"), Vector2(0, 172))
+	_subtitle = _label(13, Color("#e6d6b4"), Vector2(0, 104))
 	_subtitle.text = "ECHOES  OF  THE  BOSPORUS"
 	for l: Label in [_caption, _title, _subtitle]:
 		layer.add_child(l)
