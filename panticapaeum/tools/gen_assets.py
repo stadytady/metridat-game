@@ -76,6 +76,12 @@ def fbm(size: int, rng: np.random.Generator, octaves=(4, 8, 16), h: int | None =
     return out / tot
 
 
+def write_import(path: Path, text: str) -> None:
+    # Godot adds uid/dest to .import files; keep existing ones so ids stay stable.
+    if not path.exists():
+        path.write_text(text)
+
+
 def save(name: str, rgb: np.ndarray, alpha: np.ndarray | None = None) -> None:
     img = np.clip(rgb, 0, 255).astype(np.uint8)
     if alpha is not None:
@@ -85,7 +91,7 @@ def save(name: str, rgb: np.ndarray, alpha: np.ndarray | None = None) -> None:
         Image.fromarray(img, "RGB").save(TEX / f"{name}.png")
     # Lossless, no mipmaps: keeps the pixels crisp and stops Godot from
     # switching to VRAM compression when it detects 3D usage.
-    (TEX / f"{name}.png.import").write_text(
+    write_import(TEX / f"{name}.png.import",
         "[remap]\n\nimporter=\"texture\"\ntype=\"CompressedTexture2D\"\n\n"
         f"[deps]\n\nsource_file=\"res://assets/textures/{name}.png\"\n\n"
         "[params]\n\ncompress/mode=0\nmipmaps/generate=false\ndetect_3d/compress_to=0\n"
@@ -523,7 +529,7 @@ def write_wav(name: str, x: np.ndarray) -> None:
         w.writeframes(data)
     # Ambient beds loop seamlessly (they are filtered circularly); one-shots do not.
     loop = name in LOOPS
-    (AUD / f"{name}.wav.import").write_text(
+    write_import(AUD / f"{name}.wav.import",
         "[remap]\n\nimporter=\"wav\"\ntype=\"AudioStreamWAV\"\n\n"
         f"[deps]\n\nsource_file=\"res://assets/audio/{name}.wav\"\n\n"
         "[params]\n\nforce/8_bit=false\nforce/mono=true\nforce/max_rate=false\n"
@@ -631,6 +637,55 @@ def fire(rng):
     write_wav("fire", norm(roar + bandpass(crackle, 1000, 7000), 0.6))
 
 
+def pluck(freq: float, dur: float, rng, decay: float = 0.996) -> np.ndarray:
+    """Karplus-Strong string: a lyre-like pluck."""
+    n = int(SR * dur)
+    period = max(2, int(round(SR / freq)))
+    out = np.zeros(n)
+    out[:period] = rng.uniform(-1, 1, period)
+    for i in range(period, n):
+        out[i] = decay * 0.5 * (out[i - period] + out[i - period - 1])
+    return out * np.minimum(1, np.arange(n) / (SR * 0.004))
+
+
+def reverb(x: np.ndarray, rng, seconds: float = 1.6, mix: float = 0.35) -> np.ndarray:
+    n = int(SR * seconds)
+    ir = rng.standard_normal(n) * np.exp(-np.arange(n) / (SR * seconds / 5))
+    wet = np.fft.irfft(np.fft.rfft(x, len(x) + n) * np.fft.rfft(ir, len(x) + n))[:len(x)]
+    return x * (1 - mix) + norm(wet, np.max(np.abs(x))) * mix
+
+
+def trailer_theme(rng):
+    """10.5 s score for the trailer: D drone, lyre plucks in D Dorian, a low hit on the reveal at 7.4 s."""
+    dur = 10.5
+    n = int(SR * dur)
+    t = np.arange(n) / SR
+    out = np.zeros(n)
+    swell = np.clip(t / 3.0, 0, 1) * (1 + 0.6 * np.clip((t - 7.4) / 0.3, 0, 1)) * np.clip((dur - t) / 1.2, 0, 1)
+    drone = np.zeros(n)
+    for f, a in ((73.42, 1.0), (110.0, 0.6), (146.83, 0.35)):
+        ph = 2 * np.pi * f * t
+        drone += a * (np.sin(ph) + 0.3 * np.sin(2 * ph) + 0.15 * np.sin(3 * ph))
+    drone *= 1 + 0.15 * np.sin(2 * np.pi * 0.25 * t)
+    out += lowpass(drone, 900) * swell * 0.35
+    notes = [(0.6, 440.0), (1.4, 587.33), (2.2, 523.25), (2.8, 440.0), (3.6, 392.0), (4.4, 349.23),
+             (5.0, 329.63), (5.6, 293.66), (6.4, 440.0), (7.0, 523.25),
+             (7.4, 293.66), (7.43, 440.0), (7.46, 587.33), (8.6, 349.23), (9.3, 587.33)]
+    for start, f in notes:
+        p = pluck(f, 2.4, rng) * (0.9 if start >= 7.4 else 0.6)
+        i = int(start * SR)
+        j = min(n, i + len(p))
+        out[i:j] += p[:j - i]
+    # low hit on the hilltop reveal
+    i = int(7.4 * SR)
+    m = int(SR * 2.0)
+    tt = np.arange(m) / SR
+    hit = np.sin(2 * np.pi * (48 + 30 * np.exp(-tt * 8)) * tt) * np.exp(-tt * 2.2)
+    hit += 0.5 * lowpass(rng.standard_normal(m), 400) * np.exp(-tt * 6)
+    out[i:i + m] += hit[:n - i] * 0.9
+    write_wav("trailer_theme", norm(reverb(out, rng), 0.8))
+
+
 def main() -> None:
     for d in (TEX, MAT, AUD):
         d.mkdir(parents=True, exist_ok=True)
@@ -646,6 +701,7 @@ def main() -> None:
         step(rng, i, "stone")
         step(rng, i, "dirt")
     fire(rng)
+    trailer_theme(np.random.default_rng(77))
     print(f"textures: {len(TEXTURES)}, materials: {len(MATERIALS)}, audio: {len(list(AUD.glob('*.wav')))}")
 
 

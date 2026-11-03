@@ -17,7 +17,11 @@ func _ready() -> void:
 	_apply_settings()
 	$HUD.bind_interactor(player().interactor)
 	$PauseMenu.closed.connect(func() -> void: capture_mouse(true))
-	if "--shots" in OS.get_cmdline_user_args() or "--walkthrough" in OS.get_cmdline_user_args():
+	if "--trailer" in OS.get_cmdline_user_args():
+		var trailer: Node = load("res://scripts/core/trailer.gd").new()
+		trailer.name = "Trailer"
+		add_child(trailer)
+	elif "--shots" in OS.get_cmdline_user_args() or "--walkthrough" in OS.get_cmdline_user_args():
 		var director: Node = load("res://scripts/core/director.gd").new()
 		director.name = "Director"
 		add_child(director)
