@@ -8,7 +8,6 @@ var _toast: Label
 var _hint: Label
 var _toast_tween: Tween
 var _perf: Label
-var _click: Label
 var _target: Node
 var _lamps: Label
 var _dusk_shown := false
@@ -56,13 +55,6 @@ func _ready() -> void:
 	_perf.visible = false
 	root.add_child(_perf)
 
-	_click = UiStyle.label("UI_CLICK_TO_PLAY", 34, UiStyle.BORDER)
-	_click.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	_click.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_click.position += Vector2(-400, -120)
-	_click.size = Vector2(800, 50)
-	_click.visible = false
-	root.add_child(_click)
 
 	_hint = UiStyle.label("UI_HINT", 22, UiStyle.MUTED)
 	_hint.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
@@ -90,7 +82,6 @@ func _notification(what: int) -> void:
 
 func _process(_delta: float) -> void:
 	_prompt.visible = not Game.ui_blocking
-	_click.visible = Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and not Game.ui_blocking and not get_tree().paused
 	if Input.is_action_just_pressed(&"perf_overlay"):
 		_perf.visible = not _perf.visible
 	if _perf.visible:
