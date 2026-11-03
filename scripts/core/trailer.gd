@@ -1,23 +1,25 @@
 extends Node
-## 25-second cinematic, rendered in-engine through the same PS1 pipeline.
+## 31-second cinematic, rendered in-engine through the same PS1 pipeline.
 ## Started by `-- --trailer`; record with Movie Maker (tools/trailer.sh):
 ## --write-movie + --fixed-fps make every frame exact, however slow the GPU.
 ##
 ## Afternoon to night, as the game goes: the strait, the street, the potter's
 ## yard, the fisherman at sunset, the way to the sanctuary at dusk, the lit
-## street and the hill at night. Each shot sets its own hour (the atmosphere
+## street, Hecate's temple at night, the dream's misty path, and the hill at
+## night. Each shot sets its own hour (the atmosphere
 ## snaps to it) and, after dusk, the lamps are lit. Camera moves are
 ## Catmull-Rom splines through three points at constant speed (eased only into
 ## the first and out of the last shot) with a slow handheld drift. Cuts are
 ## dissolves. Letterbox and titles live inside the 640x360 viewport. Shot
-## boundaries follow the score (night falls at 16.6 s, the hit lands at 19.6 s).
+## boundaries follow the score (night falls at 16.6 s, the dream at 22.2 s,
+## the hit lands at 25.4 s).
 
-const DURATION := 25.0
+const DURATION := 31.0
 const DISSOLVE := 0.5
 const VIEW := Vector2(640, 360)
 const BAR := 46.0  # 2.39:1 inside 640x360
-const TITLE_AT := 21.6
-const FADE_OUT := [24.2, 24.8]
+const TITLE_AT := 27.6
+const FADE_OUT := [30.2, 30.8]
 
 ## start, end, hour (0 afternoon .. 1 night), camera path, look-at path, fov from/to, caption
 const SHOTS := [
@@ -44,11 +46,20 @@ const SHOTS := [
 		"pos": [Vector3(29.0, 6.6, 3.5), Vector3(31.4, 6.8, -2.0), Vector3(33.0, 7.4, -6.2)],
 		"look": [Vector3(35.5, 7.4, -12.0), Vector3(37.0, 8.8, -15.5), Vector3(40.5, 10.6, -20.0)]},
 	# night: up the street between the lit lamps
-	{"t": [16.6, 19.6], "hour": 1.0, "lamps": true, "fov": [56.0, 54.0], "caption": "",
+	{"t": [16.6, 19.4], "hour": 1.0, "lamps": true, "fov": [56.0, 54.0], "caption": "",
 		"pos": [Vector3(-6, 8.5, -0.8), Vector3(-13, 10.6, -0.4), Vector3(-20, 12.6, 0.6)],
 		"look": [Vector3(-35, 15.2, 1.2), Vector3(-50, 19.0, -0.5), Vector3(-65, 23.4, 1.0)]},
+	# Hecate's temple at night, straight on: the altar fire, the torches, and
+	# through the open doors the triple goddess glowing inside; a slow push-in
+	{"t": [19.4, 22.2], "hour": 1.0, "lamps": true, "fov": [52.0, 38.0], "caption": "",
+		"pos": [Vector3(46.0, 11.4, -17.4), Vector3(46.0, 11.15, -18.9), Vector3(46.0, 10.95, -20.3)],
+		"look": [Vector3(46.0, 9.8, -27.5), Vector3(46.0, 9.85, -29.0), Vector3(46.0, 9.9, -31.0)]},
+	# the dream: the stony path in the fog, someone standing ahead
+	{"t": [22.2, 25.4], "hour": 1.25, "lamps": true, "fov": [54.0, 48.0], "caption": "",
+		"pos": [Vector3(0.2, 61.55, 2601.0), Vector3(0.7, 61.5, 2606.0), Vector3(1.3, 61.45, 2611.0)],
+		"look": [Vector3(3.8, 61.5, 2622.0), Vector3(3.8, 61.45, 2622.0), Vector3(3.8, 61.4, 2622.0)]},
 	# night on the hill: between the columns, the city and the strait below
-	{"t": [19.6, 25.0], "hour": 1.0, "lamps": true, "fov": [56.0, 62.0], "caption": "",
+	{"t": [25.4, 31.0], "hour": 1.0, "lamps": true, "fov": [56.0, 62.0], "caption": "",
 		"pos": [Vector3(-89, 30.0, 0.4), Vector3(-85.5, 30.2, 0.1), Vector3(-81.0, 30.6, 0.0)],
 		"look": [Vector3(-20, 18, 0), Vector3(-5, 14, 0), Vector3(10, 11, 0)]},
 ]

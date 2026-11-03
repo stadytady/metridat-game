@@ -647,7 +647,7 @@ def materials():
 SR = 22050
 
 
-LOOPS = {"wind", "waves", "fire"}
+LOOPS = {"wind", "waves", "fire", "dream_drone"}
 
 
 def write_wav(name: str, x: np.ndarray) -> None:
@@ -769,6 +769,39 @@ def squawk(rng):
     write_wav("squawk", norm(bandpass(tone, 400, 4500), 0.5))
 
 
+def dream_drone(rng):
+    """Seamless 24 s bed for the dream: a low D and its fifth beating slowly,
+    with a breath of filtered noise. Every partial has a whole number of
+    cycles in the loop and the noise is filtered circularly, so it loops."""
+    dur = 24.0
+    n = int(SR * dur)
+    t = np.arange(n) / SR
+    out = np.zeros(n)
+    for f, a in ((36.75, 1.0), (55.125, 0.55), (73.5, 0.35), (110.25, 0.12)):
+        f = round(f * dur) / dur  # whole cycles per loop
+        beat = 1.0 + 0.25 * np.sin(2 * np.pi * (3 / dur) * t + rng.uniform(0, 6.28))
+        out += a * np.sin(2 * np.pi * f * t) * beat
+    breath = lowpass(rng.standard_normal(n), 300) * (0.6 + 0.4 * np.sin(2 * np.pi * (2 / dur) * t))
+    out += 2.5 * breath
+    write_wav("dream_drone", norm(out, 0.6))
+
+
+def dog_howl(rng):
+    """A dog howling far off: a long rising and falling cry with vibrato,
+    softened and smeared as if heard through fog."""
+    dur = 3.2
+    n = int(SR * dur)
+    t = np.arange(n) / SR
+    contour = 470 + 230 * np.sin(np.pi * np.clip(t / 2.6, 0, 1)) ** 0.7 - 60 * np.clip((t - 2.0) / 1.0, 0, 1)
+    f = contour * (1 + 0.012 * np.sin(2 * np.pi * 5.5 * t))
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    tone = np.sin(ph) + 0.45 * np.sin(2 * ph) + 0.2 * np.sin(3 * ph)
+    env = np.clip(t / 0.35, 0, 1) * np.clip((dur - t) / 0.9, 0, 1)
+    tone *= env
+    tone += 0.08 * lowpass(rng.standard_normal(n), 1500) * env
+    write_wav("dog_howl", norm(reverb(bandpass(tone, 250, 2400), rng, 2.4, 0.5), 0.5))
+
+
 def step(rng, idx, kind):
     n = int(SR * 0.18)
     t = np.arange(n) / SR
@@ -814,10 +847,12 @@ def reverb(x: np.ndarray, rng, seconds: float = 1.6, mix: float = 0.35) -> np.nd
 
 
 def trailer_theme(rng):
-    """25.5 s score for the trailer, following the day: D drone and lyre plucks in
+    """31.5 s score for the trailer, following the day: D drone and lyre plucks in
     D Dorian by day, a second voice at sunset (11.2 s), a soft swell as night
-    falls (16.6 s), a low hit on the hill reveal (19.6 s), a last chord, fade."""
-    dur = 25.5
+    falls (16.6 s), a hush for the dream (22.2 s: plucks stop, the drone sinks
+    an octave and breathes), a low hit on the hill reveal (25.4 s), a last
+    chord, fade."""
+    dur = 31.5
     n = int(SR * dur)
     t = np.arange(n) / SR
     out = np.zeros(n)
@@ -825,23 +860,25 @@ def trailer_theme(rng):
     def ramp(a, b):
         return np.clip((t - a) / (b - a), 0, 1)
 
-    # drone: rises in, thickens at sunset, darkens and swells at night, fades out
-    swell = ramp(0, 3.0) * (1 + 0.35 * ramp(11.2, 13.0) + 0.5 * ramp(16.4, 17.2) + 0.5 * ramp(19.6, 19.9)) * np.clip((dur - t) / 2.0, 0, 1)
+    dream = ramp(22.0, 22.6) * (1 - ramp(25.2, 25.4))
+    swell = ramp(0, 3.0) * (1 + 0.35 * ramp(11.2, 13.0) + 0.5 * ramp(16.4, 17.2) + 0.5 * ramp(25.4, 25.7)) \
+        * (1 - 0.45 * dream) * np.clip((dur - t) / 2.0, 0, 1)
     drone = np.zeros(n)
     for f, a in ((73.42, 1.0), (110.0, 0.6), (146.83, 0.35)):
         ph = 2 * np.pi * f * t
         drone += a * (np.sin(ph) + 0.3 * np.sin(2 * ph) + 0.15 * np.sin(3 * ph))
-    low = np.sin(2 * np.pi * 36.71 * t) * ramp(16.4, 18.0)  # night: an octave below
+    low = np.sin(2 * np.pi * 36.71 * t) * ramp(16.4, 18.0) * (1 + 0.8 * dream)
     drone = drone * (1 + 0.15 * np.sin(2 * np.pi * 0.25 * t)) + 0.8 * low
     out += lowpass(drone, 900) * swell * 0.33
+    out += 0.5 * lowpass(rng.standard_normal(n), 250) * dream  # the dream breathes
 
     A3, C4, D4, E4, F4, G4, A4, C5, D5 = 220.0, 261.63, 293.66, 329.63, 349.23, 392.0, 440.0, 523.25, 587.33
     day = [(0.6, A4), (1.4, D5), (2.2, C5), (2.8, A4), (3.6, G4), (4.4, F4), (5.0, E4), (5.6, D4),
            (6.4, A4), (7.0, C5), (7.6, D5), (8.4, A4), (9.2, G4), (9.8, F4), (10.4, E4)]
     sunset = [(11.2, D4), (11.25, A4), (12.0, F4), (12.8, E4), (13.4, D4), (14.0, C4), (14.05, G4),
               (14.8, A4), (15.6, G4), (16.0, F4)]
-    night = [(16.6, D4), (16.65, A4), (17.8, F4), (18.8, E4)]
-    reveal = [(19.6, D4), (19.63, A4), (19.66, D5), (20.8, F4), (21.6, A4), (22.6, D5), (23.4, A3), (23.45, D4)]
+    night = [(16.6, D4), (16.65, A4), (17.8, F4), (18.8, E4), (19.4, D4), (19.45, A3), (20.6, F4), (21.4, E4)]
+    reveal = [(25.4, D4), (25.43, A4), (25.46, D5), (26.6, F4), (27.6, A4), (28.6, D5), (29.4, A3), (29.45, D4)]
     for group, gain in ((day, 0.6), (sunset, 0.65), (night, 0.45), (reveal, 0.85)):
         for start, f in group:
             p = pluck(f, 2.6, rng) * gain
@@ -849,7 +886,7 @@ def trailer_theme(rng):
             j = min(n, i + len(p))
             out[i:j] += p[:j - i]
     # hits: a soft one as night falls, the low one on the hilltop reveal
-    for at, gain, decay in ((16.6, 0.45, 3.0), (19.6, 0.95, 2.0)):
+    for at, gain, decay in ((16.6, 0.45, 3.0), (25.4, 0.95, 2.0)):
         i = int(at * SR)
         m = int(SR * 2.4)
         tt = np.arange(m) / SR
@@ -890,6 +927,8 @@ def main() -> None:
         cluck(np.random.default_rng(510 + i), i)
     squawk(np.random.default_rng(513))
     fleece(np.random.default_rng(514))
+    dream_drone(np.random.default_rng(515))
+    dog_howl(np.random.default_rng(516))
     print(f"textures: {len(TEXTURES)}, materials: {len(MATERIALS)}, audio: {len(list(AUD.glob('*.wav')))}")
 
 

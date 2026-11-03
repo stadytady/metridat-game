@@ -457,6 +457,8 @@ func _check_dream(player: CharacterBody3D) -> void:
 		return
 	if env.fog_depth_end > 80.0:
 		_fail.append("dream fog not thick: ends at %.0f m" % env.fog_depth_end)
+	if not dream._drone.playing:
+		_fail.append("the dream's drone is silent")
 	var walked := true
 	for z: float in [8.0, 16.0, 24.0, 32.0, 40.0, 48.0, 56.0, 64.0, 71.0, 74.4]:
 		var o: Vector3 = dream.ORIGIN
@@ -466,6 +468,8 @@ func _check_dream(player: CharacterBody3D) -> void:
 	player.bot_move = Vector2.ZERO
 	if not walked:
 		return
+	if dream.howls < 1:
+		_fail.append("no howl in the dream")
 	if dream.vanished != dream.FIGURES_Z.size():
 		_fail.append("figures vanished: %d of %d" % [dream.vanished, dream.FIGURES_Z.size()])
 	var mirror: Node3D = _inspectables().get("bronze_mirror")
@@ -498,6 +502,8 @@ func _check_dream(player: CharacterBody3D) -> void:
 	await _frames(2)
 	end.woke.emit()
 	await get_tree().create_timer(3.0).timeout
+	if dream._drone.playing:
+		_fail.append("the dream's drone goes on after waking")
 	if Game.dreaming or player.global_position.distance_to(abaton) > 1.5:
 		_fail.append("did not wake in the abaton (dreaming %s, at %s)" % [Game.dreaming, player.global_position])
 	if env.fog_depth_end < 300.0:

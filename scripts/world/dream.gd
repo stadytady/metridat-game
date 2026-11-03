@@ -23,6 +23,13 @@ const MIRROR_LIFT := 0.33  # disc centre above it: the handle (0.32) stands on t
 const MIRROR_LEAN := 70.0  # degrees from lying flat
 
 var figures: Array[Node3D] = []
+## Sound of the dream: a low drone, and a dog howling somewhere ahead in the
+## fog (the dog was Hecate's animal). Only while dreaming.
+var howls := 0
+var _drone: AudioStreamPlayer
+var _howl: AudioStreamPlayer3D
+var _howl_timer: Timer
+var _rng := RandomNumberGenerator.new()
 var vanished := 0
 var ended := false
 
@@ -69,6 +76,7 @@ func _ready() -> void:
 	var mirror := spawn_inspectable("bronze_mirror", ORIGIN + ALTAR + Vector3(0, ALTAR_TOP, -0.08), 0.0)
 	var model := mirror.get_child(0) as Node3D
 	model.transform = Transform3D(mirror_basis(), Vector3(0, MIRROR_LIFT, 0))
+	_altar_lamp()
 	var zone := Area3D.new()
 	zone.set_script(preload("res://scripts/world/zone.gd"))
 	zone.title = "LOC_DREAM"
@@ -79,6 +87,7 @@ func _ready() -> void:
 	cs.position = ORIGIN + Vector3(0, 2, 4)
 	zone.add_child(cs)
 	add_child(zone)
+	_sound()
 	Game.dream_requested.connect(enter)
 	Game.discovered.connect(func(d: Discovery, _new: bool) -> void:
 		if d.epilogue:
@@ -145,6 +154,66 @@ func _altar(kit: MeshKit) -> void:
 	kit.solid_box("limestone", ALTAR + Vector3(0, 0.08, 0), Vector3(1.8, 0.16, 1.2), ["bottom"])
 	kit.solid_box("limestone", ALTAR + Vector3(0, 0.55, 0), Vector3(1.3, 0.8, 0.8), ["bottom"], {"pz": "plaster", "nz": "plaster"})
 	kit.box("limestone", ALTAR + Vector3(0, 0.98, 0), Vector3(1.45, 0.1, 0.9), ["bottom"])
+
+
+func _sound() -> void:
+	_rng.seed = 516
+	_drone = AudioStreamPlayer.new()
+	_drone.name = "DreamDrone"
+	_drone.stream = preload("res://assets/audio/dream_drone.wav")
+	_drone.volume_db = -10.0
+	add_child(_drone)
+	_howl = AudioStreamPlayer3D.new()
+	_howl.name = "DreamHowl"
+	_howl.stream = preload("res://assets/audio/dog_howl.wav")
+	_howl.unit_size = 25.0
+	_howl.max_distance = 200.0
+	_howl.volume_db = -6.0
+	add_child(_howl)
+	_howl_timer = Timer.new()
+	_howl_timer.one_shot = true
+	_howl_timer.timeout.connect(_howl_once)
+	add_child(_howl_timer)
+	Game.dream_changed.connect(func(on: bool) -> void:
+		if on:
+			_drone.play()
+			_howl_timer.start(5.0)
+		else:
+			_drone.stop()
+			_howl.stop()
+			_howl_timer.stop())
+
+
+## Somewhere off the path, ahead and to one side, never twice from the same place.
+func _howl_once() -> void:
+	if not Game.dreaming:
+		return
+	var cam := get_viewport().get_camera_3d()
+	var ahead := cam.global_position.z - ORIGIN.z + _rng.randf_range(25.0, 45.0) if cam else 60.0
+	_howl.global_position = ORIGIN + Vector3(_rng.randf_range(-30.0, 30.0), 2.0, ahead)
+	_howl.pitch_scale = _rng.randf_range(0.9, 1.08)
+	_howl.play()
+	howls += 1
+	_howl_timer.start(_rng.randf_range(13.0, 22.0))
+
+
+## A small clay oil lamp burning beside the mirror: the polished face catches
+## its glow, so the mirror shines out of the fog instead of standing dark.
+func _altar_lamp() -> void:
+	var at := ORIGIN + ALTAR + Vector3(0.45, ALTAR_TOP, -0.25)
+	var k := MeshKit.new()
+	k.lathe("clay", PackedVector2Array([Vector2(0.05, 0.0), Vector2(0.08, 0.03), Vector2(0.06, 0.07)]), 6, at, 1.0, true, "dark", true)
+	k.box("clay", at + Vector3(0.09, 0.055, 0), Vector3(0.07, 0.025, 0.03), [])
+	k.box("flame", at + Vector3(0.12, 0.1, 0), Vector3(0.04, 0.07, 0.04), [])
+	add_child(k.build("AltarLamp"))
+	var glow := OmniLight3D.new()
+	glow.position = at + Vector3(0.1, 0.25, -0.35)
+	glow.light_color = Color(1, 0.7, 0.4)
+	glow.omni_range = 3.5
+	glow.set_script(preload("res://scripts/world/flicker.gd"))
+	glow.base_energy = 1.6
+	glow.amount = 0.25
+	add_child(glow)
 
 
 ## Invisible walls keep the dreamer on the path; the mound closes the end.

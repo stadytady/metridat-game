@@ -69,11 +69,13 @@ jobs:
           cat > "$notes" <<NOTES
           First-person exploration of Panticapaeum, 4th century BCE, in a PlayStation-era style (Godot ${GODOT_VERSION}).
 
+          Walk down from the hill above the strait through the Street of the Jars and the agora, past the potter's workshop and the fisherman's camp on the beach, up to the sanctuary of Hecate. Eight finds, each turnable in close-up, keep sourced history apart from the game's own fiction. Every find brings the evening on and the ships in to anchor; at night, light the lamps, lie down in Hecate's abaton and follow the dream. EN / RU.
+
           **Windows:** unzip and run \`Panticapaeum.exe\`. It is not code-signed: if SmartScreen says "Windows protected your PC", click *More info* → *Run anyway*. If it does not start, run \`Panticapaeum.console.exe\` to see the engine log.
           **Linux:** \`tar xzf\` and run \`./panticapaeum.x86_64\`.
           **Browser:** https://stadytady.github.io/metridat-game/
 
-          Controls: WASD, mouse, Shift run, Space jump, E inspect, Esc pause, F3 performance overlay.
+          Controls: start screen: click, Enter or E. WASD move, mouse look, Shift run, Space jump, E inspect / talk / light / sleep, J journal of finds (with hints), Esc pause (language, sensitivity, PS1 effects), F3 performance overlay. In a find's panel: drag to turn it, wheel to zoom.
           Measure performance: \`Panticapaeum.exe -- --benchmark\` (results in \`%APPDATA%\\Godot\\app_userdata\\Panticapaeum- Echoes of the Bosporus\\benchmark.txt\`).
 
           Checked in CI: unit tests and a scripted walkthrough of the whole scene, then the same walkthrough in the unpacked release packages: Linux natively, Windows under Wine. Not checked: real Windows hardware and GPUs.

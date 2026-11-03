@@ -84,7 +84,6 @@ D_MOULD_FIGURINE_HINT,"In the potter's workshop, in the south-west corner of the
 D_NET_SINKERS_HINT,"On the beach below the agora: go out through the gap in the east parapet, look by the fisherman.",На пляже под агорой: выйдите через проём в восточном парапете и ищите у рыбака.
 D_VOTIVE_FIGURINE_HINT,Through the gateway in the north-east corner of the agora and up the stair: on the votive shelf of the sanctuary.,Через ворота в северо-восточном углу агоры и вверх по лестнице: на вотивной полке святилища.
 UI_START,START,НАЧАТЬ
-NPC_PILGRIM_NAME,a sleeping pilgrim,спящий паломник
 LOC_DREAM,The Dream,Сон
 UI_SLEEP,[E] Lie down to sleep,[E] Лечь спать
 UI_SLEEP_NOT_YET,Not yet. Dreams come here when the way is lit.,"Ещё не время. Сны приходят сюда, когда путь освещён."
