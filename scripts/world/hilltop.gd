@@ -1,6 +1,7 @@
 extends District
 ## Starting point: a paved lookout terrace on the summit with a broken parapet,
-## fallen architecture, and two standing columns framing the way down.
+## fallen architecture, and two standing columns framing the way down. The
+## west half holds a small theatre (theatre.gd).
 
 
 func _ready() -> void:
@@ -33,15 +34,9 @@ func _ready() -> void:
 	# fallen drums and blocks
 	Arch.drum(kit, Arch.frame(Vector3(c.x - 3, top, -4.5), Vector3(1, 0, 0.4)), 0.3, 1.1)
 	Arch.drum(kit, Arch.frame(Vector3(c.x + 2.5, top, 5.2), Vector3(0.3, 0, 1)), 0.3, 0.9)
-	Arch.drum(kit, Arch.frame(Vector3(c.x - 6, top, 3.0), Vector3(1, 0, -0.7)), 0.28, 1.3)
 	for b: Array in [[Vector3(c.x + 4, top, -5.6), 0.5], [Vector3(c.x + 3.0, top, -6.2), 0.4], [Vector3(c.x - 6.5, top, -5.0), 0.6]]:
 		kit.xform = Transform3D(Basis.from_euler(Vector3(0, rng.randf_range(-0.5, 0.5), 0)), b[0])
 		kit.solid_box("limestone", Vector3(0, b[1] / 2.0, 0), Vector3(1.0, b[1], 0.7), ["bottom"])
-	kit.xform = Transform3D.IDENTITY
-	# broken column stump (two drums)
-	kit.xform = Transform3D(Basis.IDENTITY, Vector3(c.x - 5.0, top, -1.5))
-	kit.lathe("column", PackedVector2Array([Vector2(0.3, 0), Vector2(0.3, 1.4), Vector2(0.27, 1.7), Vector2(0.0, 1.75)]), 8, Vector3.ZERO, 1.0, false)
-	kit.add_collider(Vector3(0, 0.85, 0), Vector3(0.6, 1.7, 0.6))
 	kit.xform = Transform3D.IDENTITY
 	add_child(kit.build("Terrace"))
 	# two standing columns frame the view and the steps down to the city

@@ -45,6 +45,8 @@ static func viewpoints() -> Dictionary:
 		"agora": [Vector3(11, Topo.AGORA_H + 1.6, 6), Vector3(30, 6, -8)],
 		"workshop": [Vector3(14.6, Topo.AGORA_H + 1.6, 5.6), Vector3(13.0, Topo.AGORA_H + 0.7, 9.4)],
 		"fishing": [Vector3(61.5, Topo.terrain(61.5, 13.2) + 1.6, 13.2), Vector3(67.5, 1.2, 15.2)],
+		"theatre": [Vector3(-85.0, Topo.HILL_PLATFORM_TOP + 1.6, 3.0), Vector3(-93.0, Topo.HILL_PLATFORM_TOP + 0.4, -0.5)],
+		"masks": [Vector3(-86.9, Topo.HILL_PLATFORM_TOP + 1.3, 2.2), Vector3(-88.6, Topo.HILL_PLATFORM_TOP + 1.05, 3.9)],
 		"chickens": [Vector3(12.2, Topo.AGORA_H + 1.3, 3.2), Vector3(15.4, Topo.AGORA_H + 0.2, 5.8)],
 		"sacred_way": [Vector3(29.0, Topo.AGORA_H + 1.6, 3.5), Vector3(35.5, 7.2, -12.0)],
 		"dream": [Vector3(0, 61.6, 2601), Vector3(0, 61.2, 2620)],
