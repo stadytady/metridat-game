@@ -41,18 +41,14 @@ jobs:
         run: tools/test.sh
       - name: Export
         run: tools/export.sh windows linux web
-      - name: Smoke-test the exported pack
-        run: build/linux/panticapaeum.x86_64 --headless --fixed-fps 60 -- --walkthrough 2>&1 | grep -q "WALKTHROUGH PASS"
       - name: Package
+        run: tools/package.sh "$TAG"
+      - name: Install Wine (to run the Windows build)
         run: |
-          mkdir -p dist
-          name="Panticapaeum-${TAG}"
-          (cd build/windows && zip -9 -q "../../dist/${name}-windows-x86_64.zip" Panticapaeum.exe)
-          (cd build/linux && tar -czf "../../dist/${name}-linux-x86_64.tar.gz" panticapaeum.x86_64)
-          (cd build/web && zip -9 -q -r "../../dist/${name}-web.zip" .)
-          cp docs/trailer.mp4 "dist/${name}-trailer.mp4"
-          (cd dist && sha256sum ./* > SHA256SUMS.txt)
-          ls -la dist
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends wine wine64 xvfb
+      - name: Smoke-test the packages (Linux natively, Windows under Wine)
+        run: tools/smoke.sh
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -61,14 +57,14 @@ jobs:
           cat > "$notes" <<NOTES
           First-person exploration of Panticapaeum, 4th century BCE, in a PlayStation-era style (Godot ${GODOT_VERSION}).
 
-          **Windows:** unzip and run \`Panticapaeum.exe\` (unsigned, so SmartScreen may ask to confirm).
-          **Linux:** \`tar xzf\` and run \`panticapaeum.x86_64\`.
+          **Windows:** unzip and run \`Panticapaeum.exe\`. It is not code-signed: if SmartScreen says "Windows protected your PC", click *More info* → *Run anyway*. If it does not start, run \`Panticapaeum.console.exe\` to see the engine log.
+          **Linux:** \`tar xzf\` and run \`./panticapaeum.x86_64\`.
           **Browser:** https://stadytady.github.io/metridat-game/
 
           Controls: WASD, mouse, Shift run, Space jump, E inspect, Esc pause, F3 performance overlay.
           Measure performance: \`Panticapaeum.exe -- --benchmark\` (results in \`%APPDATA%\\Godot\\app_userdata\\Panticapaeum- Echoes of the Bosporus\\benchmark.txt\`).
 
-          Checked in CI: unit tests, a scripted walkthrough of the whole scene, and a walkthrough of the exported Linux build. The Windows build has not been run on Windows by CI.
+          Checked in CI: unit tests and a scripted walkthrough of the whole scene, then the same walkthrough in the unpacked release packages: Linux natively, Windows under Wine. Not checked: real Windows hardware and GPUs.
           NOTES
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" dist/* --clobber

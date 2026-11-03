@@ -63,6 +63,8 @@ tools/trailer.sh [out.mp4]   # Movie Maker (--write-movie, --fixed-fps 30) + ffm
 
 - **В браузере:** https://stadytady.github.io/metridat-game/ (лендинг с трейлером, игра — по кнопке «Play in browser»). В вебе Godot использует Compatibility-рендер (WebGL 2), всё остальное то же.
 - **Скачать:** [Releases](https://github.com/stadytady/metridat-game/releases): zip для Windows, tar.gz для Linux, web-сборка, трейлер, SHA256SUMS.
+  - **Windows:** распаковать и запустить `Panticapaeum.exe`. Он не подписан, поэтому SmartScreen может показать «Система Windows защитила ваш компьютер»: «Подробнее» → «Выполнить в любом случае». Если игра не стартует — запустить `Panticapaeum.console.exe`, он покажет лог движка.
+  - **Linux:** `tar xzf …` и `./panticapaeum.x86_64` (tar сохраняет бит исполнения; zip-артефакты Actions его теряли).
 
 - Открыть `project.godot` в Godot **4.5.1** (стандартная сборка, не .NET) и нажать F5. Первый импорт ассетов занимает несколько секунд.
 - Сборка под Windows: `tools/export.sh windows` создаёт `build/windows/Panticapaeum.exe` (один файл, pck внутри). Готовый .exe также есть в артефактах CI (`panticapaeum-windows-x86_64`).
@@ -125,6 +127,8 @@ tools/shots.sh /tmp/shots             # скриншоты точек обзор
 # клип одной точки обзора (например, прибой) через Movie Maker:
 #   godot --path . --write-movie out.png --fixed-fps 30 -- --clip=surf --seconds=5 (Forward+, на машине без GPU — lavapipe + Xvfb)
 tools/export.sh windows linux web     # нужны export templates 4.5.1 (tools/install-godot.sh --templates)
+tools/package.sh v0.0.1               # пакеты для игроков в dist/ (как в релизе)
+tools/smoke.sh                        # распаковать пакеты и пройти игру в каждом (Windows — под Wine)
 tools/site.sh                         # сайт для Pages в build/site (лендинг + трейлер + web-сборка в play/)
 git tag v0.1.0 && git push origin v0.1.0   # релиз: release.yml собирает и публикует GitHub Release
 ```
@@ -148,7 +152,7 @@ Panticapaeum.exe -- --benchmark
 |---|---|
 | Unit-тесты (15) и проход 6/6 находок | локально, Godot 4.5.1 headless |
 | Рендер Forward+ всех точек обзора и UI | локально, Mesa lavapipe (llvmpipe) под Xvfb, скриншоты выше |
-| Экспорт Windows x86_64 (`PE32+`, 97 МБ) | собран локально, **на Windows не запускался** |
+| Windows-сборка | запускается под Wine из распакованного zip: проход 6/6 (headless) и рендер Forward+ через Vulkan (lavapipe). В CI и релизе каждый раз гоняется `tools/smoke.sh`. **На реальном Windows-железе не проверялась** |
 | Экспортированный пакет работает | Linux-экспорт тех же ресурсов прошёл `--walkthrough` и отрендерил кадры |
 | Производительность на RTX 4060 | **не измерена.** В кадре 105–245 draw calls и ~240 тыс. треугольников, видеопамять < 80 МБ, сборка мира ~0,4 с. Для RTX 4060 это небольшая нагрузка, но цифр FPS на железе нет. Замерить: `Panticapaeum.exe -- --benchmark` (см. ниже) |
 | Звук | проверено, что потоки играют и зациклены. **На слух не проверялся** (в контейнере нет аудиоустройства) |

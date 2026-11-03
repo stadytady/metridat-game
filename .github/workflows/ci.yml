@@ -46,20 +46,24 @@ jobs:
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name: Export Windows, Linux and Web
         run: tools/export.sh windows linux web
-      - name: Smoke-test the exported pack (Linux build, same resources)
+      - name: Package like a release
+        run: tools/package.sh "ci-${GITHUB_SHA::7}"
+      - name: Install Wine (to run the Windows build)
         run: |
-          out="$(build/linux/panticapaeum.x86_64 --headless --fixed-fps 60 -- --walkthrough 2>&1)"
-          echo "$out" | grep -E 'inspected|audio:|FAIL|WALKTHROUGH'
-          echo "$out" | grep -q "WALKTHROUGH PASS"
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends wine wine64 xvfb
+      - name: Smoke-test the packages (Linux natively, Windows under Wine)
+        run: tools/smoke.sh
       - uses: actions/upload-artifact@v4
         with:
           name: panticapaeum-windows-x86_64
-          path: build/windows/Panticapaeum.exe
+          path: dist/*-windows-x86_64.zip
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
+          # a .tar.gz inside the artifact zip, so the executable bit survives
           name: panticapaeum-linux-x86_64
-          path: build/linux/panticapaeum.x86_64
+          path: dist/*-linux-x86_64.tar.gz
           if-no-files-found: error
       - name: Assemble Pages site
         run: tools/site.sh
