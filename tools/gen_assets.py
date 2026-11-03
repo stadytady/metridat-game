@@ -645,6 +645,7 @@ MATERIALS = {
     "worn": ("psx_cutout", "worn", "#ffffff", (1.0, 1.0)),
     "fur": ("psx_lit", "fur", "#ffffff", (2.0, 2.0)),
     "pigeon": ("psx_lit", "feather", "#8c93a2", (1.0, 1.0)),
+    "wisp": ("psx_unlit", "white", "#bfe6ff", (1.0, 1.0)),
     "net": ("psx_cutout", "net", "#ffffff", (1.5, 1.5)),
     "fish": ("psx_lit", "fish", "#ffffff", (1.0, 1.0)),
     "water": ("psx_water", "water", "#ffffff", (1.0, 1.0)),

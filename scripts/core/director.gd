@@ -630,6 +630,19 @@ func _check_night() -> void:
 	if Game.lamps_lit() != Game.lamps.size():
 		_fail.append("lit %d of %d lamps" % [Game.lamps_lit(), Game.lamps.size()])
 	print("night: hour %.2f, lamps %d/%d" % [atm.t, Game.lamps_lit(), Game.lamps.size()])
+	var om: Node = _main().world.get_node("Omens")
+	if not om.night:
+		_fail.append("omens: night not noticed")
+	if not om.supper_lamp.visible:
+		_fail.append("omens: no lamp at Hecate's supper")
+	if not om.vanished:
+		_fail.append("omens: the figure on the street did not vanish as the bot passed")
+	if om.howls < 1:
+		_fail.append("omens: no dog howled in the night")
+	var dog: Node = get_tree().get_first_node_in_group(&"dog")
+	if dog == null or dog.watch == Vector3.INF:
+		_fail.append("omens: the dog sleeps through the night")
+	print("omens: figure vanished=%s, howls=%d, dog awake=%s" % [om.vanished, om.howls, dog != null and dog.watch != Vector3.INF])
 
 
 ## Switching language live re-renders the open info panel and the HUD.
