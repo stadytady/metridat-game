@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panticapaeum: Echoes of the Bosporus</title>
+<meta name="description" content="First-person exploration of Panticapaeum, capital of the Bosporan Kingdom, 4th century BCE. A PlayStation-era look, made in Godot.">
+<meta property="og:title" content="Panticapaeum: Echoes of the Bosporus">
+<meta property="og:image" content="poster.png">
+<link rel="icon" href="icon.png">
+<style>
+  :root { --bg:#120e0a; --panel:#1c1611; --ochre:#c9953f; --text:#e6d6b4; --muted:#a8977a; --sea:#7aa39b; --terra:#d98b55; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:16px/1.55 "Courier New", ui-monospace, monospace; }
+  main { max-width:960px; margin:0 auto; padding:32px 16px 64px; }
+  h1 { font-size:clamp(28px,6vw,48px); letter-spacing:.12em; color:#f2c48c; margin:0; text-align:center; }
+  .sub { text-align:center; letter-spacing:.3em; color:var(--muted); margin:4px 0 24px; font-size:14px; }
+  video, .poster { width:100%; display:block; border:2px solid var(--ochre); image-rendering:pixelated; background:#000; }
+  .actions { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin:24px 0; }
+  .btn { display:inline-block; padding:12px 22px; border:2px solid var(--ochre); color:var(--text); text-decoration:none; background:var(--panel); letter-spacing:.08em; }
+  .btn:hover, .btn:focus { background:#3a2410; color:#fff; }
+  .btn.primary { background:#5c3410; }
+  section { background:var(--panel); border:2px solid #4a3a26; padding:16px 20px; margin:16px 0; }
+  h2 { color:var(--ochre); font-size:18px; letter-spacing:.1em; margin:0 0 8px; }
+  table { border-collapse:collapse; } td { padding:2px 16px 2px 0; vertical-align:top; } td:first-child { color:var(--ochre); white-space:nowrap; }
+  .note { color:var(--muted); font-size:14px; }
+  .hist { color:var(--sea); } .fic { color:var(--terra); }
+  a { color:#f2c48c; }
+</style>
+</head>
+<body>
+<main>
+  <h1>PANTICAPAEUM</h1>
+  <p class="sub">ECHOES OF THE BOSPORUS · VERTICAL SLICE 0.1</p>
+  <video src="trailer.mp4" poster="poster.png" controls playsinline preload="metadata"></video>
+  <div class="actions">
+    <a class="btn primary" href="play/">▶ Play in browser</a>
+    <a class="btn" href="https://github.com/stadytady/metridat-game/releases/latest">Download for Windows / Linux</a>
+    <a class="btn" href="https://github.com/stadytady/metridat-game">Source</a>
+  </div>
+  <section>
+    <h2>THE HILL ABOVE THE STRAIT</h2>
+    <p>Panticapaeum, capital of the Bosporan Kingdom, in the 4th century BCE. Walk down from the summit along a stepped street, cross the agora, climb to a small sanctuary with an altar fire, and look out over the Cimmerian Bosporus. Six finds tell what archaeology knows: <span class="hist">sourced history</span> is kept apart from <span class="fic">the game's own fiction</span>.</p>
+    <p class="note">Low-poly, 640×360, wobbling vertices, affine textures, 15-bit dither: built to look like a lost archaeology game from 1999. All assets are original and generated in code.</p>
+  </section>
+  <section>
+    <h2>CONTROLS</h2>
+    <table>
+      <tr><td>Click</td><td>start / capture the mouse</td></tr>
+      <tr><td>WASD · Mouse</td><td>move · look</td></tr>
+      <tr><td>Shift · Space</td><td>run · jump</td></tr>
+      <tr><td>E</td><td>inspect</td></tr>
+      <tr><td>Esc</td><td>pause, settings</td></tr>
+    </table>
+    <p class="note">The browser version uses Godot's Compatibility renderer (WebGL 2) and loads about 40 MB. The desktop build uses Forward+ and has crisper shadows.</p>
+  </section>
+</main>
+</body>
+</html>

@@ -55,6 +55,9 @@ tools/trailer.sh [out.mp4]   # Movie Maker (--write-movie, --fixed-fps 30) + ffm
 
 ## Как запустить
 
+- **В браузере:** https://stadytady.github.io/metridat-game/ (лендинг с трейлером, игра — по кнопке «Play in browser»). В вебе Godot использует Compatibility-рендер (WebGL 2), всё остальное то же.
+- **Скачать:** [Releases](https://github.com/stadytady/metridat-game/releases): zip для Windows, tar.gz для Linux, web-сборка, трейлер, SHA256SUMS.
+
 - Открыть `project.godot` в Godot **4.5.1** (стандартная сборка, не .NET) и нажать F5. Первый импорт ассетов занимает несколько секунд.
 - Сборка под Windows: `tools/export.sh windows` создаёт `build/windows/Panticapaeum.exe` (один файл, pck внутри). Готовый .exe также есть в артефактах CI (`panticapaeum-windows-x86_64`).
 
@@ -112,7 +115,9 @@ tools/                      генерация, тесты, скриншоты, 
 ```sh
 tools/test.sh                         # импорт, 15 unit-тестов, проход ботом по всей сцене
 tools/shots.sh /tmp/shots             # скриншоты точек обзора и UI (Forward+, на машине без GPU — lavapipe + Xvfb)
-tools/export.sh windows linux         # нужны export templates 4.5.1 (tools/install-godot.sh --templates)
+tools/export.sh windows linux web     # нужны export templates 4.5.1 (tools/install-godot.sh --templates)
+tools/site.sh                         # сайт для Pages в build/site (лендинг + трейлер + web-сборка в play/)
+git tag v0.1.0 && git push origin v0.1.0   # релиз: release.yml собирает и публикует GitHub Release
 ```
 
 - **Unit-тесты.** Нормали MeshKit смотрят наружу (с `cull_back` вывернутый треугольник становится дырой). Мощение не протыкается рельефом. Улица проходима для контроллера. Шаг через бордюр 0,3 м работает, а стену 0,6 м перешагнуть нельзя. Гравитация. У каждой находки заполнены все поля, есть сцена, история не совпадает с вымыслом.
@@ -139,6 +144,8 @@ Panticapaeum.exe -- --benchmark
 | Производительность на RTX 4060 | **не измерена.** В кадре 105–245 draw calls и ~240 тыс. треугольников, видеопамять < 80 МБ, сборка мира ~0,4 с. Для RTX 4060 это небольшая нагрузка, но цифр FPS на железе нет. Замерить: `Panticapaeum.exe -- --benchmark` (см. ниже) |
 | Звук | проверено, что потоки играют и зациклены. **На слух не проверялся** (в контейнере нет аудиоустройства) |
 | Трейлер | отрендерен локально (Movie Maker на lavapipe, ~100 с на 300 кадров), раскадровку и уровни звука проверял я; **звук на слух не проверен** |
+| Web-сборка (Compatibility) | локально: headless Chromium (WebGL2 через SwiftShader), сцена рендерится, ходьба работает, ошибок в консоли нет (кроме штатных требований браузера к клику для звука и захвата мыши) |
+| GitHub Pages и Releases | workflow готовы (`ci.yml` → `pages`, `release.yml` по тегу `v*`). Рабочими считать после первого зелёного деплоя и релиза |
 | CI (`.github/workflows/ci.yml`) | ✅ зелёный в Actions: тесты + проход, экспорт Windows/Linux со смоуком экспортированного пакета, скриншоты на lavapipe |
 
 Известное: при выходе из headless-режима с dummy-драйвером звука Godot пишет об «утечке» playback'ов зацикленных потоков. С реальным аудиодрайвером это не воспроизводилось: проверить негде.
