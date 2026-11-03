@@ -5,7 +5,7 @@ extends RefCounted
 
 ## Baked to GLB. EXTRA kinds are small one-off models built at runtime.
 const MODELS := ["amphora", "pithos", "krater", "column_doric", "olive_tree", "cypress", "ship", "tripod", "figurine"]
-const EXTRA := ["coins", "sherds", "stele", "grain", "votive", "lampstand", "torch_post", "mould", "boat", "sinkers"]
+const EXTRA := ["coins", "sherds", "stele", "grain", "votive", "lampstand", "torch_post", "mould", "boat", "sinkers", "hekataion"]
 
 
 static func build(name: String) -> MeshKit:
@@ -47,6 +47,8 @@ static func build(name: String) -> MeshKit:
 			boat(kit)
 		"sinkers":
 			sinkers(kit)
+		"hekataion":
+			hekataion(kit)
 		"lampstand":
 			lampstand(kit)
 		"torch_post":
@@ -350,6 +352,30 @@ static func sinkers(kit: MeshKit) -> void:
 	for x: float in [-0.08, 0.1]:
 		var p := Vector3(x, 0.0, 0.11 * signf(x))
 		kit.lathe("clay", PackedVector2Array([Vector2(0.035, 0.0), Vector2(0.015, 0.07)]), 4, p, 1.0, true, "clay", true)
+
+
+## Hekataion: Hecate in triple form, three standing maidens back to back
+## around a pillar, each in a long peplos and a tall polos, holding a torch,
+## on a stepped base. Marble. About 1.9 m, origin at the foot of the base.
+static func hekataion(kit: MeshKit) -> void:
+	kit.box("column", Vector3(0, 0.12, 0), Vector3(0.95, 0.24, 0.95), ["bottom"])
+	kit.box("column", Vector3(0, 0.33, 0), Vector3(0.75, 0.18, 0.75), ["bottom"])
+	kit.lathe("column", PackedVector2Array([Vector2(0.11, 0.42), Vector2(0.1, 1.75)]), 6, Vector3.ZERO, 1.0, true, "column", true)
+	for i in 3:
+		var ang := TAU * i / 3.0
+		kit.xform = Transform3D(Basis(Vector3.UP, ang), Vector3.ZERO)
+		var z := 0.2  # each maiden stands against the pillar, facing out
+		# long peplos, flaring to the feet
+		kit.lathe("column", PackedVector2Array([Vector2(0.17, 0.42), Vector2(0.14, 0.8), Vector2(0.11, 1.15), Vector2(0.12, 1.32)]), 6,
+				Vector3(0, 0, z), 1.0, true, "column", false)
+		kit.box("column", Vector3(0, 1.4, z), Vector3(0.24, 0.16, 0.14), [])  # shoulders
+		kit.box("column", Vector3(0, 1.55, z + 0.01), Vector3(0.12, 0.15, 0.13), [])  # head
+		kit.lathe("column", PackedVector2Array([Vector2(0.07, 1.62), Vector2(0.09, 1.76)]), 6, Vector3(0, 0, z + 0.01), 1.0, true, "column", true)  # polos
+		# a torch held upright in front
+		kit.box("column", Vector3(0.1, 1.22, z + 0.12), Vector3(0.06, 0.06, 0.14), [])
+		kit.box("bronze", Vector3(0.1, 1.33, z + 0.17), Vector3(0.04, 0.42, 0.04), [])
+		kit.box("fire", Vector3(0.1, 1.57, z + 0.17), Vector3(0.07, 0.08, 0.07), [])
+	kit.xform = Transform3D.IDENTITY
 
 
 ## Bronze lampstand with a clay oil lamp on top (flame at FLAME_Y["lampstand"]).

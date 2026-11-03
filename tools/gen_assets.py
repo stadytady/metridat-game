@@ -553,6 +553,13 @@ def feather(rng):
     save("feather", ramp(field, ["#8a7e6c", "#b4aa96", "#d6ccb6", "#ece4d0"]))
 
 
+def fleece(rng):
+    # Curly sheepskin: cream locks with grey-brown shadows.
+    s = 32
+    field = 0.55 + (vnoise(s, 8, rng) - 0.5) * 0.5 + (rng.random((s, s)) - 0.5) * 0.18
+    save("fleece", ramp(field, ["#6e6250", "#9a8c74", "#c2b496", "#dccfb2", "#ece2c8"]))
+
+
 def dark(rng):
     s = 16
     save("dark", ramp(0.4 + vnoise(s, 4, rng) * 0.3, ["#140f0b", "#1f1813", "#2a211a"]))
@@ -611,6 +618,7 @@ MATERIALS = {
     "rooster_tail": ("psx_lit", "feather", "#2c3a2e", (1.0, 1.0)),
     "comb": ("psx_lit", "white", "#b42a1e", (1.0, 1.0)),
     "beak": ("psx_lit", "white", "#d8a440", (1.0, 1.0)),
+    "fleece": ("psx_lit", "fleece", "#ffffff", (2.0, 2.0)),
     "net": ("psx_cutout", "net", "#ffffff", (1.5, 1.5)),
     "fish": ("psx_lit", "fish", "#ffffff", (1.0, 1.0)),
     "water": ("psx_water", "water", "#ffffff", (1.0, 1.0)),
@@ -881,6 +889,7 @@ def main() -> None:
     for i in range(3):
         cluck(np.random.default_rng(510 + i), i)
     squawk(np.random.default_rng(513))
+    fleece(np.random.default_rng(514))
     print(f"textures: {len(TEXTURES)}, materials: {len(MATERIALS)}, audio: {len(list(AUD.glob('*.wav')))}")
 
 

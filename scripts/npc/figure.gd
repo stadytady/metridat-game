@@ -32,13 +32,16 @@ const POSES := {
 		"r_shoulder": Vector3(70, 0, -10), "r_elbow": Vector3(20, 0, 0), "l_shoulder": Vector3(25, 0, 10), "l_elbow": Vector3(60, 0, 0),
 		"l_hip": Vector3(115, 0, 10), "r_hip": Vector3(115, 0, -10), "l_knee": Vector3(-140, 0, 0), "r_knee": Vector3(-140, 0, 0)},
 	# on a stone, mending the net spread over his knees
+	# lying on the back on a fleece, the body tipped over the pelvis, arms by the sides
+	"sleep": {"pelvis": Vector3(90, 0, 0), "head": Vector3(-12, 0, 0), "l_shoulder": Vector3(0, 0, 6), "r_shoulder": Vector3(0, 0, -6),
+		"l_knee": Vector3(-8, 0, 0), "r_knee": Vector3(-8, 0, 0)},
 	"mender": {"chest": Vector3(-28, 0, 0), "head": Vector3(-22, 0, 0),
 		"l_shoulder": Vector3(20, 0, 10), "r_shoulder": Vector3(20, 0, -10), "l_elbow": Vector3(45, 0, 0), "r_elbow": Vector3(45, 0, 0),
 		"l_hip": Vector3(80, 0, 10), "r_hip": Vector3(80, 0, -10), "l_knee": Vector3(-60, 0, 0), "r_knee": Vector3(-60, 0, 0)},
 }
 
 ## Pelvis height for a pose (seated figures sit on something low).
-const SEAT := {"stand": 0.92, "potter": 0.46, "turner": 0.32, "mender": 0.4}
+const SEAT := {"stand": 0.92, "potter": 0.46, "turner": 0.32, "mender": 0.4, "sleep": 0.12}
 
 
 ## Builds the joints under `root`; returns {joint name: Node3D}.
@@ -84,6 +87,9 @@ static func motion(pose: String, t: float) -> Dictionary:
 		"turner":
 			return {"r_shoulder": Vector3(sin(q * 6.0) * 18, cos(q * 6.0) * 15, 0), "r_elbow": Vector3(cos(q * 6.0) * 12, 0, 0),
 				"chest": Vector3(sin(q * 6.0) * 4, 0, 0)}
+		"sleep":
+			# slow breathing
+			return {"chest": Vector3(sin(q * 1.4) * 2.0, 0, 0)}
 		"mender":
 			# the needle goes through, the arm pulls the twine out and up
 			var k := fposmod(q * 0.8, 1.0)

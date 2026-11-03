@@ -1,6 +1,12 @@
 extends District
-## Terrace sanctuary above the agora: small temple in antis, an altar with a
-## fire (the focal point at dusk), a bronze tripod, votive ledge, cypresses.
+## Terrace sanctuary of Hecate above the agora (the dedication is the game's
+## fiction): a small temple in antis on three steps with its doors open and
+## the triple Hecate (hekataion) lit inside, an altar with a fire (the focal
+## point at dusk) and wreaths, a bronze tripod, the votive ledge, cypresses,
+## an abaton where pilgrims sleep on fleeces, a basin for washing hands at
+## the top of the stair, and "Hecate's supper" left at the gate below.
+
+const NPC := preload("res://scripts/npc/npc.gd")
 
 const COL_H := 3.0
 
@@ -31,7 +37,11 @@ func _ready() -> void:
 	# votive ledge along the east wall
 	kit.solid_box("limestone", Vector3(x1 - 0.7, y + 0.45, c.y - 2.0), Vector3(0.9, 0.9, 6.0), ["bottom"])
 	_sacred_way(kit)
+	_abaton(kit, x0, y)
+	_offerings(kit, altar_pos)
 	add_child(kit.build("Sanctuary"))
+	_cella(temple_xf)
+	_sleeper(x0, y)
 	for p: Vector3 in cols:
 		place("column_doric", temple_xf * p, 0.0, Vector3(1, COL_H / 3.6, 1), 0.3, COL_H)
 	place("tripod", altar_pos + Vector3(2.4, 0, 0.6), 20.0, Vector3.ONE, 0.4, 1.4)
@@ -93,3 +103,84 @@ func _sacred_way(kit: MeshKit) -> void:
 ## Height of the stair axis at fraction u from the foot.
 static func _stair_y(u: float) -> float:
 	return lerpf(Topo.SANCT_STAIR[0].y, Topo.SANCT_STAIR[1].y, clampf(u, 0.0, 1.0))
+
+
+## Inside the open doors: the hekataion on its base at the back of the cella,
+## lit by a small lamp so it shows from the altar, day or night.
+func _cella(temple_xf: Transform3D) -> void:
+	var statue := Props.build("hekataion").build("Hekataion")
+	statue.transform = Transform3D(Basis.IDENTITY, temple_xf * Vector3(0, 0.5, -4.4))
+	add_child(statue)
+	var lamp := OmniLight3D.new()
+	lamp.position = temple_xf * Vector3(0.0, 1.9, -2.6)
+	lamp.light_color = Color(1, 0.62, 0.3)
+	lamp.omni_range = 4.5
+	lamp.set_script(preload("res://scripts/world/flicker.gd"))
+	lamp.base_energy = 1.1
+	lamp.amount = 0.25
+	add_child(lamp)
+
+
+## Abaton: a lean-to against the west wall where pilgrims sleep for a dream.
+## Fleeces on the floor; one pilgrim is already asleep.
+const ABATON_Z := [-30.5, -24.5]
+
+func _abaton(kit: MeshKit, x0: float, y: float) -> void:
+	var xb := x0 + 0.35
+	var xf := x0 + 2.4
+	var z0: float = ABATON_Z[0]
+	var z1: float = ABATON_Z[1]
+	for z: float in [z0, (z0 + z1) / 2.0, z1]:
+		kit.solid_box("wood", Vector3(xb, y + 1.2, z), Vector3(0.14, 2.4, 0.14), ["bottom"])
+		kit.solid_box("wood", Vector3(xf, y + 1.05, z), Vector3(0.14, 2.1, 0.14), ["bottom"])
+	kit.box("wood", Vector3(xf, y + 2.12, (z0 + z1) / 2.0), Vector3(0.12, 0.1, z1 - z0 + 0.3), [])
+	var a := Vector3(xb - 0.2, y + 2.5, z0 - 0.3)
+	var b := Vector3(xb - 0.2, y + 2.5, z1 + 0.3)
+	var c := Vector3(xf + 0.35, y + 2.1, z1 + 0.3)
+	var d := Vector3(xf + 0.35, y + 2.1, z0 - 0.3)
+	kit.quad("roof", a, b, c, d)
+	kit.quad("wood", b, a, d, c)
+	for z: float in [z0 + 0.9, (z0 + z1) / 2.0, z1 - 0.9]:
+		kit.box("fleece", Vector3((xb + xf) / 2.0, y + 0.03, z), Vector3(0.85, 0.06, 1.7), ["bottom"])
+
+
+func _sleeper(x0: float, y: float) -> void:
+	var p: Npc = NPC.new()
+	p.npc_id = "pilgrim"
+	p.name_key = "NPC_PILGRIM_NAME"
+	p.pose = "sleep"
+	p.body_mat = "chiton_dark"
+	p.talkable = false
+	# lying along the fleece, head towards the north end
+	p.position = Vector3(x0 + 1.4, y + 0.06, (ABATON_Z[0] + ABATON_Z[1]) / 2.0 + 0.7)
+	p.rotation.y = PI
+	add_child(p)
+
+
+## Wreaths on the altar, a washing basin at the top of the stair, and
+## Hecate's supper: bowls of food left at the gate below, where the way from
+## the agora meets the stair.
+func _offerings(kit: MeshKit, altar_pos: Vector3) -> void:
+	for sx: float in [-0.75, 0.75]:
+		var c := altar_pos + Vector3(sx, 1.17, 0.35)
+		for i in 8:
+			var ang := TAU * i / 8.0
+			kit.box("foliage", c + Vector3(cos(ang) * 0.16, 0.0, sin(ang) * 0.16), Vector3(0.09, 0.06, 0.09), [])
+	var s0 := Topo.SANCT_STAIR[0]
+	var s1 := Topo.SANCT_STAIR[1]
+	var dir := Vector3(s1.x - s0.x, 0, s1.z - s0.z).normalized()
+	var perp := Vector3(-dir.z, 0, dir.x)
+	# perirrhanterion: a stone basin on a pillar, just inside the terrace
+	var bp := s1 + dir * 2.2 - perp * 1.7
+	bp.y = Topo.SANCT_H
+	kit.lathe("limestone", PackedVector2Array([Vector2(0.12, 0.0), Vector2(0.09, 0.8), Vector2(0.32, 0.9), Vector2(0.36, 1.02)]), 8,
+			bp, 1.0, true, "limestone", false)
+	kit.add_collider(bp + Vector3(0, 0.5, 0), Vector3(0.7, 1.0, 0.7))
+	kit.quad("dark", bp + Vector3(-0.25, 0.98, 0.25), bp + Vector3(0.25, 0.98, 0.25), bp + Vector3(0.25, 0.98, -0.25), bp + Vector3(-0.25, 0.98, -0.25))
+	# Hecate's supper by the outer pillar of the lower gate
+	var g := s0 + dir * 0.6 - perp * 2.0 - dir * 0.7
+	for i in 3:
+		var p := g + perp * (0.35 * i - 0.1) + dir * (0.12 * (i % 2))
+		p.y = Topo.surface(p.x, p.z)
+		kit.lathe("clay", PackedVector2Array([Vector2(0.05, 0.0), Vector2(0.14, 0.07), Vector2(0.15, 0.09)]), 7, p, 1.0, true, "clay", false)
+		kit.box("bark" if i != 1 else "clay", p + Vector3(0, 0.08, 0), Vector3(0.12, 0.04, 0.1), [])  # bread, cakes

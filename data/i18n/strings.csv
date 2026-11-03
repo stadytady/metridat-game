@@ -19,7 +19,7 @@ UI_FOOTNOTE,History sections are sourced; story sections are fiction.,"Исто�
 LOC_HILL,The Hill Above the Strait,Холм над проливом
 LOC_STREET,Street of the Jars,Улица кувшинов
 LOC_AGORA,The Agora,Агора
-LOC_SANCTUARY,Sanctuary on the Terrace,Святилище на террасе
+LOC_SANCTUARY,Sanctuary of Hecate,Святилище Гекаты
 LOC_SHORE,The Shore of the Strait,Берег пролива
 D_SHERD_KERCH_TITLE,Fragment of a red-figure vase,Обломок краснофигурной вазы
 D_SHERD_KERCH_DESCRIPTION,A palm-sized shard of black-glazed pottery. The figures were left in the colour of the clay and the background painted black around them. Part of a dancer's foot survives.,"Черепок размером с ладонь, покрытый чёрным лаком. Фигуры оставлены цвета глины, а фон вокруг них закрашен чёрным. Уцелела часть ступни танцовщицы."
@@ -44,7 +44,7 @@ D_INSCRIPTION_STELE_NARRATIVE,"This exact stone and wording are invented, though
 D_VOTIVE_FIGURINE_TITLE,Terracotta votive figurine,Терракотовая вотивная статуэтка
 D_VOTIVE_FIGURINE_DESCRIPTION,"A small seated goddess of moulded terracotta, with traces of white slip. Several like her stand on the ledge, left by worshippers.","Небольшая сидящая богиня из терракоты, оттиснутой в форме, со следами белой обмазки. Рядом на полке стоят ещё несколько таких — их оставили молящиеся."
 D_VOTIVE_FIGURINE_HISTORY,"Mould-made terracotta figurines were among the most common offerings in Greek sanctuaries. In the Bosporan cities, seated and standing goddesses, usually identified as Demeter, Kore or Aphrodite, are found in large numbers in sanctuaries and houses. Panticapaeum was founded by Miletus around 600 BCE, and the healer god Apollo Ietros was one of its leading cults.","Терракотовые статуэтки, сделанные в формах, были одними из самых распространённых приношений в греческих святилищах. В боспорских городах сидящих и стоящих богинь — обычно их считают Деметрой, Корой или Афродитой — во множестве находят в святилищах и домах. Пантикапей был основан Милетом около 600 г. до н. э., а бог-целитель Аполлон Иетрос был одним из главных его культов."
-D_VOTIVE_FIGURINE_NARRATIVE,This small precinct is the game's invention: a shrine kept by the city's potters. The figurine was left by a woman whose son sailed for Athens with the grain ships.,"Это небольшое святилище придумано для игры: его содержат городские гончары. Статуэтку оставила женщина, чей сын ушёл в Афины с хлебными кораблями."
+D_VOTIVE_FIGURINE_NARRATIVE,"This sanctuary of Hecate, kept by the city's potters, is the game's invention. The figurine was left by a woman whose son sailed for Athens with the grain ships.","Это святилище Гекаты, которое содержат городские гончары, придумано для игры. Статуэтку оставила женщина, чей сын ушёл в Афины с хлебными кораблями."
 UI_LIGHT_LAMP,[E] Light the lamp,[E] Зажечь светильник
 UI_LIGHT_TORCH,[E] Light the torch,[E] Зажечь факел
 UI_LAMPS,LAMPS  %d / %d,СВЕТИЛЬНИКИ  %d / %d
@@ -63,7 +63,7 @@ NPC_POTTER_4,"The boy turns, I shape. When the kiln is full we fire it all night
 D_MOULD_FIGURINE_TITLE,Mould for a terracotta figurine,Форма для терракотовой статуэтки
 D_MOULD_FIGURINE_DESCRIPTION,"A two-piece clay mould, opened: the front half holds the hollow of a seated goddess, the back half lies beside it. A fresh figurine, still soft, waits to dry.","Двусоставная глиняная форма, раскрытая: в передней половине — углубление в виде сидящей богини, задняя лежит рядом. Рядом сохнет свежая, ещё мягкая статуэтка."
 D_MOULD_FIGURINE_HISTORY,"Greek terracotta figurines were mass-produced by pressing clay into moulds, often made from an existing figure, so one model could be copied many times. Moulds and locally made figurines are known from Panticapaeum and other Bosporan cities. Corinthian votive plaques and Attic vase paintings show the potter's wheel turned by hand by an assistant while the potter shapes the clay.","Греческие терракотовые статуэтки делали массово: глину вдавливали в формы, часто снятые с готовой фигурки, так что один образец можно было повторять много раз. Формы и статуэтки местного производства известны из Пантикапея и других боспорских городов. На коринфских вотивных табличках и аттических вазах гончарный круг вращает рукой помощник, пока мастер формует глину."
-D_MOULD_FIGURINE_NARRATIVE,Kallias and his workshop are the game's invention. He keeps this mould for the goddess of the little shrine on the terrace.,Каллий и его мастерская придуманы для игры. Эту форму он хранит для богини маленького святилища на террасе.
+D_MOULD_FIGURINE_NARRATIVE,Kallias and his workshop are the game's invention. He keeps this mould for Hecate's little sanctuary on the terrace.,Каллий и его мастерская придуманы для игры. Эту форму он хранит для маленького святилища Гекаты на террасе.
 NPC_FISHER_NAME,Glaukos the fisherman,Главк-рыбак
 NPC_FISHER_1,"Mind the net, it's still wet. Glaukos. If you came for fish, you're late: the catch went to the salters at dawn.","Осторожно, сеть ещё мокрая. Я Главк. Если за рыбой — опоздал: улов на рассвете ушёл засольщикам."
 NPC_FISHER_2,"In spring the shoals come through the strait into the Maeotis, and then every boat in the city is on the water, day and night.","Весной косяки идут через пролив в Меотиду, и тогда все лодки города на воде — днём и ночью."
@@ -85,3 +85,4 @@ D_MOULD_FIGURINE_HINT,"In the potter's workshop, in the south-west corner of the
 D_NET_SINKERS_HINT,"On the beach below the agora: go out through the gap in the east parapet, look by the fisherman.",На пляже под агорой: выйдите через проём в восточном парапете и ищите у рыбака.
 D_VOTIVE_FIGURINE_HINT,Through the gateway in the north-east corner of the agora and up the stair: on the votive shelf of the sanctuary.,Через ворота в северо-восточном углу агоры и вверх по лестнице: на вотивной полке святилища.
 UI_START,START,НАЧАТЬ
+NPC_PILGRIM_NAME,a sleeping pilgrim,спящий паломник
