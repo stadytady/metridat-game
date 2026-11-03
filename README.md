@@ -130,7 +130,7 @@ tools/export.sh windows linux web     # нужны export templates 4.5.1 (tools
 tools/package.sh v0.0.1               # пакеты для игроков в dist/ (как в релизе)
 tools/smoke.sh                        # распаковать пакеты и пройти игру в каждом (Windows — под Wine)
 tools/site.sh                         # сайт для Pages в build/site (лендинг + трейлер + web-сборка в play/)
-git tag v0.1.0 && git push origin v0.1.0   # релиз: release.yml собирает и публикует GitHub Release
+git tag v0.0.1 && git push origin v0.0.1   # релиз (или Actions → release → Run workflow с тегом: тег создастся сам)
 ```
 
 - **Unit-тесты.** Нормали MeshKit смотрят наружу (с `cull_back` вывернутый треугольник становится дырой). Мощение не протыкается рельефом. Улица проходима для контроллера. Шаг через бордюр 0,3 м работает, а стену 0,6 м перешагнуть нельзя. Гравитация. У каждой находки заполнены все поля, есть сцена, история не совпадает с вымыслом.
