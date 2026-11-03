@@ -29,7 +29,7 @@ var night := false
 
 var _atm: Node
 var _howl: AudioStreamPlayer3D
-var _howl_in := 8.0
+var _howl_in := 25.0  # the first one soon after dark, then rarely
 var _rng := RandomNumberGenerator.new()
 var _t := 0.0
 var _night_parts: Array[Node3D] = []
@@ -181,4 +181,4 @@ func _process(delta: float) -> void:
 		_howl.pitch_scale = _rng.randf_range(0.85, 1.0)
 		_howl.play()
 		howls += 1
-		_howl_in = _rng.randf_range(20.0, 40.0)
+		_howl_in = _rng.randf_range(180.0, 300.0)
