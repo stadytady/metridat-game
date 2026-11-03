@@ -13,7 +13,7 @@ func _physics_process(_delta: float) -> void:
 	if hit != current:
 		current = hit
 		target_changed.emit(hit)
-	if current and not Game.ui_blocking and Input.is_action_just_pressed(&"interact"):
+	if current and Game.can_interact_now() and Input.is_action_just_pressed(&"interact"):
 		current.interact()
 
 

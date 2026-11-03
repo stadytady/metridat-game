@@ -103,7 +103,7 @@ func open() -> void:
 func close(hand_back: bool = true) -> void:
 	_panel.visible = false
 	Game.ui_blocking = false
-	Game.ui_closed_frame = Engine.get_process_frames()
+	Game.mark_ui_closed()
 	if hand_back:
 		Game.inspect_closed.emit()
 

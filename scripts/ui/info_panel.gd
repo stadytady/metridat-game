@@ -108,7 +108,7 @@ func close() -> void:
 	_panel.visible = false
 	viewer.set_active(false)
 	Game.ui_blocking = false
-	Game.ui_closed_frame = Engine.get_process_frames()
+	Game.mark_ui_closed()
 	Game.inspect_closed.emit()
 
 

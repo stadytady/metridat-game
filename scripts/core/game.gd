@@ -32,6 +32,11 @@ var talked := {}
 var ui_blocking := false
 ## Frame a UI layer closed on: the same Esc must not reopen another layer.
 var ui_closed_frame := -1
+## Time a UI layer closed: E is ignored for REARM_MS after it, or the press
+## that closed a panel (or the next one right after) opens the find again
+## and the player gets stuck on it.
+var ui_closed_msec := -100000
+const REARM_MS := 400
 
 
 func _ready() -> void:
@@ -129,3 +134,14 @@ func save_settings() -> void:
 	if err != OK:
 		push_warning("settings not saved: %s" % error_string(err))
 	settings_changed.emit()
+
+
+## Every panel calls this when it closes.
+func mark_ui_closed() -> void:
+	ui_closed_frame = Engine.get_process_frames()
+	ui_closed_msec = Time.get_ticks_msec()
+
+
+## E may act on the world again: no panel open and none closed just now.
+func can_interact_now() -> bool:
+	return not ui_blocking and Time.get_ticks_msec() - ui_closed_msec >= REARM_MS
