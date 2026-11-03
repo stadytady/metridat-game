@@ -5,9 +5,9 @@
 [resource]
 script = ExtResource("1_d")
 id = &"grain_pithos"
-title = "Grain jar and sacks of wheat"
-location = "The Agora"
-description = "A large storage jar of coarse clay, with sacks of hard wheat stacked beside it, waiting to go down to the harbour."
-history = "Grain was the great export of the Bosporus. The Athenian orator Demosthenes (Against Leptines, 355/4 BCE) says that about 400,000 medimnoi of grain a year came to Athens from the Bosporus. He also says that Leukon I gave Athenian merchants first right of loading and freedom from export duty. Athens honoured Leukon and later his sons in return."
+title = "D_GRAIN_PITHOS_TITLE"
+location = "LOC_AGORA"
+description = "D_GRAIN_PITHOS_DESCRIPTION"
+history = "D_GRAIN_PITHOS_HISTORY"
 sources = "Demosthenes 20 (Against Leptines) 29-40; IG II2 212 (Athenian decree for Spartokos II and Pairisades I, 347/6 BCE)."
-narrative = "A ship from Piraeus is late. The sacks wait under the awning while the merchant curses the north wind and counts them again."
+narrative = "D_GRAIN_PITHOS_NARRATIVE"

@@ -1,6 +1,6 @@
 extends Node
 ## Automation, started by user args after "--":
-##   --shots [--out=DIR] [--only=a,b]   save a PNG per viewpoint of World.viewpoints()
+##   --shots [--out=DIR] [--only=a,b] [--lang=ru]   save a PNG per viewpoint of World.viewpoints()
 ##                                      (the final composited frame: world + post + UI)
 ##   --walkthrough                       a bot walks the whole route with real physics,
 ##                                      inspects every discovery, exercises pause; exit 1 on failure
@@ -16,6 +16,10 @@ func _ready() -> void:
 			_out = a.substr(6)
 		elif a.begins_with("--only="):
 			_only = a.substr(7).split(",")
+		elif a.begins_with("--lang="):
+			# Not Game.set_language(): automation must not overwrite saved settings.
+			Game.language = a.substr(7)
+			TranslationServer.set_locale(Game.language)
 	if "--shots" in OS.get_cmdline_user_args():
 		_shots.call_deferred()
 	elif "--walkthrough" in OS.get_cmdline_user_args():
@@ -159,6 +163,7 @@ func _walkthrough() -> void:
 		_fail.append("found %d of %d discoveries" % [Game.found_count(), Game.total()])
 	_check_audio(player)
 	await _check_pause()
+	await _check_language()
 	print("walkthrough: found %d/%d, end at %s" % [Game.found_count(), Game.total(), player.global_position])
 	for f in _fail:
 		print("FAIL ", f)
@@ -221,6 +226,26 @@ func _inspect(player: CharacterBody3D, items: Dictionary, id: String) -> void:
 	print("inspected %s (%d/%d)" % [id, Game.found_count(), Game.total()])
 	info.close()
 	await _frames(3)
+
+
+## Switching language live re-renders the open info panel and the HUD.
+func _check_language() -> void:
+	var info: Node = _main().get_node("InfoPanel")
+	var hud: Node = _main().get_node("HUD")
+	var d: Discovery = Game.registry.values()[0]
+	info._on_discovered(d, false)
+	for lang: String in ["ru", "en"]:
+		TranslationServer.set_locale(lang)
+		await _frames(2)
+		var title: String = info._title.text
+		var want: String = load("res://data/i18n/strings.%s.translation" % lang).get_message(d.title)
+		if title != want:
+			_fail.append("info panel title in %s is %s, want %s" % [lang, title, want])
+		var counter: String = hud._counter.text
+		if (lang == "ru") != counter.begins_with("НАХОДКИ"):
+			_fail.append("HUD counter not re-rendered in %s: %s" % [lang, counter])
+	info.close()
+	print("language: live switch en<->ru ok" if _fail.is_empty() else "language: FAILED")
 
 
 func _check_audio(player: CharacterBody3D) -> void:

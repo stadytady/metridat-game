@@ -5,9 +5,9 @@
 [resource]
 script = ExtResource("1_d")
 id = &"coin_stater"
-title = "Gold stater of Panticapaeum"
-location = "The Agora"
-description = "A heavy gold coin. One side shows the bearded head of a satyr. The other shows a horned griffin standing on an ear of wheat, holding a spear in its jaws, above the letters PAN."
-history = "Panticapaeum minted coins from the late 6th century BCE. In the second half of the 4th century BCE it struck gold staters with a satyr's head, often read as Pan in a pun on the city's name, and a griffin with a spear above an ear of grain, inscribed PAN. They are among the best-known Greek coins of the Black Sea."
+title = "D_COIN_STATER_TITLE"
+location = "LOC_AGORA"
+description = "D_COIN_STATER_DESCRIPTION"
+history = "D_COIN_STATER_HISTORY"
 sources = "G. K. Jenkins, Ancient Greek Coins (1972); C. M. Kraay, Archaic and Classical Greek Coins (1976)."
-narrative = "A buyer left it on the stall and did not wait for change. The merchant says it is far too much money for one jar of fish sauce, and keeps it anyway."
+narrative = "D_COIN_STATER_NARRATIVE"

@@ -5,9 +5,9 @@
 [resource]
 script = ExtResource("1_d")
 id = &"amphora_stamped"
-title = "Stamped transport amphora"
-location = "Street of the Jars"
-description = "A wine amphora with a pointed toe, so it could be packed upright in a ship's hold or pushed into sand. A small stamp is pressed into one handle."
-history = "Wine and olive oil came to the Bosporus in amphorae from Aegean and Black Sea centres such as Thasos, Chios, Heraclea Pontica and Sinope. Several of these cities stamped amphora handles with the names of officials. The stamps let archaeologists date the jars and trace trade, and thousands of stamped handles have been found at Panticapaeum and other Bosporan sites."
+title = "D_AMPHORA_STAMPED_TITLE"
+location = "LOC_STREET"
+description = "D_AMPHORA_STAMPED_DESCRIPTION"
+history = "D_AMPHORA_STAMPED_HISTORY"
 sources = "V. F. Gajdukevic, Das Bosporanische Reich (1971); Y. Garlan, Amphores et timbres amphoriques grecs (2000)."
-narrative = "The courtyard belongs to a wine dealer the game calls Phormion. He keeps the empty jars and swears that a Heraclean stamp means honest wine."
+narrative = "D_AMPHORA_STAMPED_NARRATIVE"

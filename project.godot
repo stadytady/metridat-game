@@ -35,6 +35,11 @@ theme/default_font_antialiasing=0
 theme/default_font_hinting=2
 theme/default_font_subpixel_positioning=0
 
+[internationalization]
+
+locale/translations=PackedStringArray("res://data/i18n/strings.en.translation", "res://data/i18n/strings.ru.translation")
+locale/fallback="en"
+
 [physics]
 
 3d/physics_engine="Jolt Physics"
