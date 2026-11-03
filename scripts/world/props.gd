@@ -5,7 +5,7 @@ extends RefCounted
 
 ## Baked to GLB. EXTRA kinds are small one-off models built at runtime.
 const MODELS := ["amphora", "pithos", "krater", "column_doric", "olive_tree", "cypress", "ship", "tripod", "figurine"]
-const EXTRA := ["coins", "sherds", "stele", "grain", "votive", "lampstand", "torch_post", "mould", "boat", "sinkers", "hekataion"]
+const EXTRA := ["coins", "sherds", "stele", "grain", "votive", "lampstand", "torch_post", "mould", "boat", "sinkers", "hekataion", "mirror"]
 
 
 static func build(name: String) -> MeshKit:
@@ -49,6 +49,8 @@ static func build(name: String) -> MeshKit:
 			sinkers(kit)
 		"hekataion":
 			hekataion(kit)
+		"mirror":
+			mirror(kit)
 		"lampstand":
 			lampstand(kit)
 		"torch_post":
@@ -376,6 +378,20 @@ static func hekataion(kit: MeshKit) -> void:
 		kit.box("bronze", Vector3(0.1, 1.33, z + 0.17), Vector3(0.04, 0.42, 0.04), [])
 		kit.box("fire", Vector3(0.1, 1.57, z + 0.17), Vector3(0.07, 0.08, 0.07), [])
 	kit.xform = Transform3D.IDENTITY
+
+
+## Greek bronze hand mirror lying on its back: a polished disc with a raised
+## rim and a turned handle ending in a knob. Origin under the disc's centre.
+static func mirror(kit: MeshKit) -> void:
+	# disc: back (bronze, greened) and polished face
+	kit.lathe("bronze", PackedVector2Array([Vector2(0.0, 0.0), Vector2(0.11, 0.004), Vector2(0.13, 0.012), Vector2(0.13, 0.02)]), 12,
+			Vector3.ZERO, 1.0, true, "gold", true)
+	kit.lathe("bronze", PackedVector2Array([Vector2(0.13, 0.02), Vector2(0.135, 0.026), Vector2(0.125, 0.026)]), 12)
+	# handle: a tang with a moulded ring, a shaft and a knob, lying flat
+	kit.box("bronze", Vector3(0, 0.012, 0.15), Vector3(0.05, 0.02, 0.05), [])
+	kit.box("bronze", Vector3(0, 0.014, 0.19), Vector3(0.035, 0.024, 0.04), [])
+	kit.box("bronze", Vector3(0, 0.012, 0.25), Vector3(0.026, 0.02, 0.09), [])
+	kit.box("bronze", Vector3(0, 0.014, 0.305), Vector3(0.04, 0.026, 0.03), [])
 
 
 ## Bronze lampstand with a clay oil lamp on top (flame at FLAME_Y["lampstand"]).

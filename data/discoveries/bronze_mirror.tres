@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="Discovery" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/interaction/discovery.gd" id="1_d"]
+[ext_resource type="PackedScene" path="res://scenes/interactables/models/mirror.tscn" id="2_m"]
+
+[resource]
+script = ExtResource("1_d")
+id = &"bronze_mirror"
+title = "D_BRONZE_MIRROR_TITLE"
+location = "LOC_DREAM"
+description = "D_BRONZE_MIRROR_DESCRIPTION"
+history = "D_BRONZE_MIRROR_HISTORY"
+sources = "L. O. K. Congdon, Caryatid Mirrors of Ancient Greece (1981); R. Rolle, The World of the Scythians (1989); R. A. Higgins, Greek and Roman Jewellery (2nd ed., 1980)."
+narrative = "D_BRONZE_MIRROR_NARRATIVE"
+hint = "D_BRONZE_MIRROR_HINT"
+model = ExtResource("2_m")
+epilogue = true

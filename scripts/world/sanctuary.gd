@@ -142,6 +142,11 @@ func _abaton(kit: MeshKit, x0: float, y: float) -> void:
 	kit.quad("wood", b, a, d, c)
 	for z: float in [z0 + 0.9, (z0 + z1) / 2.0, z1 - 0.9]:
 		kit.box("fleece", Vector3((xb + xf) / 2.0, y + 0.03, z), Vector3(0.85, 0.06, 1.7), ["bottom"])
+	# the free fleece at the south end is the player's
+	var spot := SleepSpot.new()
+	spot.name = "SleepSpot"
+	spot.position = Vector3((xb + xf) / 2.0, y, z1 - 0.9)
+	add_child(spot)
 
 
 func _sleeper(x0: float, y: float) -> void:

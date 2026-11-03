@@ -47,6 +47,8 @@ static func viewpoints() -> Dictionary:
 		"fishing": [Vector3(61.5, Topo.terrain(61.5, 13.2) + 1.6, 13.2), Vector3(67.5, 1.2, 15.2)],
 		"chickens": [Vector3(12.2, Topo.AGORA_H + 1.3, 3.2), Vector3(15.4, Topo.AGORA_H + 0.2, 5.8)],
 		"sacred_way": [Vector3(29.0, Topo.AGORA_H + 1.6, 3.5), Vector3(35.5, 7.2, -12.0)],
+		"dream": [Vector3(0, 61.6, 2601), Vector3(0, 61.2, 2620)],
+		"dream_mound": [Vector3(1.0, 61.7, 2668), Vector3(0, 61.5, 2680)],
 		"sanctuary": [Vector3(40, Topo.SANCT_H + 1.6, -22), Vector3(50, 10, -31)],
 		"surf": [Vector3(Topo.waterline_x(12) - 4.0, Topo.terrain(Topo.waterline_x(12) - 4.0, 12) + 1.6, 12),
 				Vector3(Topo.waterline_x(12) + 40.0, 0.0, -18)],

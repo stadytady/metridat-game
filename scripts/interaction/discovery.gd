@@ -17,3 +17,6 @@ extends Resource
 ## The find itself: placed in the world by its Inspectable and shown large
 ## in the info panel's viewer.
 @export var model: PackedScene
+## A find of the epilogue (the dream): not counted in the city's finds, does
+## not move the evening on, shown in the journal only once found.
+@export var epilogue := false

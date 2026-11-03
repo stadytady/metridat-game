@@ -27,3 +27,16 @@ func test_target_follows_finds() -> void:
 	check(DayCycle.target_for(0, 6) == 0.0, "start in the afternoon")
 	check(DayCycle.target_for(6, 6) == 1.0, "all finds bring the night")
 	check(DayCycle.target_for(3, 6) > DayCycle.target_for(2, 6), "each find moves the evening on")
+
+
+## Past night lies the dream: fog close around, the moon brighter than at
+## night, and no hour beyond it.
+func test_dream_key() -> void:
+	var night := DayCycle.sample(1.0)
+	var dream := DayCycle.sample(DayCycle.DREAM)
+	check(dream.fog_end < night.fog_end / 5.0, "dream fog must close in: %.0f vs %.0f" % [dream.fog_end, night.fog_end])
+	check(dream.fog_begin < night.fog_begin, "dream fog starts nearer")
+	check(dream.moon_energy > night.moon_energy, "the dream's moon is brighter")
+	check(dream.sun_energy == 0.0, "no sun in the dream")
+	check(DayCycle.sample(DayCycle.DREAM + 1.0).fog_end == dream.fog_end, "nothing past the dream")
+	check(DayCycle.sample(0.5).fog_end == night.fog_end, "the waking day keeps its far fog")

@@ -27,6 +27,10 @@ signal lamp_lit(lit: int, total: int)
 signal dialogue_requested(npc: Node)
 ## npc_id -> true once the whole conversation was heard.
 var talked := {}
+## True from lying down in the abaton until waking: the hour is DayCycle.DREAM.
+var dreaming := false
+signal dream_requested
+signal dream_changed(on: bool)
 
 ## True while the info panel or pause menu owns the input.
 var ui_blocking := false
@@ -76,6 +80,8 @@ func _setup_input() -> void:
 func time_target() -> float:
 	if time_override >= 0.0:
 		return time_override
+	if dreaming:
+		return DayCycle.DREAM
 	return DayCycle.target_for(found_count(), total())
 
 
@@ -88,12 +94,13 @@ func register(d: Discovery) -> void:
 	registry[d.id] = d
 
 
+## The city's finds; the epilogue's do not count.
 func total() -> int:
-	return registry.size()
+	return registry.values().filter(func(d: Discovery) -> bool: return not d.epilogue).size()
 
 
 func found_count() -> int:
-	return found.size()
+	return found.keys().filter(func(id: StringName) -> bool: return not registry[id].epilogue).size()
 
 
 func mark_found(d: Discovery) -> void:

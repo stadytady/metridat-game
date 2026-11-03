@@ -62,6 +62,8 @@ func _shots() -> void:
 		await _ui_shots(player)
 	if _only.is_empty() or "finds" in _only:
 		await _find_shots()
+	if _only.is_empty() or "end" in _only:
+		await _end_shot()
 	_report_perf()
 	get_tree().quit()
 
@@ -110,10 +112,21 @@ func _ui_shots(player: CharacterBody3D) -> void:
 	_main().get_node("PauseMenu").close()
 
 
+## THE END over black (the dream's last screen), for a look at it.
+func _end_shot() -> void:
+	var end: CanvasLayer = load("res://scripts/ui/end_screen.gd").new()
+	_main().add_child(end)
+	end.play()
+	end.skip_to_keys()
+	await _frames(6)
+	_save("ui_end")
+	end.queue_free()
+
+
 ## The info panel with its viewer for every find, to look at each model large.
 func _find_shots() -> void:
 	var info: Node = _main().get_node("InfoPanel")
-	for d: Discovery in preload("res://scripts/ui/journal_panel.gd").ordered(Game.registry):
+	for d: Discovery in Game.registry.values():  # all of them, the dream's too
 		info.show_discovery(d)
 		await _frames(12)
 		_save("find_%s" % d.id)
@@ -275,6 +288,7 @@ func _walkthrough() -> void:
 	_check_night()
 	await _check_journal(0)
 	await _check_journal_view()
+	await _check_dream(player)
 	_check_audio(player)
 	await _check_pause()
 	await _check_language()
@@ -415,6 +429,88 @@ func _check_journal(expect_hints: int) -> void:
 	j.close()
 	await _frames(2)
 	print("journal: %d rows, %d hints" % [c.x, c.y])
+
+
+## Night in Hecate's sanctuary: lie down on the fleece, walk the dream path
+## past the figures (each must vanish), find the mirror on the altar before
+## the mound, see THE END, wake in the abaton.
+func _check_dream(player: CharacterBody3D) -> void:
+	var dream: Node = _main().world.get_node("Dream")
+	var spot: SleepSpot = _main().world.find_child("SleepSpot", true, false)
+	if spot == null:
+		_fail.append("no sleeping place in the abaton")
+		return
+	player.bot_move = Vector2.ZERO
+	player.global_position = spot.global_position + Vector3(1.4, 0.05, 0.0)
+	player.look_at_point(spot.global_position + Vector3(0, 0.05, 0))
+	await _frames(4)
+	if spot.get_prompt() != tr("UI_SLEEP"):
+		_fail.append("fleece does not offer sleep with every lamp lit: %s" % spot.get_prompt())
+	var abaton := player.global_position
+	if not player.interactor.try_interact():
+		_fail.append("ray does not hit the fleece")
+		return
+	await get_tree().create_timer(3.0).timeout
+	var env: Environment = _main().world.get_node("Atmosphere").env
+	if not Game.dreaming or player.global_position.distance_to(dream.ORIGIN) > 10.0:
+		_fail.append("did not enter the dream (dreaming %s, at %s)" % [Game.dreaming, player.global_position])
+		return
+	if env.fog_depth_end > 80.0:
+		_fail.append("dream fog not thick: ends at %.0f m" % env.fog_depth_end)
+	var walked := true
+	for z: float in [8.0, 16.0, 24.0, 32.0, 40.0, 48.0, 56.0, 64.0, 71.0, 74.4]:
+		var o: Vector3 = dream.ORIGIN
+		if not await _walk_to(player, Vector2(o.x + dream.path_x(z), o.z + z)):
+			walked = false
+			break
+	player.bot_move = Vector2.ZERO
+	if not walked:
+		return
+	if dream.vanished != dream.FIGURES_Z.size():
+		_fail.append("figures vanished: %d of %d" % [dream.vanished, dream.FIGURES_Z.size()])
+	var mirror: Node3D = _inspectables().get("bronze_mirror")
+	player.look_at_point(mirror.global_position + Vector3(0, 0.05, 0))
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	if not player.interactor.try_interact():
+		_fail.append("ray does not hit the mirror from %s" % player.global_position)
+		return
+	await _frames(3)
+	var info: Node = _main().get_node("InfoPanel")
+	if not info.is_open() or not Game.found.has(&"bronze_mirror"):
+		_fail.append("mirror panel did not open")
+		return
+	_check_viewer(info, "bronze_mirror")
+	if Game.found_count() != Game.total():
+		_fail.append("the mirror changed the city's count: %d/%d" % [Game.found_count(), Game.total()])
+	info.close()
+	var end: Node = null
+	for i in 60:
+		await get_tree().create_timer(0.1).timeout
+		end = _main().get_node_or_null("EndScreen")
+		if end:
+			break
+	if end == null:
+		_fail.append("no THE END after the mirror")
+		return
+	await _frames(3)
+	end.skip_to_keys()
+	await _frames(2)
+	end.woke.emit()
+	await get_tree().create_timer(3.0).timeout
+	if Game.dreaming or player.global_position.distance_to(abaton) > 1.5:
+		_fail.append("did not wake in the abaton (dreaming %s, at %s)" % [Game.dreaming, player.global_position])
+	if env.fog_depth_end < 300.0:
+		_fail.append("night fog did not come back after waking: %.0f m" % env.fog_depth_end)
+	var j: Node = _main().get_node("JournalPanel")
+	j.open()
+	await _frames(2)
+	var rows: Vector2i = j.counts()
+	j.close()
+	await _frames(2)
+	if rows.x != Game.total() + 1:
+		_fail.append("journal does not list the mirror after the dream: %d rows" % rows.x)
+	print("dream: figures %d/%d, mirror found, woke in the abaton" % [dream.vanished, dream.FIGURES_Z.size()])
 
 
 ## The start screen holds the game until START, then hands it over.
