@@ -2,7 +2,7 @@
 # Installs Godot (and optionally export templates) with SHA-512 verification.
 #   GODOT_VERSION=4.5.1 tools/install-godot.sh [--templates]
 # Puts the binary at $GODOT_BIN_DIR/godot (default ~/.local/bin).
-# Templates: only Web (no threads) and Linux x86_64 are extracted, not the full 1.3 GB set.
+# Templates: only Windows x86_64 and Linux x86_64 are extracted from the 1.3 GB archive.
 set -euo pipefail
 
 ver="${GODOT_VERSION:?set GODOT_VERSION, e.g. 4.5.1}"
@@ -26,13 +26,13 @@ if ! "$bin_dir/godot" --version 2>/dev/null | grep -q "^${ver}.stable"; then
 fi
 "$bin_dir/godot" --headless --version
 
-if [[ "${1:-}" == "--templates" && ! -f "$tpl_dir/version.txt" ]]; then
+if [[ "${1:-}" == "--templates" && ! -f "$tpl_dir/windows_release_x86_64.exe" ]]; then
   tpz="Godot_v${ver}-stable_export_templates.tpz"
   fetch "$tpz" && verify "$tpz"
   mkdir -p "$tpl_dir"
   unzip -q -o -j "$work/$tpz" \
     'templates/version.txt' \
-    'templates/web_nothreads_*.zip' \
+    'templates/windows_*_x86_64*.exe' \
     'templates/linux_*.x86_64' \
     -d "$tpl_dir"
   ls -la "$tpl_dir"

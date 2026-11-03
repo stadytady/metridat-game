@@ -4,11 +4,16 @@ config_version=5
 
 [application]
 
-config/name="Metridat"
-config/description="Grid puzzle: every tile changes the colors of its pattern; make the whole board dark."
+config/name="Panticapaeum: Echoes of the Bosporus"
+config/description="First-person exploration of Panticapaeum, 4th century BCE. Vertical slice 0.1."
+config/version="0.1.0"
 run/main_scene="res://scenes/main.tscn"
-config/features=PackedStringArray("4.5", "GL Compatibility")
+config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
+
+[autoload]
+
+Game="*res://scripts/core/game.gd"
 
 [debug]
 
@@ -16,14 +21,44 @@ gdscript/warnings/integer_division=0
 
 [display]
 
-window/size/viewport_width=720
-window/size/viewport_height=960
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/size/window_width_override=1600
+window/size/window_height_override=900
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
-window/handheld/orientation=1
+window/vsync/vsync_mode=1
+
+[gui]
+
+theme/default_font_antialiasing=0
+theme/default_font_hinting=2
+theme/default_font_subpixel_positioning=0
+
+[physics]
+
+3d/physics_engine="Jolt Physics"
+common/physics_ticks_per_second=60
 
 [rendering]
 
-renderer/rendering_method="gl_compatibility"
-renderer/rendering_method.mobile="gl_compatibility"
-environment/defaults/default_clear_color=Color(0.078, 0.086, 0.102, 1)
+renderer/rendering_method="forward_plus"
+textures/canvas_textures/default_texture_filter=0
+textures/default_filters/anisotropic_filtering_level=0
+anti_aliasing/quality/msaa_3d=0
+anti_aliasing/quality/screen_space_aa=0
+lights_and_shadows/directional_shadow/size=2048
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality=0
+lights_and_shadows/positional_shadow/soft_shadow_filter_quality=0
+environment/defaults/default_clear_color=Color(0.85, 0.65, 0.45, 1)
+
+[shader_globals]
+
+psx_resolution={
+"type": "vec2",
+"value": Vector2(640, 360)
+}
+psx_affine={
+"type": "float",
+"value": 1.0
+}

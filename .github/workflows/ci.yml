@@ -19,14 +19,14 @@ env:
 jobs:
   test:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
       - name: Install Godot
         run: |
           tools/install-godot.sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - name: Tests and smoke run
+      - name: Unit tests and scripted walkthrough
         run: tools/test.sh
 
   export:
@@ -39,32 +39,47 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
-          key: godot-templates-${{ env.GODOT_VERSION }}-web-linux
+          key: godot-templates-${{ env.GODOT_VERSION }}-windows-linux
       - name: Install Godot and templates
         run: |
           tools/install-godot.sh --templates
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - name: Export
-        run: tools/export.sh Web Linux
+      - name: Export Windows and Linux
+        run: tools/export.sh windows linux
+      - name: Smoke-test the exported pack (Linux build, same resources)
+        run: |
+          out="$(build/linux/panticapaeum.x86_64 --headless --fixed-fps 60 -- --walkthrough 2>&1)"
+          echo "$out" | grep -E 'inspected|audio:|FAIL|WALKTHROUGH'
+          echo "$out" | grep -q "WALKTHROUGH PASS"
       - uses: actions/upload-artifact@v4
         with:
-          name: metridat-linux-x86_64
-          path: build/linux/metridat.x86_64
+          name: panticapaeum-windows-x86_64
+          path: build/windows/Panticapaeum.exe
           if-no-files-found: error
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          path: build/web
+          name: panticapaeum-linux-x86_64
+          path: build/linux/panticapaeum.x86_64
+          if-no-files-found: error
 
-  pages:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: export
+  screenshots:
+    needs: test
     runs-on: ubuntu-24.04
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+    timeout-minutes: 20
     steps:
-      - id: deploy
-        uses: actions/deploy-pages@v4
+      - uses: actions/checkout@v5
+      - name: Install Godot and software Vulkan
+        run: |
+          tools/install-godot.sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq mesa-vulkan-drivers xvfb
+      - name: Render viewpoints with Forward+ (lavapipe)
+        run: |
+          godot --headless --path . --import >/dev/null 2>&1 || true
+          tools/shots.sh build/shots | grep -E 'shot|perf'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: panticapaeum-screenshots
+          path: build/shots/*.png
+          if-no-files-found: error

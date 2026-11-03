@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="Discovery" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/interaction/discovery.gd" id="1_d"]
+
+[resource]
+script = ExtResource("1_d")
+id = &"sherd_kerch"
+title = "Fragment of a red-figure vase"
+location = "The Hill Above the Strait"
+description = "A palm-sized shard of black-glazed pottery. The figures were left in the colour of the clay and the background painted black around them. Part of a dancer's foot survives."
+history = "Athenian red-figure pottery reached Panticapaeum in large quantities. Late Attic red-figure vases of about 375-330 BCE are called the \"Kerch style\" because so many were found in the tombs of Kerch, the modern city on the site of Panticapaeum. Common subjects include women's scenes, Dionysos and Eros, and griffins fighting Arimasps, sometimes with added white and gilding."
+sources = "K. Schefold, Untersuchungen zu den Kertscher Vasen (1934); J. Boardman, Athenian Red Figure Vases: The Classical Period (1989)."
+narrative = "Someone dropped this cup up here long ago. Perhaps it was a lookout on the summit, watching the strait and drinking from a cup too fine for the job."

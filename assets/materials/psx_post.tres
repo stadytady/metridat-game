@@ -1,0 +1,10 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3]
+
+[ext_resource type="Shader" path="res://assets/shaders/psx_post.gdshader" id="1_s"]
+
+[resource]
+resource_name = "psx_post"
+shader = ExtResource("1_s")
+shader_parameter/color_levels = 31.0
+shader_parameter/dither_amount = 0.8
+shader_parameter/enabled = true

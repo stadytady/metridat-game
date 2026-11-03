@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="Discovery" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/interaction/discovery.gd" id="1_d"]
+
+[resource]
+script = ExtResource("1_d")
+id = &"votive_figurine"
+title = "Terracotta votive figurine"
+location = "Sanctuary on the Terrace"
+description = "A small seated goddess of moulded terracotta, with traces of white slip. Several like her stand on the ledge, left by worshippers."
+history = "Mould-made terracotta figurines were among the most common offerings in Greek sanctuaries. In the Bosporan cities, seated and standing goddesses, usually identified as Demeter, Kore or Aphrodite, are found in large numbers in sanctuaries and houses. Panticapaeum was founded by Miletus around 600 BCE, and the healer god Apollo Ietros was one of its leading cults."
+sources = "R. A. Higgins, Greek Terracottas (1967); J. G. F. Hind, \"Archaeology of the Greeks and barbarian peoples around the Black Sea\", Archaeological Reports 39 (1992-93)."
+narrative = "This small precinct is the game's invention: a shrine kept by the city's potters. The figurine was left by a woman whose son sailed for Athens with the grain ships."
