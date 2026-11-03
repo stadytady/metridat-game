@@ -149,7 +149,7 @@ func _fisherman() -> void:
 	var f: Npc = NPC.new()
 	f.npc_id = "fisher"
 	f.name_key = "NPC_FISHER_NAME"
-	f.lines = PackedStringArray(["NPC_FISHER_1", "NPC_FISHER_2", "NPC_FISHER_3", "NPC_FISHER_4"])
+	f.lines = PackedStringArray(["NPC_FISHER_1", "NPC_FISHER_2", "NPC_FISHER_3", "NPC_FISHER_4", "NPC_FISHER_5"])
 	f.pose = "mender"
 	f.body_mat = "chiton_dark"
 	f.position = Vector3(SEAT.x, ground(SEAT), SEAT.y)
