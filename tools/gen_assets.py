@@ -483,6 +483,35 @@ def sky_night(rng):
                  1.6, ((0.42, 0.01, "#1a2236"), (0.36, 0.008, "#151c30")), stars=420, moon=(140, 70, 9))
 
 
+def skin(rng):
+    s = 32
+    field = 0.55 + (vnoise(s, 4, rng) - 0.5) * 0.25
+    save("skin", ramp(field, ["#6e4630", "#8a5a3c", "#a2704c", "#b8865e"]))
+
+
+def chiton(rng):
+    s = 64
+    x = np.arange(s)
+    folds = 0.5 + 0.18 * np.sin(x / s * 2 * np.pi * 6 + vnoise(s, 4, rng)[0] * 3)
+    field = np.tile(folds, (s, 1)) + (fbm(s, rng, (4, 8)) - 0.5) * 0.25
+    rgb = ramp(field, ["#7a6a52", "#9a8a6c", "#b8a888", "#d0c2a2", "#e0d4b6"])
+    rgb[56:60, :] = hexc("#7c361c")  # woven border
+    save("chiton", rgb)
+
+
+def hair(rng):
+    s = 16
+    field = 0.5 + (vnoise(s, 4, rng) - 0.5) * 0.5
+    save("hair", ramp(field, ["#140e0a", "#22180f", "#33241a"]))
+
+
+def mud(rng):
+    s = 64
+    field = 0.5 + (fbm(s, rng, (4, 8, 16)) - 0.5) * 0.6
+    field[(np.arange(s)[:, None] % 11 == 0) & (np.ones((1, s)) > 0)] -= 0.2
+    save("mud", ramp(field, ["#4a3426", "#634634", "#7c5a42", "#946e52", "#aa8464"]))
+
+
 def dark(rng):
     s = 16
     save("dark", ramp(0.4 + vnoise(s, 4, rng) * 0.3, ["#140f0b", "#1f1813", "#2a211a"]))
@@ -528,6 +557,11 @@ MATERIALS = {
     "marker": ("psx_unlit", "white", "#e8b34a", (1.0, 1.0)),
     "fire": ("psx_unlit", "white", "#ffb347", (1.0, 1.0)),
     "flame": ("psx_unlit", "white", "#ffd27a", (1.0, 1.0)),
+    "skin": ("psx_lit", "skin", "#ffffff", (2.0, 2.0)),
+    "chiton": ("psx_lit", "chiton", "#ffffff", (1.0, 1.0)),
+    "chiton_dark": ("psx_lit", "chiton", "#a08a78", (1.0, 1.0)),
+    "hair": ("psx_lit", "hair", "#ffffff", (2.0, 2.0)),
+    "mud": ("psx_lit", "mud", "#ffffff", (0.5, 0.5)),
     "water": ("psx_water", "water", "#ffffff", (1.0, 1.0)),
 }
 
@@ -743,6 +777,10 @@ def main() -> None:
     # Separate generators: adding these must not change any existing asset.
     sky_dusk(np.random.default_rng(500))
     sky_night(np.random.default_rng(501))
+    skin(np.random.default_rng(502))
+    chiton(np.random.default_rng(503))
+    hair(np.random.default_rng(504))
+    mud(np.random.default_rng(505))
     print(f"textures: {len(TEXTURES)}, materials: {len(MATERIALS)}, audio: {len(list(AUD.glob('*.wav')))}")
 
 

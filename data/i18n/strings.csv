@@ -51,3 +51,16 @@ UI_LAMPS,LAMPS  %d / %d,СВЕТИЛЬНИКИ  %d / %d
 UI_DUSK_HINT,The light is going. Lamps stand along the way: press E to light them.,Темнеет. Вдоль пути стоят светильники — зажгите их клавишей E.
 UI_NIGHT_HINT,Night has fallen over the strait. Light the way back up to the hill.,Над проливом ночь. Осветите обратный путь к холму.
 UI_ALL_LIT,The way is lit. Panticapaeum sleeps.,Путь освещён. Пантикапей засыпает.
+UI_TALK,[E] Talk to %s,[E] Поговорить: %s
+UI_NPC_FICTION,Invented character: the words are fiction.,Вымышленный персонаж: слова — вымысел.
+UI_DIALOGUE_KEYS,[E] next   [ESC] leave,[E] дальше   [ESC] уйти
+NPC_POTTER_NAME,Kallias the potter,Каллий-гончар
+NPC_BOY_NAME,the boy at the wheel,мальчик у круга
+NPC_POTTER_1,"Mind the wet clay, friend. Kallias, potter, at your service.","Осторожно, глина сырая. Каллий, гончар, к твоим услугам."
+NPC_POTTER_2,"The fine painted cups come from Athens on the grain ships. We make what the city uses every day: jugs, cooking pots, roof tiles, lamps.","Тонкие расписные чаши везут из Афин на хлебных кораблях. А мы делаем то, чем город пользуется каждый день: кувшины, горшки, черепицу, светильники."
+NPC_POTTER_3,The little goddesses for the shrine? Pressed from moulds. Take a mould from one good figure and you can make a hundred.,Богинь для святилища? Их оттискивают в формах. Сними форму с одной хорошей статуэтки — и сделаешь сотню.
+NPC_POTTER_4,"The boy turns, I shape. When the kiln is full we fire it all night; you will see the glow from the sanctuary steps.","Мальчик крутит, я формую. Когда печь полна, обжигаем всю ночь — отсвет будет видно со ступеней святилища."
+D_MOULD_FIGURINE_TITLE,Mould for a terracotta figurine,Форма для терракотовой статуэтки
+D_MOULD_FIGURINE_DESCRIPTION,"A two-piece clay mould, opened: the front half holds the hollow of a seated goddess, the back half lies beside it. A fresh figurine, still soft, waits to dry.","Двусоставная глиняная форма, раскрытая: в передней половине — углубление в виде сидящей богини, задняя лежит рядом. Рядом сохнет свежая, ещё мягкая статуэтка."
+D_MOULD_FIGURINE_HISTORY,"Greek terracotta figurines were mass-produced by pressing clay into moulds, often made from an existing figure, so one model could be copied many times. Moulds and locally made figurines are known from Panticapaeum and other Bosporan cities. Corinthian votive plaques and Attic vase paintings show the potter's wheel turned by hand by an assistant while the potter shapes the clay.","Греческие терракотовые статуэтки делали массово: глину вдавливали в формы, часто снятые с готовой фигурки, так что один образец можно было повторять много раз. Формы и статуэтки местного производства известны из Пантикапея и других боспорских городов. На коринфских вотивных табличках и аттических вазах гончарный круг вращает рукой помощник, пока мастер формует глину."
+D_MOULD_FIGURINE_NARRATIVE,Kallias and his workshop are the game's invention. He keeps this mould for the goddess of the little shrine on the terrace.,Каллий и его мастерская придуманы для игры. Эту форму он хранит для богини маленького святилища на террасе.

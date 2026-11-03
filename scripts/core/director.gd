@@ -78,6 +78,17 @@ func _ui_shots(player: CharacterBody3D) -> void:
 	await _frames(6)
 	_save("ui_info")
 	_main().get_node("InfoPanel").close()
+	var potter: Npc = get_tree().get_nodes_in_group(&"npc").filter(func(n: Node) -> bool: return n.npc_id == "potter").front()
+	if potter:
+		player.global_position = Vector3(13.4, Topo.AGORA_H, 7.0)
+		player.look_at_point(potter.global_position + Vector3(0, 0.9, 0))
+		await _frames(6)
+		player.interactor.try_interact()
+		var dlg: Node = _main().get_node("DialoguePanel")
+		dlg.advance()
+		await _frames(6)
+		_save("ui_dialogue")
+		dlg.close()
 	_main().get_node("PauseMenu").open()
 	await _frames(6)
 	_save("ui_pause")
@@ -156,6 +167,16 @@ func _route() -> Array:
 	r.append("coin_stater")
 	r.append(Vector2(24.3, 5.7))
 	r.append("grain_pithos")
+	# potter's workshop in the south-west corner, around the stall
+	r.append(Vector2(22.0, 4.5))
+	r.append(Vector2(13.4, 4.8))
+	r.append(Vector2(13.4, 7.0))
+	r.append("talk:potter")
+	r.append(Vector2(11.6, 7.7))
+	r.append("mould_figurine")
+	r.append(Vector2(12.5, 4.5))
+	r.append(Vector2(20.0, 3.5))
+	r.append(Vector2(30.0, 3.0))
 	r.append(Vector2(34.0, -2.0))
 	r.append(Vector2(34.0, -9.8))
 	r.append(Vector2(Topo.SANCT_STAIR[1].x, Topo.SANCT_STAIR[1].z))
@@ -196,6 +217,8 @@ func _walkthrough() -> void:
 			var ok := await _walk_to(player, step)
 			if not ok:
 				break
+		elif String(step).begins_with("talk:"):
+			await _talk(player, String(step).substr(5))
 		else:
 			await _inspect(player, items, step)
 		min_y = minf(min_y, player.global_position.y)
@@ -272,6 +295,41 @@ func _inspect(player: CharacterBody3D, items: Dictionary, id: String) -> void:
 	print("inspected %s (%d/%d)" % [id, Game.found_count(), Game.total()])
 	info.close()
 	await _frames(3)
+
+
+## Talks to an NPC through the interactor ray and reads every line.
+func _talk(player: CharacterBody3D, npc_id: String) -> void:
+	player.bot_move = Vector2.ZERO
+	await _frames(5)
+	var npc: Npc = null
+	for n in get_tree().get_nodes_in_group(&"npc"):
+		if n.npc_id == npc_id:
+			npc = n
+	if npc == null:
+		_fail.append("no npc " + npc_id)
+		return
+	player.look_at_point(npc.global_position + Vector3(0, 0.9, 0))
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	if not player.interactor.try_interact():
+		_fail.append("ray does not hit npc %s from %s" % [npc_id, player.global_position])
+		return
+	await _frames(3)
+	var panel: Node = _main().get_node("DialoguePanel")
+	if not panel.is_open():
+		_fail.append("dialogue did not open for " + npc_id)
+		return
+	var shown := 0
+	while panel.is_open() and shown < 20:
+		shown += 1
+		var text: String = panel._line.text
+		if text.begins_with("NPC_"):
+			_fail.append("untranslated line %s" % text)
+		panel.advance()
+		await _frames(2)
+	if not Game.talked.get(npc_id, false) or shown != npc.lines.size():
+		_fail.append("talk with %s: %d of %d lines" % [npc_id, shown, npc.lines.size()])
+	print("talked to %s (%d lines)" % [npc_id, shown])
 
 
 ## Turns aside to any unlit lamp within reach, lights it through the
