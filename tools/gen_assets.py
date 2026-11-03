@@ -543,6 +543,16 @@ def sand(rng):
     save("sand", ramp(field, ["#7a6a4e", "#94826a", "#ab9878", "#c0ac88", "#d2bf98", "#e2d2ac"]))
 
 
+def feather(rng):
+    # Rows of rounded feather tips, light; tinted per breed in MATERIALS.
+    s = 32
+    y, x = np.mgrid[0:s, 0:s]
+    row = y // 4
+    tip = ((x + row * 2) % 6 - 2.5) ** 2 / 6.0 + (y % 4) / 4.0
+    field = 0.75 - 0.35 * (tip > 1.0) + (vnoise(s, 4, rng) - 0.5) * 0.2
+    save("feather", ramp(field, ["#8a7e6c", "#b4aa96", "#d6ccb6", "#ece4d0"]))
+
+
 def dark(rng):
     s = 16
     save("dark", ramp(0.4 + vnoise(s, 4, rng) * 0.3, ["#140f0b", "#1f1813", "#2a211a"]))
@@ -595,6 +605,12 @@ MATERIALS = {
     "mud": ("psx_lit", "mud", "#ffffff", (0.5, 0.5)),
     "sand": ("psx_lit", "sand", "#ffffff", (0.25, 0.25)),
     "sand_wet": ("psx_lit", "sand", "#8f8476", (0.25, 0.25)),
+    "hen": ("psx_lit", "feather", "#c0864e", (1.0, 1.0)),
+    "hen_white": ("psx_lit", "feather", "#ffffff", (1.0, 1.0)),
+    "rooster": ("psx_lit", "feather", "#8a4a26", (1.0, 1.0)),
+    "rooster_tail": ("psx_lit", "feather", "#2c3a2e", (1.0, 1.0)),
+    "comb": ("psx_lit", "white", "#b42a1e", (1.0, 1.0)),
+    "beak": ("psx_lit", "white", "#d8a440", (1.0, 1.0)),
     "net": ("psx_cutout", "net", "#ffffff", (1.5, 1.5)),
     "fish": ("psx_lit", "fish", "#ffffff", (1.0, 1.0)),
     "water": ("psx_water", "water", "#ffffff", (1.0, 1.0)),
@@ -718,6 +734,33 @@ def gull(rng, idx):
     write_wav(f"gull_{idx}", norm(bandpass(out, 600, 5000), 0.5))
 
 
+def cluck(rng, idx):
+    # A hen's few low, nasal clucks.
+    out = np.zeros(int(SR * 0.9))
+    pos = 0
+    for _ in range(int(rng.integers(2, 5))):
+        ln = int(SR * rng.uniform(0.06, 0.1))
+        t = np.arange(ln) / SR
+        f = rng.uniform(380, 520) * (1 + 0.25 * np.exp(-t * 40))
+        ph = 2 * np.pi * np.cumsum(f) / SR
+        tone = np.sign(np.sin(ph)) * 0.4 + np.sin(2 * ph) * 0.5 + np.sin(3 * ph) * 0.3
+        tone *= np.minimum(1, t / 0.008) * np.exp(-t * 30)
+        out[pos:pos + ln] += tone
+        pos += ln + int(SR * rng.uniform(0.07, 0.16))
+    write_wav(f"cluck_{idx}", norm(bandpass(out, 300, 3500), 0.45))
+
+
+def squawk(rng):
+    # Alarm: a rising, rough cackle while scattering.
+    ln = int(SR * 0.7)
+    t = np.arange(ln) / SR
+    f = 700 + 500 * np.abs(np.sin(t * 2 * np.pi * 7))
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    tone = np.sin(ph) + 0.6 * np.sin(2 * ph) + 0.4 * rng.standard_normal(ln) * 0.5
+    tone *= np.minimum(1, t / 0.02) * np.exp(-t * 3.5) * (0.6 + 0.4 * np.sign(np.sin(t * 2 * np.pi * 9)))
+    write_wav("squawk", norm(bandpass(tone, 400, 4500), 0.5))
+
+
 def step(rng, idx, kind):
     n = int(SR * 0.18)
     t = np.arange(n) / SR
@@ -819,6 +862,10 @@ def main() -> None:
     net(np.random.default_rng(506))
     fish(np.random.default_rng(507))
     sand(np.random.default_rng(508))
+    feather(np.random.default_rng(509))
+    for i in range(3):
+        cluck(np.random.default_rng(510 + i), i)
+    squawk(np.random.default_rng(513))
     print(f"textures: {len(TEXTURES)}, materials: {len(MATERIALS)}, audio: {len(list(AUD.glob('*.wav')))}")
 
 

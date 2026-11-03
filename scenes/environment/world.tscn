@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/world.gd" id="1_world"]
 [ext_resource type="Script" path="res://scripts/world/atmosphere.gd" id="2_atm"]
@@ -16,6 +16,7 @@
 [ext_resource type="Script" path="res://scripts/world/lamps.gd" id="14_lamps"]
 [ext_resource type="Script" path="res://scripts/world/workshop.gd" id="15_workshop"]
 [ext_resource type="Script" path="res://scripts/world/fishing.gd" id="16_fishing"]
+[ext_resource type="Script" path="res://scripts/world/poultry.gd" id="17_poultry"]
 
 [node name="World" type="Node3D"]
 script = ExtResource("1_world")
@@ -52,6 +53,9 @@ script = ExtResource("12_ships")
 
 [node name="Workshop" type="Node3D" parent="."]
 script = ExtResource("15_workshop")
+
+[node name="Poultry" type="Node3D" parent="."]
+script = ExtResource("17_poultry")
 
 [node name="FishingCamp" type="Node3D" parent="."]
 script = ExtResource("16_fishing")

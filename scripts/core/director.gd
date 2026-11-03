@@ -172,6 +172,7 @@ func _route() -> Array:
 	r.append(Vector2(13.4, 4.8))
 	r.append(Vector2(13.4, 7.0))
 	r.append("talk:potter")
+	r.append("check:chickens")
 	r.append(Vector2(11.6, 7.7))
 	r.append("mould_figurine")
 	r.append(Vector2(12.5, 4.5))
@@ -229,6 +230,8 @@ func _walkthrough() -> void:
 				break
 		elif String(step).begins_with("talk:"):
 			await _talk(player, String(step).substr(5))
+		elif step == "check:chickens":
+			await _check_chickens(player)
 		else:
 			await _inspect(player, items, step)
 		min_y = minf(min_y, player.global_position.y)
@@ -340,6 +343,34 @@ func _talk(player: CharacterBody3D, npc_id: String) -> void:
 	if not Game.talked.get(npc_id, false) or shown != npc.lines.size():
 		_fail.append("talk with %s: %d of %d lines" % [npc_id, shown, npc.lines.size()])
 	print("talked to %s (%d lines)" % [npc_id, shown])
+
+
+## Steps up to the agora flock: the nearest chicken must scatter and stay home.
+func _check_chickens(player: CharacterBody3D) -> void:
+	var birds := get_tree().get_nodes_in_group(&"chicken")
+	if birds.size() < 4:
+		_fail.append("only %d chickens" % birds.size())
+		return
+	var back := player.global_position
+	var c: Chicken = null
+	for b: Chicken in birds:
+		if b.name.begins_with("agora") and (c == null or b.global_position.distance_to(back) < c.global_position.distance_to(back)):
+			c = b
+	player.bot_move = Vector2.ZERO
+	var before := c.fled
+	player.global_position = Vector3(c.global_position.x - 1.0, Topo.AGORA_H, c.global_position.z)
+	player.look_at_point(c.global_position)
+	var start := c.global_position
+	await _frames(60)
+	if c.fled == before:
+		_fail.append("chicken %s did not scatter" % c.name)
+	elif c.global_position.distance_to(start) < 0.3:
+		_fail.append("chicken %s scattered but did not move" % c.name)
+	if Vector2(c.global_position.x - c.home.x, c.global_position.z - c.home.z).length() > c.radius + 0.05:
+		_fail.append("chicken %s left home" % c.name)
+	print("chickens: %d, %s scattered %.2f m" % [birds.size(), c.name, c.global_position.distance_to(start)])
+	player.global_position = back
+	await _frames(5)
 
 
 ## Turns aside to any unlit lamp within reach, lights it through the
