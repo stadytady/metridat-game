@@ -116,12 +116,15 @@ static func cypress(kit: MeshKit) -> void:
 ## (open boats, the hold). Returns the sections [x, half-beam, bilge y, sheer y]
 ## for decks and fittings.
 static func hull(kit: MeshKit, length: float, beam: float, depth: float, sheer_mid: float, sheer_end: float,
-		n: int, low: String, high: String, inner: String = "") -> Array:
+		n: int, low: String, high: String, inner: String = "", rail: float = 0.0) -> Array:
 	var sec := []
 	for i in n:
 		var t := float(i) / (n - 1)
 		var e := absf(t * 2.0 - 1.0)  # 0 amidships, 1 at the ends
-		var w := beam * pow(maxf(sin(PI * clampf(t, 0.02, 0.98)), 0.0), 0.55)
+		# zero beam at the very ends: the planks close on the stem and stern posts
+		var w := beam * pow(maxf(sin(PI * t), 0.0), 0.55)
+		if w < 1e-3:
+			w = 0.0  # sin(PI) is not exactly 0: keep the bow edge shared by both sides
 		sec.append([lerpf(-length / 2.0, length / 2.0, t), w, depth * (0.55 + 0.25 * e), depth + sheer_mid + sheer_end * pow(e, 2.4)])
 	for i in n - 1:
 		var a: Array = sec[i]
@@ -133,18 +136,26 @@ static func hull(kit: MeshKit, length: float, beam: float, depth: float, sheer_m
 			var bb := Vector3(b[0], b[2], b[1] * 0.82 * s)
 			var ta := Vector3(a[0], a[3], a[1] * s)
 			var tb := Vector3(b[0], b[3], b[1] * s)
-			if s > 0:
-				kit.quad(low, ka, kb, bb, ba)
-				kit.quad(high, ba, bb, tb, ta)
-				if inner != "":
-					kit.quad(inner, kb, ka, ba, bb)
-					kit.quad(inner, bb, ba, ta, tb)
-			else:
-				kit.quad(low, kb, ka, ba, bb)
-				kit.quad(high, bb, ba, ta, tb)
-				if inner != "":
-					kit.quad(inner, ka, kb, bb, ba)
-					kit.quad(inner, ba, bb, tb, ta)
+			# Both sides and both skins split each quad on the same diagonal, the
+			# one leaving the zero-beam end section; the other diagonal would make
+			# a flat fin in the centre plane where the hull closes.
+			var outer_low := [ka, kb, bb, ba] if s > 0 else [ka, ba, bb, kb]
+			var outer_high := [ba, bb, tb, ta] if s > 0 else [ba, ta, tb, bb]
+			if b[0] > 0.0:  # bow half: start the cycle at b's keel
+				outer_low = [kb, bb, ba, ka] if s > 0 else [kb, ka, ba, bb]
+				outer_high = [bb, tb, ta, ba] if s > 0 else [bb, ba, ta, tb]
+			kit.quad(low, outer_low[0], outer_low[1], outer_low[2], outer_low[3])
+			kit.quad(high, outer_high[0], outer_high[1], outer_high[2], outer_high[3])
+			if inner != "":
+				# reversed winding: [a, d, c, b] keeps the same a-c diagonal
+				kit.quad(inner, outer_low[0], outer_low[3], outer_low[2], outer_low[1])
+				kit.quad(inner, outer_high[0], outer_high[3], outer_high[2], outer_high[1])
+	if rail > 0.0:  # gunwale: gives the sheer strake a visible thickness
+		for s: float in [1.0, -1.0]:
+			var pts := []
+			for a: Array in sec:
+				pts.append(Vector3(a[0], a[3], a[1] * s))
+			beam_chain(kit, high, pts, rail)
 	return sec
 
 
@@ -178,7 +189,7 @@ static func hull_width(sec: Array, x: float) -> Vector2:
 ## Keel at y = 0; it floats with the waterline at about y = 1.
 static func ship(kit: MeshKit) -> void:
 	var L := 16.0
-	var sec := hull(kit, L, 2.4, 1.3, 0.9, 1.3, 11, "dark", "hull", "wood")
+	var sec := hull(kit, L, 2.4, 1.3, 0.9, 1.3, 13, "dark", "hull", "wood", 0.16)
 	var deck := func(x0: float, x1: float, y: float) -> void:
 		var w0 := hull_width(sec, x0).x * 0.95
 		var w1 := hull_width(sec, x1).x * 0.95
@@ -313,7 +324,7 @@ static func mould(kit: MeshKit) -> void:
 ## Small open fishing boat, bow along +x, keel at y = 0: the ship's hull in
 ## small, open, with stem and stern posts, two thwarts and the oars shipped.
 static func boat(kit: MeshKit) -> void:
-	var sec := hull(kit, 4.6, 0.82, 0.42, 0.14, 0.32, 9, "hull", "wood", "wood")
+	var sec := hull(kit, 4.6, 0.82, 0.42, 0.14, 0.32, 11, "hull", "wood", "wood", 0.06)
 	var bow: Array = sec[-1]
 	var stern: Array = sec[0]
 	beam_chain(kit, "hull", [Vector3(bow[0] - 0.15, 0.0, 0), Vector3(bow[0] + 0.12, bow[3] * 0.6, 0), Vector3(bow[0] + 0.18, bow[3] + 0.15, 0)], 0.09)
