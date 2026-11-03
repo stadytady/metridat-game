@@ -1,0 +1,70 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  GODOT_VERSION: 4.5.1
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install Godot
+        run: |
+          tools/install-godot.sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Tests and smoke run
+        run: tools/test.sh
+
+  export:
+    needs: test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - name: Cache export templates
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
+          key: godot-templates-${{ env.GODOT_VERSION }}-web-linux
+      - name: Install Godot and templates
+        run: |
+          tools/install-godot.sh --templates
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Export
+        run: tools/export.sh Web Linux
+      - uses: actions/upload-artifact@v4
+        with:
+          name: metridat-linux-x86_64
+          path: build/linux/metridat.x86_64
+          if-no-files-found: error
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  pages:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: export
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
