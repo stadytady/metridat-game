@@ -7,6 +7,9 @@ const SHIPS := [
 	[Vector3(820, 0, -260), 70.0, 1.3],
 ]
 
+## The ship model has its keel at y = 0; sink it to its waterline.
+const WATERLINE := -1.0
+
 var _ships: Array[Node3D] = []
 var _t := 0.0
 
@@ -24,6 +27,6 @@ func _process(delta: float) -> void:
 	for i in _ships.size():
 		var n := _ships[i]
 		var base: Vector3 = SHIPS[i][0]
-		n.position.y = base.y + sin(_t * 0.7 + i) * 0.25
+		n.position.y = base.y + WATERLINE * float(SHIPS[i][2]) + sin(_t * 0.7 + i) * 0.25
 		n.rotation.z = sin(_t * 0.5 + i * 2.0) * 0.03
 		n.rotation.x = sin(_t * 0.6 + i) * 0.02

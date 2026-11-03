@@ -1,34 +1,56 @@
 extends Node
-## 10-second cinematic, rendered in-engine through the same PS1 pipeline.
+## 25-second cinematic, rendered in-engine through the same PS1 pipeline.
 ## Started by `-- --trailer`; record with Movie Maker (tools/trailer.sh):
 ## --write-movie + --fixed-fps make every frame exact, however slow the GPU.
 ##
-## Four shots. Each camera move is a Catmull-Rom spline through three points,
-## travelled at constant speed (eased only into the first and out of the last
-## shot), with a slow handheld drift. Cuts are dissolves: the last frame of the
-## outgoing shot fades out over the incoming one. Letterbox and titles live
-## inside the 640x360 viewport, so they get the same pixels and dither as the
-## world. Shot boundaries follow the score (the hit lands at 7.4 s).
+## Afternoon to night, as the game goes: the strait, the street, the potter's
+## yard, the fisherman at sunset, the way to the sanctuary at dusk, the lit
+## street and the hill at night. Each shot sets its own hour (the atmosphere
+## snaps to it) and, after dusk, the lamps are lit. Camera moves are
+## Catmull-Rom splines through three points at constant speed (eased only into
+## the first and out of the last shot) with a slow handheld drift. Cuts are
+## dissolves. Letterbox and titles live inside the 640x360 viewport. Shot
+## boundaries follow the score (night falls at 16.6 s, the hit lands at 19.6 s).
 
-const DURATION := 10.0
-const DISSOLVE := 0.45
+const DURATION := 25.0
+const DISSOLVE := 0.5
 const VIEW := Vector2(640, 360)
 const BAR := 46.0  # 2.39:1 inside 640x360
+const TITLE_AT := 21.6
+const FADE_OUT := [24.2, 24.8]
 
-## start, end, camera path, look-at path, fov from/to, caption
+## start, end, hour (0 afternoon .. 1 night), camera path, look-at path, fov from/to, caption
 const SHOTS := [
-	{"t": [0.0, 2.7], "fov": [40.0, 37.0], "caption": "The Cimmerian Bosporus, 4th century BCE",
+	{"t": [0.0, 3.2], "hour": 0.0, "fov": [40.0, 37.0], "caption": "The Cimmerian Bosporus, 4th century BCE",
 		"pos": [Vector3(236, 2.2, -60), Vector3(239, 2.6, -52), Vector3(243, 3.0, -46)],
 		"look": [Vector3(260, 4.5, -70), Vector3(260.5, 4.8, -70), Vector3(261, 5.0, -70)]},
-	{"t": [2.7, 5.1], "fov": [58.0, 56.0], "caption": "",
+	{"t": [3.2, 5.8], "hour": 0.08, "fov": [58.0, 56.0], "caption": "",
 		"pos": [Vector3(-2, 7.8, -0.6), Vector3(-9, 9.0, -0.9), Vector3(-16, 11.8, 0.2)],
 		"look": [Vector3(-30, 13.5, 1.5), Vector3(-45, 16.5, 0.5), Vector3(-60, 21.5, 1.0)]},
-	{"t": [5.1, 7.4], "fov": [50.0, 46.0], "caption": "",
-		"pos": [Vector3(41.5, 10.0, -18.8), Vector3(44.0, 10.1, -18.2), Vector3(47.0, 10.2, -18.6)],
-		"look": [Vector3(45.6, 9.8, -23.5), Vector3(45.9, 9.9, -24.0), Vector3(46.2, 10.0, -24.5)]},
-	{"t": [7.4, 10.0], "fov": [56.0, 60.0], "caption": "",
-		"pos": [Vector3(-89, 29.4, 0.4), Vector3(-85.5, 29.6, 0.1), Vector3(-81.0, 30.2, 0.0)],
-		"look": [Vector3(-20, 12, 0), Vector3(-5, 8, 0), Vector3(10, 5, 0)]},
+	# low over the agora paving into the potter's yard: the hens scatter
+	{"t": [5.8, 8.6], "hour": 0.2, "fov": [54.0, 50.0], "caption": "",
+		"pos": [Vector3(20.5, 5.55, 2.6), Vector3(18.4, 5.5, 3.5), Vector3(16.9, 5.6, 4.3)],
+		"look": [Vector3(15.0, 5.25, 5.6), Vector3(14.4, 5.45, 7.2), Vector3(13.6, 5.8, 9.2)]},
+	# arc around the wheel, the kiln smoking behind
+	{"t": [8.6, 11.2], "hour": 0.3, "fov": [42.0, 40.0], "caption": "",
+		"pos": [Vector3(11.6, 6.05, 6.2), Vector3(12.8, 6.0, 5.8), Vector3(14.2, 6.0, 6.1)],
+		"look": [Vector3(13.2, 5.9, 9.0), Vector3(13.4, 5.88, 9.0), Vector3(13.7, 5.88, 9.1)]},
+	# down the beach at sunset towards the fisherman and his boat
+	{"t": [11.2, 14.0], "hour": 0.62, "fov": [50.0, 46.0], "caption": "",
+		"pos": [Vector3(60.5, 4.6, 18.4), Vector3(62.2, 4.1, 17.6), Vector3(63.4, 3.8, 16.8)],
+		"look": [Vector3(65.6, 2.6, 14.8), Vector3(66.2, 2.4, 15.0), Vector3(67.2, 2.0, 15.6)]},
+	# dusk: across the agora to the gateway and up the stair to the altar fire
+	{"t": [14.0, 16.6], "hour": 0.8, "lamps": true, "fov": [52.0, 48.0], "caption": "",
+		"pos": [Vector3(29.0, 6.6, 3.5), Vector3(31.4, 6.8, -2.0), Vector3(33.0, 7.4, -6.2)],
+		"look": [Vector3(35.5, 7.4, -12.0), Vector3(37.0, 8.8, -15.5), Vector3(40.5, 10.6, -20.0)]},
+	# night: up the street between the lit lamps
+	{"t": [16.6, 19.6], "hour": 1.0, "lamps": true, "fov": [56.0, 54.0], "caption": "",
+		"pos": [Vector3(-6, 8.5, -0.8), Vector3(-13, 10.6, -0.4), Vector3(-20, 12.6, 0.6)],
+		"look": [Vector3(-35, 15.2, 1.2), Vector3(-50, 19.0, -0.5), Vector3(-65, 23.4, 1.0)]},
+	# night on the hill: between the columns, the city and the strait below
+	{"t": [19.6, 25.0], "hour": 1.0, "lamps": true, "fov": [56.0, 62.0], "caption": "",
+		"pos": [Vector3(-89, 30.0, 0.4), Vector3(-85.5, 30.2, 0.1), Vector3(-81.0, 30.6, 0.0)],
+		"look": [Vector3(-20, 18, 0), Vector3(-5, 14, 0), Vector3(10, 11, 0)]},
 ]
 
 var _t := 0.0
@@ -164,6 +186,14 @@ func _finish_benchmark() -> void:
 	get_tree().quit()
 
 
+## The shot's hour, snapped (time_override); after dusk every lamp is lit.
+func _set_time(shot: Dictionary) -> void:
+	Game.time_override = shot.hour
+	if shot.get("lamps", false):
+		for lamp: Lamp in Game.lamps:
+			lamp.interact()
+
+
 static func _ease(x: float) -> float:
 	x = clampf(x, 0.0, 1.0)
 	return x * x * (3.0 - 2.0 * x)
@@ -196,6 +226,7 @@ func _apply(t: float) -> void:
 				_ghost.texture = ImageTexture.create_from_image(img)
 				_cut_t = t
 		_shot = idx
+		_set_time(SHOTS[idx])
 	var shot: Dictionary = SHOTS[idx]
 	var t0: float = shot.t[0]
 	var t1: float = shot.t[1]
@@ -213,12 +244,12 @@ func _apply(t: float) -> void:
 
 	_ghost.modulate.a = 1.0 - clampf((t - _cut_t) / DISSOLVE, 0.0, 1.0)
 	var fade := 1.0 - clampf(t / 1.0, 0.0, 1.0)
-	fade = maxf(fade, clampf((t - 9.3) / 0.5, 0.0, 1.0))
+	fade = maxf(fade, clampf((t - FADE_OUT[0]) / (FADE_OUT[1] - FADE_OUT[0]), 0.0, 1.0))
 	_fade.modulate.a = fade
 
 	var into := t - t0
 	var out := t1 - t
 	_caption.text = shot.caption
 	_caption.modulate.a = clampf(into / 0.5, 0.0, 1.0) * clampf((out - 0.2) / 0.4, 0.0, 1.0) if shot.caption != "" else 0.0
-	_title.modulate.a = clampf((t - 8.0) / 0.7, 0.0, 1.0)
-	_subtitle.modulate.a = clampf((t - 8.5) / 0.6, 0.0, 1.0)
+	_title.modulate.a = clampf((t - TITLE_AT) / 0.8, 0.0, 1.0)
+	_subtitle.modulate.a = clampf((t - TITLE_AT - 0.6) / 0.6, 0.0, 1.0)

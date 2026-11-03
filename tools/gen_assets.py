@@ -806,33 +806,48 @@ def reverb(x: np.ndarray, rng, seconds: float = 1.6, mix: float = 0.35) -> np.nd
 
 
 def trailer_theme(rng):
-    """10.5 s score for the trailer: D drone, lyre plucks in D Dorian, a low hit on the reveal at 7.4 s."""
-    dur = 10.5
+    """25.5 s score for the trailer, following the day: D drone and lyre plucks in
+    D Dorian by day, a second voice at sunset (11.2 s), a soft swell as night
+    falls (16.6 s), a low hit on the hill reveal (19.6 s), a last chord, fade."""
+    dur = 25.5
     n = int(SR * dur)
     t = np.arange(n) / SR
     out = np.zeros(n)
-    swell = np.clip(t / 3.0, 0, 1) * (1 + 0.6 * np.clip((t - 7.4) / 0.3, 0, 1)) * np.clip((dur - t) / 1.2, 0, 1)
+
+    def ramp(a, b):
+        return np.clip((t - a) / (b - a), 0, 1)
+
+    # drone: rises in, thickens at sunset, darkens and swells at night, fades out
+    swell = ramp(0, 3.0) * (1 + 0.35 * ramp(11.2, 13.0) + 0.5 * ramp(16.4, 17.2) + 0.5 * ramp(19.6, 19.9)) * np.clip((dur - t) / 2.0, 0, 1)
     drone = np.zeros(n)
     for f, a in ((73.42, 1.0), (110.0, 0.6), (146.83, 0.35)):
         ph = 2 * np.pi * f * t
         drone += a * (np.sin(ph) + 0.3 * np.sin(2 * ph) + 0.15 * np.sin(3 * ph))
-    drone *= 1 + 0.15 * np.sin(2 * np.pi * 0.25 * t)
-    out += lowpass(drone, 900) * swell * 0.35
-    notes = [(0.6, 440.0), (1.4, 587.33), (2.2, 523.25), (2.8, 440.0), (3.6, 392.0), (4.4, 349.23),
-             (5.0, 329.63), (5.6, 293.66), (6.4, 440.0), (7.0, 523.25),
-             (7.4, 293.66), (7.43, 440.0), (7.46, 587.33), (8.6, 349.23), (9.3, 587.33)]
-    for start, f in notes:
-        p = pluck(f, 2.4, rng) * (0.9 if start >= 7.4 else 0.6)
-        i = int(start * SR)
-        j = min(n, i + len(p))
-        out[i:j] += p[:j - i]
-    # low hit on the hilltop reveal
-    i = int(7.4 * SR)
-    m = int(SR * 2.0)
-    tt = np.arange(m) / SR
-    hit = np.sin(2 * np.pi * (48 + 30 * np.exp(-tt * 8)) * tt) * np.exp(-tt * 2.2)
-    hit += 0.5 * lowpass(rng.standard_normal(m), 400) * np.exp(-tt * 6)
-    out[i:i + m] += hit[:n - i] * 0.9
+    low = np.sin(2 * np.pi * 36.71 * t) * ramp(16.4, 18.0)  # night: an octave below
+    drone = drone * (1 + 0.15 * np.sin(2 * np.pi * 0.25 * t)) + 0.8 * low
+    out += lowpass(drone, 900) * swell * 0.33
+
+    A3, C4, D4, E4, F4, G4, A4, C5, D5 = 220.0, 261.63, 293.66, 329.63, 349.23, 392.0, 440.0, 523.25, 587.33
+    day = [(0.6, A4), (1.4, D5), (2.2, C5), (2.8, A4), (3.6, G4), (4.4, F4), (5.0, E4), (5.6, D4),
+           (6.4, A4), (7.0, C5), (7.6, D5), (8.4, A4), (9.2, G4), (9.8, F4), (10.4, E4)]
+    sunset = [(11.2, D4), (11.25, A4), (12.0, F4), (12.8, E4), (13.4, D4), (14.0, C4), (14.05, G4),
+              (14.8, A4), (15.6, G4), (16.0, F4)]
+    night = [(16.6, D4), (16.65, A4), (17.8, F4), (18.8, E4)]
+    reveal = [(19.6, D4), (19.63, A4), (19.66, D5), (20.8, F4), (21.6, A4), (22.6, D5), (23.4, A3), (23.45, D4)]
+    for group, gain in ((day, 0.6), (sunset, 0.65), (night, 0.45), (reveal, 0.85)):
+        for start, f in group:
+            p = pluck(f, 2.6, rng) * gain
+            i = int(start * SR)
+            j = min(n, i + len(p))
+            out[i:j] += p[:j - i]
+    # hits: a soft one as night falls, the low one on the hilltop reveal
+    for at, gain, decay in ((16.6, 0.45, 3.0), (19.6, 0.95, 2.0)):
+        i = int(at * SR)
+        m = int(SR * 2.4)
+        tt = np.arange(m) / SR
+        hit = np.sin(2 * np.pi * (48 + 30 * np.exp(-tt * 8)) * tt) * np.exp(-tt * decay)
+        hit += 0.5 * lowpass(rng.standard_normal(m), 400) * np.exp(-tt * 6)
+        out[i:i + m] += hit[:n - i] * gain
     write_wav("trailer_theme", norm(reverb(out, rng), 0.8))
 
 
