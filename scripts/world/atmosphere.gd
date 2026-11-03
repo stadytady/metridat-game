@@ -91,6 +91,7 @@ func apply(hour: float) -> void:
 	env.fog_light_color = k.fog_color
 	env.fog_depth_begin = k.fog_begin
 	env.fog_depth_end = k.fog_end
+	env.fog_sky_affect = k.fog_sky  # in the dream the fog swallows the stars too
 	sky_mat.set_shader_parameter("weights", k.sky_weights)
 	var tint: Color = k.light_tint
 	RenderingServer.global_shader_parameter_set(&"psx_light_tint", Vector3(tint.r, tint.g, tint.b))

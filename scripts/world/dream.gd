@@ -18,6 +18,9 @@ const MOUND := Vector3(0, 0, 92)
 const MOUND_R := 11.0
 const MOUND_H := 5.0
 const ALTAR := Vector3(0, 0, 76.5)
+const ALTAR_TOP := 1.03  # top of the altar's crowning slab
+const MIRROR_LIFT := 0.33  # disc centre above it: the handle (0.32) stands on the slab
+const MIRROR_LEAN := 70.0  # degrees from lying flat
 
 var figures: Array[Node3D] = []
 var vanished := 0
@@ -27,6 +30,13 @@ var _fade: ColorRect
 var _end: CanvasLayer
 var _mirror_found := false
 var _wake_at := Vector3.ZERO
+
+
+## The mirror model lies face up with its handle along +z. Stood up: tipped
+## about x so the face turns to +z and the handle points down, leaning back,
+## then turned to face -z, back down the path.
+static func mirror_basis() -> Basis:
+	return Basis(Vector3.UP, PI) * Basis(Vector3.RIGHT, deg_to_rad(MIRROR_LEAN))
 
 
 ## The path's centre line, gently winding (local x for a local z).
@@ -52,7 +62,13 @@ func _ready() -> void:
 	add_child(kit.build("Dream", &"dirt"))
 	_trees(rng)
 	_figures()
-	spawn_inspectable("bronze_mirror", ORIGIN + ALTAR + Vector3(0, 1.0, 0), 180.0)
+	# The mirror stands on the altar, leaning back a little, its face to the
+	# path and the handle down: seen from afar, catching the moon. (Lying flat
+	# it sank into the altar's top and only the marker showed.)
+	# Only the model is stood up: the find's collider and marker stay upright.
+	var mirror := spawn_inspectable("bronze_mirror", ORIGIN + ALTAR + Vector3(0, ALTAR_TOP, -0.08), 0.0)
+	var model := mirror.get_child(0) as Node3D
+	model.transform = Transform3D(mirror_basis(), Vector3(0, MIRROR_LIFT, 0))
 	var zone := Area3D.new()
 	zone.set_script(preload("res://scripts/world/zone.gd"))
 	zone.title = "LOC_DREAM"
