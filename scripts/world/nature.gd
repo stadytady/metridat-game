@@ -38,7 +38,9 @@ func _shrubs(rng: RandomNumberGenerator) -> void:
 		var r := rng.randf_range(0.35, 0.8)
 		kit.color = Color(1, 1, 1) * rng.randf_range(0.8, 1.05)
 		kit.color.a = 1
-		kit.blob("foliage", Vector3(x, t + r * 0.4, z), Vector3(r * 1.2, r * 0.75, r), 0.25, rng)
+		# Not on the camp or the beach sand; a scratch kit keeps the rng sequence.
+		var k := MeshKit.new() if t < 3.4 or Topo.in_rect(x, z, Topo.CAMP_CENTER, Topo.CAMP_HALF, r) else kit
+		k.blob("foliage", Vector3(x, t + r * 0.4, z), Vector3(r * 1.2, r * 0.75, r), 0.25, rng)
 		n += 1
 	var node := kit.build("Shrubs")
 	add_child(node)
@@ -54,8 +56,11 @@ func _shore(rng: RandomNumberGenerator) -> void:
 		var t := Topo.terrain(x, z)
 		kit.color = Color(1, 1, 1) * rng.randf_range(0.8, 1.0)
 		kit.color.a = 1
+		# Rocks on the camp are built into a scratch kit: the rng sequence, and
+		# with it every other rock, stays as it was.
+		var k := MeshKit.new() if Topo.in_rect(x, z, Topo.CAMP_CENTER, Topo.CAMP_HALF, r) else kit
 		if t >= 0.0:
-			kit.blob("rock", Vector3(x, t + r * 0.3, z), Vector3(r * 1.3, r * 0.8, r), 0.3, rng)
+			k.blob("rock", Vector3(x, t + r * 0.3, z), Vector3(r * 1.3, r * 0.8, r), 0.3, rng)
 		else:
 			# In the surf: tall enough that its foot stays below the deepest trough.
 			kit.blob("rock", Vector3(x, -0.8 - r * 0.1, z), Vector3(r * 1.3, r + 1.0, r), 0.3, rng)

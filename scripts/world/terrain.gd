@@ -1,7 +1,7 @@
 extends Node3D
 ## Terrain on a tensor grid: 3 m cells over the play area, coarser outside.
 ## One grid means no cracks between detail levels. Material is chosen per
-## triangle (dirt in the city, grass outside, rock on steep ground and shore).
+## triangle (dirt in the city, grass outside, sand on the beach, rock on steep ground).
 
 const CITY_MIN := Vector2(-84, -75)
 const CITY_MAX := Vector2(60, 75)
@@ -82,8 +82,12 @@ func _ready() -> void:
 func _material(mid: Vector3, n: Vector3, patch: FastNoiseLite) -> String:
 	if n.y < 0.78:
 		return "rock"
-	if mid.y < 1.3:
-		return "rock"
+	# Beach: wet sand at the waterline, dry sand above, its upper edge ragged
+	# so it meets the grass in patches, not along a contour line.
+	if mid.y < 0.45:
+		return "sand_wet"
+	if mid.y < 3.2 + patch.get_noise_2d(mid.x * 2.5, mid.z * 2.5) * 0.7:
+		return "sand"
 	var in_city := mid.x > CITY_MIN.x and mid.x < CITY_MAX.x and mid.z > CITY_MIN.y and mid.z < CITY_MAX.y
 	if in_city:
 		return "grass" if patch.get_noise_2d(mid.x, mid.z) > 0.45 else "earth"

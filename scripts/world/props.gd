@@ -5,7 +5,7 @@ extends RefCounted
 
 ## Baked to GLB. EXTRA kinds are small one-off models built at runtime.
 const MODELS := ["amphora", "pithos", "krater", "column_doric", "olive_tree", "cypress", "ship", "tripod", "figurine"]
-const EXTRA := ["coins", "sherds", "stele", "grain", "votive", "lampstand", "torch_post", "mould"]
+const EXTRA := ["coins", "sherds", "stele", "grain", "votive", "lampstand", "torch_post", "mould", "boat", "sinkers"]
 
 
 static func build(name: String) -> MeshKit:
@@ -43,6 +43,10 @@ static func build(name: String) -> MeshKit:
 			grain(kit)
 		"mould":
 			mould(kit)
+		"boat":
+			boat(kit)
+		"sinkers":
+			sinkers(kit)
 		"lampstand":
 			lampstand(kit)
 		"torch_post":
@@ -210,6 +214,52 @@ static func mould(kit: MeshKit) -> void:
 	kit.box("dark", Vector3(-0.09, 0.101, -0.08), Vector3(0.04, 0.002, 0.04), ["bottom"])
 	kit.box("clay", Vector3(0.09, 0.05, 0.01), Vector3(0.15, 0.1, 0.24), [])
 	kit.blob("figurine", Vector3(0.0, 0.03, 0.2), Vector3(0.05, 0.03, 0.05), 0.2, RandomNumberGenerator.new())
+
+
+## Small open fishing boat, bow along +x, keel at y = 0. Same plank-quad hull
+## as the merchant ship, with thwarts and a pair of oars laid inside.
+static func boat(kit: MeshKit) -> void:
+	var n := 7
+	var sections := []
+	for i in n:
+		var t := float(i) / (n - 1)
+		var w := 0.78 * sin(PI * clampf(t, 0.03, 0.97)) ** 0.6
+		sections.append([lerpf(-2.3, 2.3, t), w, 0.62 + 0.9 * pow(absf(t - 0.5) * 2.0, 3.0) * 0.3])
+	for i in n - 1:
+		var a: Array = sections[i]
+		var b: Array = sections[i + 1]
+		var ka := Vector3(a[0], 0.0, 0)
+		var kb := Vector3(b[0], 0.0, 0)
+		for s: float in [1.0, -1.0]:
+			var ta := Vector3(a[0], a[2], a[1] * s)
+			var tb := Vector3(b[0], b[2], b[1] * s)
+			# outside and inside skin: the hull is open, both sides are seen
+			if s > 0:
+				kit.quad("hull", ka, kb, tb, ta)
+				kit.quad("wood", kb, ka, ta, tb)
+			else:
+				kit.quad("hull", kb, ka, ta, tb)
+				kit.quad("wood", ka, kb, tb, ta)
+	for x: float in [-0.9, 0.5]:
+		kit.box("wood", Vector3(x, 0.45, 0), Vector3(0.22, 0.05, 1.3), [])
+	for s: float in [1.0, -1.0]:
+		kit.box("wood", Vector3(0.1, 0.5, 0.28 * s), Vector3(3.2, 0.05, 0.07), [])
+		kit.box("wood", Vector3(1.55, 0.5, 0.28 * s), Vector3(0.6, 0.06, 0.16), [])
+
+
+## Net weights: pierced clay discs cut from broken pots, and two pyramidal
+## loom-weight-like sinkers, lying on a scrap of net.
+static func sinkers(kit: MeshKit) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	kit.quad("net", Vector3(-0.2, 0.004, 0.16), Vector3(0.2, 0.004, 0.16), Vector3(0.2, 0.004, -0.16), Vector3(-0.2, 0.004, -0.16))
+	for i in 5:
+		var p := Vector3(-0.13 + i * 0.065, 0.0, rng.randf_range(-0.08, 0.08))
+		kit.lathe("clay", PackedVector2Array([Vector2(0.03, 0.0), Vector2(0.03, 0.014)]), 6, p, 1.0, true, "clay", true)
+		kit.box("dark", p + Vector3(0, 0.0145, 0), Vector3(0.008, 0.001, 0.008), ["bottom"])
+	for x: float in [-0.08, 0.1]:
+		var p := Vector3(x, 0.0, 0.11 * signf(x))
+		kit.lathe("clay", PackedVector2Array([Vector2(0.035, 0.0), Vector2(0.015, 0.07)]), 4, p, 1.0, true, "clay", true)
 
 
 ## Bronze lampstand with a clay oil lamp on top (flame at FLAME_Y["lampstand"]).

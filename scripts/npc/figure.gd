@@ -2,7 +2,8 @@ class_name Figure
 extends RefCounted
 ## Rigid-segment low-poly person, the way PS1 games built characters: one box
 ## mesh per body part hanging off a joint (Node3D), animated by rotating the
-## joints. Faces -Z. A positive X rotation swings a limb forward.
+## joints. Faces -Z. A positive X rotation swings a hanging limb forward, but
+## tips an upright segment (chest, head) backwards: lean forward is negative X.
 
 ## joint name -> [parent, offset from parent, segment size, segment material, segment centre offset]
 const RIG := {
@@ -23,17 +24,21 @@ const RIG := {
 const POSES := {
 	"stand": {},
 	# on a low stool, leaning over the wheel, hands forward on the clay
-	"potter": {"pelvis": Vector3(0, 0, 0), "chest": Vector3(22, 0, 0), "head": Vector3(15, 0, 0),
+	"potter": {"pelvis": Vector3(0, 0, 0), "chest": Vector3(-22, 0, 0), "head": Vector3(-12, 0, 0),
 		"l_shoulder": Vector3(55, 0, 8), "r_shoulder": Vector3(55, 0, -8), "l_elbow": Vector3(35, 0, 0), "r_elbow": Vector3(35, 0, 0),
 		"l_hip": Vector3(90, 0, 4), "r_hip": Vector3(90, 0, -4), "l_knee": Vector3(-95, 0, 0), "r_knee": Vector3(-95, 0, 0)},
 	# squatting by the wheel, one arm on its rim
-	"turner": {"chest": Vector3(30, 0, 0), "head": Vector3(-10, 0, 0),
+	"turner": {"chest": Vector3(-30, 0, 0), "head": Vector3(15, 0, 0),
 		"r_shoulder": Vector3(70, 0, -10), "r_elbow": Vector3(20, 0, 0), "l_shoulder": Vector3(25, 0, 10), "l_elbow": Vector3(60, 0, 0),
 		"l_hip": Vector3(115, 0, 10), "r_hip": Vector3(115, 0, -10), "l_knee": Vector3(-140, 0, 0), "r_knee": Vector3(-140, 0, 0)},
+	# on a stone, mending the net spread over his knees
+	"mender": {"chest": Vector3(-28, 0, 0), "head": Vector3(-22, 0, 0),
+		"l_shoulder": Vector3(20, 0, 10), "r_shoulder": Vector3(20, 0, -10), "l_elbow": Vector3(45, 0, 0), "r_elbow": Vector3(45, 0, 0),
+		"l_hip": Vector3(80, 0, 10), "r_hip": Vector3(80, 0, -10), "l_knee": Vector3(-60, 0, 0), "r_knee": Vector3(-60, 0, 0)},
 }
 
 ## Pelvis height for a pose (seated figures sit on something low).
-const SEAT := {"stand": 0.92, "potter": 0.46, "turner": 0.32}
+const SEAT := {"stand": 0.92, "potter": 0.46, "turner": 0.32, "mender": 0.4}
 
 
 ## Builds the joints under `root`; returns {joint name: Node3D}.
@@ -79,5 +84,11 @@ static func motion(pose: String, t: float) -> Dictionary:
 		"turner":
 			return {"r_shoulder": Vector3(sin(q * 6.0) * 18, cos(q * 6.0) * 15, 0), "r_elbow": Vector3(cos(q * 6.0) * 12, 0, 0),
 				"chest": Vector3(sin(q * 6.0) * 4, 0, 0)}
+		"mender":
+			# the needle goes through, the arm pulls the twine out and up
+			var k := fposmod(q * 0.8, 1.0)
+			var pull := k * 4.0 if k < 0.25 else maxf(0.0, 1.0 - (k - 0.25) * 2.0)
+			return {"r_shoulder": Vector3(-pull * 30, 0, -pull * 25), "r_elbow": Vector3(-pull * 35, 0, 0),
+				"head": Vector3(0, pull * 8, 0)}
 		_:
 			return {"chest": Vector3(sin(q * 1.1) * 2, 0, 0)}
