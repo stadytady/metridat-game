@@ -72,7 +72,9 @@ func _process(delta: float) -> void:
 	if is_equal_approx(t, target):
 		return
 	# Automation (screenshots, trailer) jumps straight to its hour.
-	t = target if Game.time_override >= 0.0 else move_toward(t, target, delta / TRANSITION)
+	# Automation and the dream (entered and left behind a fade) jump straight there.
+	var snap := Game.time_override >= 0.0 or Game.dreaming or t > 1.0
+	t = target if snap else move_toward(t, target, delta / TRANSITION)
 	apply(t)
 
 
@@ -87,6 +89,8 @@ func apply(hour: float) -> void:
 	env.ambient_light_color = k.ambient_color
 	env.ambient_light_energy = k.ambient_energy
 	env.fog_light_color = k.fog_color
+	env.fog_depth_begin = k.fog_begin
+	env.fog_depth_end = k.fog_end
 	sky_mat.set_shader_parameter("weights", k.sky_weights)
 	var tint: Color = k.light_tint
 	RenderingServer.global_shader_parameter_set(&"psx_light_tint", Vector3(tint.r, tint.g, tint.b))

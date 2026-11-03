@@ -4,7 +4,7 @@ extends CanvasLayer
 ## "? ? ?" with a hint where to look, so no find stays lost.
 
 ## Walking order of the districts; finds sort by it, then by id.
-const ORDER := ["LOC_HILL", "LOC_STREET", "LOC_AGORA", "LOC_SHORE", "LOC_SANCTUARY"]
+const ORDER := ["LOC_HILL", "LOC_STREET", "LOC_AGORA", "LOC_SHORE", "LOC_SANCTUARY", "LOC_DREAM"]
 
 var _panel: PanelContainer
 var _title: Label
@@ -34,6 +34,8 @@ func _ready() -> void:
 static func ordered(registry: Dictionary) -> Array[Discovery]:
 	var out: Array[Discovery] = []
 	for d: Discovery in registry.values():
+		if d.epilogue and not Game.found.has(d.id):
+			continue  # the dream's find shows only once found
 		out.append(d)
 	out.sort_custom(func(a: Discovery, b: Discovery) -> bool:
 		var ia := ORDER.find(a.location)

@@ -45,4 +45,12 @@ func _ready() -> void:
 		_gull.play()
 		gulls_played += 1)
 	add_child(timer)
+	# The city's sounds go quiet in the dream (footsteps remain).
+	Game.dream_changed.connect(func(on: bool) -> void:
+		for p: Node in get_children():
+			if p is AudioStreamPlayer or p is AudioStreamPlayer3D:
+				var base: float = p.get_meta(&"base_db", p.volume_db)
+				p.set_meta(&"base_db", base)
+				p.volume_db = base - (40.0 if on else 0.0)
+		timer.paused = on)
 
