@@ -23,12 +23,12 @@ func test_fields_complete() -> void:
 		ids[d.id] = true
 		check(d.resource_path.get_file().get_basename() == label, "file name must match id: " + d.resource_path)
 		# Text fields are translation keys; the texts themselves are checked in both languages.
-		for field: String in ["title", "location", "description", "history", "narrative"]:
+		for field: String in ["title", "location", "description", "history", "narrative", "hint"]:
 			var key := String(d.get(field))
 			for lang in ["en", "ru"]:
 				var t: Translation = load("res://data/i18n/strings.%s.translation" % lang)
 				var text := String(t.get_message(key))
-				var min_len := 3 if field in ["title", "location"] else 40
+				var min_len := 3 if field in ["title", "location"] else (20 if field == "hint" else 40)
 				check(text.length() >= min_len, "%s.%s (%s) missing or too short in %s" % [label, field, key, lang])
 		check(String(d.sources).length() > 40, label + ".sources is missing or too short")
 		check(d.history != d.narrative, label + ": history and narrative must differ")

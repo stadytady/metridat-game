@@ -55,6 +55,7 @@ func _setup_input() -> void:
 		&"jump": [KEY_SPACE],
 		&"interact": [KEY_E],
 		&"pause": [KEY_ESCAPE],
+		&"journal": [KEY_J],
 		&"perf_overlay": [KEY_F3],
 	}
 	for action: StringName in keys:

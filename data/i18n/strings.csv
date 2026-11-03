@@ -1,5 +1,5 @@
 keys,en,ru
-UI_HINT,WASD move   MOUSE look   SHIFT run   SPACE jump   E inspect   ESC pause,WASD — ходьба   МЫШЬ — обзор   SHIFT — бег   ПРОБЕЛ — прыжок   E — осмотр   ESC — пауза
+UI_HINT,WASD move   MOUSE look   SHIFT run   SPACE jump   E inspect   J journal   ESC pause,WASD — ходьба   МЫШЬ — обзор   SHIFT — бег   ПРОБЕЛ — прыжок   E — осмотр   J — журнал   ESC — пауза
 UI_INSPECT,[E] Inspect  %s,[E] Осмотреть: %s
 UI_DISCOVERIES,DISCOVERIES  %d / %d,НАХОДКИ  %d / %d
 UI_ALL_FOUND,All discoveries found. The strait is yours to watch.,Все находки собраны. Теперь пролив — ваш.
@@ -73,3 +73,14 @@ D_NET_SINKERS_TITLE,Clay net sinkers,Глиняные грузила для се
 D_NET_SINKERS_DESCRIPTION,"A handful of pierced clay discs chipped from broken pots, two small pyramidal weights and a scrap of knotted net, left on an upturned basket.","Горсть просверленных глиняных кружков, обколотых из черепков, две маленькие пирамидальные гирьки и обрывок сети с узлами — на перевёрнутой корзине."
 D_NET_SINKERS_HISTORY,"Fishing was one of the main occupations of the Bosporan cities, and clay and stone net sinkers are among the most common finds on their sites. Herodotus describes large boneless fish called antakaioi, taken for salting at the mouth of the Borysthenes (Dnieper); Strabo writes that at the mouth of Lake Maeotis the strait froze in winter, carts crossed from Panticapaeum to Phanagoria on the ice, and sturgeon were dug out of it with a net called gangame. Salted fish became a major Bosporan export. A sturgeon appears on bronze coins of Panticapaeum of the late 4th century BCE. The large fish-salting vats excavated at Tyritake and Myrmekion belong to the later, Roman period.","Рыболовство было одним из главных занятий боспорских городов, а глиняные и каменные грузила для сетей — одни из самых частых находок на их городищах. Геродот пишет о крупной рыбе без костей — антакеях, — которую ловили для засолки в устье Борисфена (Днепра). Страбон сообщает, что в устье Меотиды пролив зимой замерзал, по льду ездили из Пантикапея в Фанагорию на повозках, а осетров добывали из-подо льда сетью, называемой «гангама». Солёная рыба стала одной из главных статей боспорского вывоза. Осётр изображён на бронзовых монетах Пантикапея конца IV века до н. э. Крупные рыбозасолочные цистерны, раскопанные в Тиритаке и Мирмекии, относятся к более позднему, римскому времени."
 D_NET_SINKERS_NARRATIVE,"Glaukos, his boat and his camp are the game's invention, and so is the friendship that turns Kallias's broken pots into his net weights.","Главк, его лодка и стоянка придуманы для игры, как и дружба, благодаря которой битые горшки Каллия становятся грузилами для его сетей."
+UI_JOURNAL,JOURNAL  %d / %d,ЖУРНАЛ  %d / %d
+UI_JOURNAL_KEYS,[J] or [ESC] close,[J] или [ESC] — закрыть
+UI_JOURNAL_UNKNOWN,? ? ?  not found yet,? ? ?  ещё не найдено
+D_SHERD_KERCH_HINT,"On the hilltop terrace where you start, along its north side.","На смотровой террасе холма, где начинается путь, — у её северного края."
+D_AMPHORA_STAMPED_HINT,"In the first walled courtyard off the Street of the Jars, among the storage jars and the hens.","В первом огороженном дворе у Улицы кувшинов, среди пифосов и кур."
+D_INSCRIPTION_STELE_HINT,"On the agora, a standing stone slab in front of the stoa.",На агоре: каменная плита стоит перед стоей.
+D_COIN_STATER_HINT,"On the agora, on the counter of the market stall under the cloth awning.","На агоре, на прилавке под тканевым навесом."
+D_GRAIN_PITHOS_HINT,"On the south side of the agora, a big storage jar near the market stall.",На южной стороне агоры: большой пифос возле прилавка.
+D_MOULD_FIGURINE_HINT,"In the potter's workshop, in the south-west corner of the agora, on the shelf by the wall.","В мастерской гончара в юго-западном углу агоры, на полке у стены."
+D_NET_SINKERS_HINT,"On the beach below the agora: go out through the gap in the east parapet, look by the fisherman.",На пляже под агорой: выйдите через проём в восточном парапете и ищите у рыбака.
+D_VOTIVE_FIGURINE_HINT,Through the gateway in the north-east corner of the agora and up the stair: on the votive shelf of the sanctuary.,Через ворота в северо-восточном углу агоры и вверх по лестнице: на вотивной полке святилища.
