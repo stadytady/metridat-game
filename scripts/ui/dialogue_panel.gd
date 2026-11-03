@@ -73,7 +73,7 @@ func advance() -> void:
 func close() -> void:
 	_panel.visible = false
 	Game.ui_blocking = false
-	Game.ui_closed_frame = Engine.get_process_frames()
+	Game.mark_ui_closed()
 
 
 func _process(_delta: float) -> void:

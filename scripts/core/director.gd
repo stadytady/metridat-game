@@ -68,6 +68,14 @@ func _shots() -> void:
 
 ## Prompt, info panel and pause menu over the agora.
 func _ui_shots(player: CharacterBody3D) -> void:
+	var hud: Node = _main().get_node("HUD")
+	hud.set_visible_ui(false)
+	var title := _open_title()
+	await _frames(10)
+	_save("ui_title")
+	title.start()
+	title.queue_free()
+	hud.set_visible_ui(true)
 	var stele: Node3D = _inspectables().get("inscription_stele")
 	player.global_position = Vector3(22.0, Topo.AGORA_H, -0.9)
 	player.look_at_point(stele.global_position + Vector3(0, 1.1, 0))
@@ -238,6 +246,7 @@ func _walkthrough() -> void:
 	print("walkthrough: %d inspectables registered, Game.total()=%d" % [items.size(), Game.total()])
 	if items.size() < 5:
 		_fail.append("fewer than 5 inspectables")
+	await _check_title()
 	await _check_journal(Game.total())
 	var min_y := INF
 	for step in _route():
@@ -330,7 +339,17 @@ func _inspect(player: CharacterBody3D, items: Dictionary, id: String) -> void:
 		_fail.append("counter did not advance for " + id)
 	print("inspected %s (%d/%d)" % [id, Game.found_count(), Game.total()])
 	info.close()
+	# Regression: E pressed right after closing, still looking at the find,
+	# must not open it again (the player got stuck on finds).
+	Input.action_press(&"interact")
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	Input.action_release(&"interact")
 	await _frames(3)
+	if info.is_open():
+		_fail.append("E right after closing reopened %s" % id)
+		info.close()
+		await _frames(3)
 
 
 ## Talks to an NPC through the interactor ray and reads every line.
@@ -374,7 +393,7 @@ func _check_viewer(info: Node, id: String) -> void:
 	var box: AABB = v.shown_aabb()
 	if box.size.length() < 0.02:
 		_fail.append("viewer empty for %s: %s" % [id, box])
-	if not v.is_visible_in_tree() or Input.mouse_mode != Input.MOUSE_MODE_VISIBLE:
+	if not v.is_visible_in_tree() or (Input.mouse_mode != Input.MOUSE_MODE_VISIBLE and DisplayServer.get_name() != "headless"):
 		_fail.append("viewer not shown or cursor not free for %s" % id)
 
 
@@ -392,6 +411,33 @@ func _check_journal(expect_hints: int) -> void:
 	j.close()
 	await _frames(2)
 	print("journal: %d rows, %d hints" % [c.x, c.y])
+
+
+## The start screen holds the game until START, then hands it over.
+func _check_title() -> void:
+	var title: CanvasLayer = _open_title()
+	await _frames(3)
+	if not title.is_open() or not Game.ui_blocking:
+		_fail.append("title screen did not hold the game")
+	title.start()
+	await _frames(3)
+	# The headless display server cannot capture the mouse; check it where it can.
+	var captured := Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or DisplayServer.get_name() == "headless"
+	if Game.ui_blocking or not captured:
+		_fail.append("START did not hand the game over")
+	await get_tree().create_timer(0.8).timeout
+	if title.is_open():
+		_fail.append("title screen did not fade out")
+	title.queue_free()
+	print("title: start ok")
+
+
+func _open_title() -> CanvasLayer:
+	var title: CanvasLayer = load("res://scripts/ui/title_screen.gd").new()
+	title.name = "TitleScreen"
+	_main().add_child(title)
+	title.open()
+	return title
 
 
 ## A found row in the journal opens that find in the info panel's viewer.

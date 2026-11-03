@@ -31,9 +31,15 @@ func _ready() -> void:
 		var director: Node = load("res://scripts/core/director.gd").new()
 		director.name = "Director"
 		add_child(director)
-	elif not OS.has_feature("web"):
-		# Browsers only grant pointer lock on a click; the HUD asks for one.
-		capture_mouse(true)
+	else:
+		# Start screen first; START captures the mouse from inside the click,
+		# which is also what browsers need for pointer lock.
+		var title: CanvasLayer = load("res://scripts/ui/title_screen.gd").new()
+		title.name = "TitleScreen"
+		add_child(title)
+		$HUD.set_visible_ui(false)
+		title.started.connect(func() -> void: $HUD.set_visible_ui(true))
+		title.open()
 
 
 func _fit() -> void:

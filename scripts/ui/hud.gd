@@ -21,18 +21,8 @@ func _ready() -> void:
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(root)
 
-	var cross := Control.new()
-	cross.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	cross.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	root.add_child(cross)
-	for r: Rect2 in [Rect2(-1, -7, 3, 5), Rect2(-1, 3, 3, 5), Rect2(-7, -1, 5, 3), Rect2(3, -1, 5, 3)]:
-		var c := ColorRect.new()
-		c.color = Color(1, 0.93, 0.8, 0.85)
-		c.position = r.position * 1.5
-		c.size = r.size * 1.5
-		c.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		cross.add_child(c)
-
+	# No crosshair: a clean picture. What the view centres on is announced by
+	# the prompt below ("[E] Inspect ...") when it can be used.
 	_prompt = UiStyle.label("", 28)
 	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
