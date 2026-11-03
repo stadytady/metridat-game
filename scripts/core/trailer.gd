@@ -3,22 +3,32 @@ extends Node
 ## Started by `-- --trailer`; record with Movie Maker (tools/trailer.sh):
 ## --write-movie + --fixed-fps make every frame exact, however slow the GPU.
 ##
-## Four shots, each a smoothed dolly between two camera poses, joined by short
-## fades through black. Letterbox and titles live inside the 640x360 viewport,
-## so they get the same pixels and dither as the world.
+## Four shots. Each camera move is a Catmull-Rom spline through three points,
+## travelled at constant speed (eased only into the first and out of the last
+## shot), with a slow handheld drift. Cuts are dissolves: the last frame of the
+## outgoing shot fades out over the incoming one. Letterbox and titles live
+## inside the 640x360 viewport, so they get the same pixels and dither as the
+## world. Shot boundaries follow the score (the hit lands at 7.4 s).
 
 const DURATION := 10.0
-const FADE := 0.25
+const DISSOLVE := 0.45
 const VIEW := Vector2(640, 360)
 const BAR := 46.0  # 2.39:1 inside 640x360
 
-## [start, end, from_pos, to_pos, from_look, to_look, from_fov, to_fov, caption]
+## start, end, camera path, look-at path, fov from/to, caption
 const SHOTS := [
-	[0.0, 2.6, Vector3(236, 2.4, -46), Vector3(244, 1.8, -55), Vector3(259, 4.5, -68), Vector3(261, 5.5, -71), 48.0, 44.0,
-		"The Cimmerian Bosporus, 4th century BCE"],
-	[2.6, 5.2, Vector3(-4, 8.0, -0.8), Vector3(-17, 12.4, 0.4), Vector3(-45, 15.0, 0), Vector3(-70, 23, 0), 62.0, 62.0, ""],
-	[5.2, 7.4, Vector3(43.5, 9.9, -16.0), Vector3(45.0, 10.2, -19.0), Vector3(46, 9.6, -23.2), Vector3(46, 10.0, -25.0), 55.0, 50.0, ""],
-	[7.4, 10.0, Vector3(-82.5, 29.4, 0), Vector3(-95, 32.5, 0), Vector3(25, 4, 0), Vector3(25, 4, 0), 64.0, 70.0, ""],
+	{"t": [0.0, 2.7], "fov": [40.0, 37.0], "caption": "The Cimmerian Bosporus, 4th century BCE",
+		"pos": [Vector3(236, 2.2, -60), Vector3(239, 2.6, -52), Vector3(243, 3.0, -46)],
+		"look": [Vector3(260, 4.5, -70), Vector3(260.5, 4.8, -70), Vector3(261, 5.0, -70)]},
+	{"t": [2.7, 5.1], "fov": [58.0, 56.0], "caption": "",
+		"pos": [Vector3(-2, 7.8, -0.6), Vector3(-9, 9.0, -0.9), Vector3(-16, 11.8, 0.2)],
+		"look": [Vector3(-30, 13.5, 1.5), Vector3(-45, 16.5, 0.5), Vector3(-60, 21.5, 1.0)]},
+	{"t": [5.1, 7.4], "fov": [50.0, 46.0], "caption": "",
+		"pos": [Vector3(41.5, 10.0, -18.8), Vector3(44.0, 10.1, -18.2), Vector3(47.0, 10.2, -18.6)],
+		"look": [Vector3(45.6, 9.8, -23.5), Vector3(45.9, 9.9, -24.0), Vector3(46.2, 10.0, -24.5)]},
+	{"t": [7.4, 10.0], "fov": [56.0, 60.0], "caption": "",
+		"pos": [Vector3(-89, 29.4, 0.4), Vector3(-85.5, 29.6, 0.1), Vector3(-81.0, 30.2, 0.0)],
+		"look": [Vector3(-20, 12, 0), Vector3(-5, 8, 0), Vector3(10, 5, 0)]},
 ]
 
 var _t := 0.0
@@ -28,6 +38,9 @@ var _frame_ms := PackedFloat32Array()
 var _result: Label
 var _cam: Camera3D
 var _fade: ColorRect
+var _ghost: TextureRect
+var _shot := -1
+var _cut_t := -10.0
 var _caption: Label
 var _title: Label
 var _subtitle: Label
@@ -62,6 +75,12 @@ func _ready() -> void:
 func _build_overlay(vp: SubViewport) -> void:
 	var layer := CanvasLayer.new()
 	vp.add_child(layer)
+	# Frozen last frame of the previous shot, faded out for the dissolve.
+	_ghost = TextureRect.new()
+	_ghost.size = VIEW
+	_ghost.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_ghost.modulate.a = 0.0
+	layer.add_child(_ghost)
 	for y: float in [0.0, VIEW.y - BAR]:
 		var bar := ColorRect.new()
 		bar.color = Color.BLACK
@@ -150,34 +169,56 @@ static func _ease(x: float) -> float:
 	return x * x * (3.0 - 2.0 * x)
 
 
+## Uniform Catmull-Rom through three points, ends clamped.
+static func _spline(p: Array, u: float) -> Vector3:
+	var pts: Array = [p[0]] + p + [p[-1]]
+	var seg := clampi(int(u * 2.0), 0, 1)
+	var f := u * 2.0 - seg
+	var p0: Vector3 = pts[seg]
+	var p1: Vector3 = pts[seg + 1]
+	var p2: Vector3 = pts[seg + 2]
+	var p3: Vector3 = pts[seg + 3]
+	return 0.5 * (2.0 * p1 + (p2 - p0) * f + (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3) * f * f
+			+ (3.0 * p1 - p0 - 3.0 * p2 + p3) * f * f * f)
+
+
 func _apply(t: float) -> void:
-	var shot: Array = SHOTS[-1]
-	for s: Array in SHOTS:
-		if t < s[1]:
-			shot = s
+	var idx := SHOTS.size() - 1
+	for i in SHOTS.size():
+		if t < SHOTS[i].t[1]:
+			idx = i
 			break
-	var k := _ease((t - shot[0]) / (shot[1] - shot[0]))
-	var pos: Vector3 = (shot[2] as Vector3).lerp(shot[3], k)
-	var look: Vector3 = (shot[4] as Vector3).lerp(shot[5], k)
-	_cam.global_position = pos
-	_cam.look_at(look, Vector3.UP)
-	_cam.fov = lerpf(shot[6], shot[7], k)
+	if idx != _shot:
+		if _shot >= 0:
+			# The viewport still holds the outgoing shot's last frame.
+			var img := get_parent().viewport.get_texture().get_image() as Image
+			if img:  # null under the headless dummy renderer
+				_ghost.texture = ImageTexture.create_from_image(img)
+				_cut_t = t
+		_shot = idx
+	var shot: Dictionary = SHOTS[idx]
+	var t0: float = shot.t[0]
+	var t1: float = shot.t[1]
+	var u := clampf((t - t0) / (t1 - t0), 0.0, 1.0)
+	# Constant speed inside the film; ease only into the first and out of the last shot.
+	if idx == 0:
+		u = lerpf(u * u, u, u)  # starts at rest, reaches full speed by the cut
+	elif idx == SHOTS.size() - 1:
+		u = lerpf(u, 1.0 - (1.0 - u) * (1.0 - u), u)  # full speed in, comes to rest
+	var drift := Vector3(sin(t * 0.9) * 0.05, sin(t * 1.3 + 1.0) * 0.035, cos(t * 0.7) * 0.04)
+	_cam.global_position = _spline(shot.pos, u) + drift
+	_cam.look_at(_spline(shot.look, u), Vector3.UP)
+	_cam.rotate_object_local(Vector3.FORWARD, deg_to_rad(sin(t * 0.6) * 0.35))
+	_cam.fov = lerpf(shot.fov[0], shot.fov[1], u)
 
-	# fades through black at every cut; longer in from black at the start
-	var into: float = t - float(shot[0])
-	var out: float = float(shot[1]) - t
-	var a := 0.0
-	if shot == SHOTS[0]:
-		a = 1.0 - clampf(into / 0.8, 0.0, 1.0)
-	else:
-		a = 1.0 - clampf(into / FADE, 0.0, 1.0)
-	if shot != SHOTS[-1]:
-		a = maxf(a, 1.0 - clampf(out / FADE, 0.0, 1.0))
-	else:
-		a = maxf(a, clampf((t - 9.3) / 0.5, 0.0, 1.0))
-	_fade.modulate.a = a
+	_ghost.modulate.a = 1.0 - clampf((t - _cut_t) / DISSOLVE, 0.0, 1.0)
+	var fade := 1.0 - clampf(t / 1.0, 0.0, 1.0)
+	fade = maxf(fade, clampf((t - 9.3) / 0.5, 0.0, 1.0))
+	_fade.modulate.a = fade
 
-	_caption.text = shot[8]
-	_caption.modulate.a = clampf(into / 0.5, 0.0, 1.0) * clampf(out / 0.4, 0.0, 1.0) if shot[8] != "" else 0.0
+	var into := t - t0
+	var out := t1 - t
+	_caption.text = shot.caption
+	_caption.modulate.a = clampf(into / 0.5, 0.0, 1.0) * clampf((out - 0.2) / 0.4, 0.0, 1.0) if shot.caption != "" else 0.0
 	_title.modulate.a = clampf((t - 8.0) / 0.7, 0.0, 1.0)
 	_subtitle.modulate.a = clampf((t - 8.5) / 0.6, 0.0, 1.0)
