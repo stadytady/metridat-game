@@ -17,6 +17,11 @@ func _ready() -> void:
 	_apply_settings()
 	$HUD.bind_interactor(player().interactor)
 	$PauseMenu.closed.connect(func() -> void: capture_mouse(true))
+	# Panels with a free cursor (info, journal) hand the mouse back on close.
+	# On the web, pointer lock needs a click, which the HUD asks for.
+	Game.inspect_closed.connect(func() -> void:
+		if not OS.has_feature("web"):
+			capture_mouse(true))
 	if "--trailer" in OS.get_cmdline_user_args() or "--benchmark" in OS.get_cmdline_user_args():
 		var trailer: Node = load("res://scripts/core/trailer.gd").new()
 		trailer.name = "Trailer"

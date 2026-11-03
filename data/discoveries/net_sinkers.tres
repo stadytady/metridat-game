@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="Discovery" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="Discovery" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/interaction/discovery.gd" id="1_d"]
+[ext_resource type="PackedScene" path="res://scenes/interactables/models/sinkers.tscn" id="2_m"]
 
 [resource]
 script = ExtResource("1_d")
@@ -12,3 +13,4 @@ history = "D_NET_SINKERS_HISTORY"
 sources = "Herodotus, Histories 4.53; Strabo, Geography 7.3.18; J. M. Højte (ed.), Ancient Fishing and Fish Processing in the Black Sea Region (Black Sea Studies 2, 2005); D. MacDonald, An Introduction to the History and Coinage of the Kingdom of the Bosporus (2005)."
 narrative = "D_NET_SINKERS_NARRATIVE"
 hint = "D_NET_SINKERS_HINT"
+model = ExtResource("2_m")

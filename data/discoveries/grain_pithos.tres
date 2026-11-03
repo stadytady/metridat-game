@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="Discovery" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="Discovery" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/interaction/discovery.gd" id="1_d"]
+[ext_resource type="PackedScene" path="res://scenes/interactables/models/grain.tscn" id="2_m"]
 
 [resource]
 script = ExtResource("1_d")
@@ -12,3 +13,4 @@ history = "D_GRAIN_PITHOS_HISTORY"
 sources = "Demosthenes 20 (Against Leptines) 29-40; IG II2 212 (Athenian decree for Spartokos II and Pairisades I, 347/6 BCE)."
 narrative = "D_GRAIN_PITHOS_NARRATIVE"
 hint = "D_GRAIN_PITHOS_HINT"
+model = ExtResource("2_m")

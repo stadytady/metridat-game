@@ -1,6 +1,7 @@
 extends CanvasLayer
-## Journal (J): every find in walking order. Found ones by name and place;
-## the rest as "? ? ?" with a hint where to look, so no find stays lost.
+## Journal (J): every find in walking order. Found ones by name and place,
+## and a click opens them again in the info panel's viewer; the rest as
+## "? ? ?" with a hint where to look, so no find stays lost.
 
 ## Walking order of the districts; finds sort by it, then by id.
 const ORDER := ["LOC_HILL", "LOC_STREET", "LOC_AGORA", "LOC_SHORE", "LOC_SANCTUARY"]
@@ -63,9 +64,9 @@ func _fill() -> void:
 		var row := VBoxContainer.new()
 		row.add_theme_constant_override("separation", 0)
 		var head := HBoxContainer.new()
-		var name := UiStyle.label(tr(d.title) if found else tr("UI_JOURNAL_UNKNOWN"), 24, UiStyle.TEXT if found else UiStyle.MUTED)
-		name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		head.add_child(name)
+		var title := UiStyle.label(tr(d.title) if found else tr("UI_JOURNAL_UNKNOWN"), 24, UiStyle.TEXT if found else UiStyle.MUTED)
+		title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		head.add_child(title)
 		head.add_child(UiStyle.label(tr(d.location), 20, UiStyle.MUTED))
 		row.add_child(head)
 		if not found:
@@ -74,6 +75,12 @@ func _fill() -> void:
 			hint.custom_minimum_size.x = 960
 			row.add_child(hint)
 		row.set_meta(&"hint", not found)
+		if found:
+			row.mouse_filter = Control.MOUSE_FILTER_STOP
+			row.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+			row.gui_input.connect(_on_row_input.bind(d))
+			row.mouse_entered.connect(func() -> void: title.add_theme_color_override("font_color", UiStyle.BORDER))
+			row.mouse_exited.connect(func() -> void: title.add_theme_color_override("font_color", UiStyle.TEXT))
 		_rows.add_child(row)
 	_panel.reset_size()
 	_panel.position = ((Vector2(1920, 1080) - _panel.size) / 2.0).max(Vector2(40, 40))
@@ -89,12 +96,27 @@ func open() -> void:
 	_panel.visible = true
 	_opened_frame = Engine.get_process_frames()
 	Game.ui_blocking = true
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE  # rows are clickable
 
 
-func close() -> void:
+## `hand_back`: give the cursor back to the game (not when another panel opens).
+func close(hand_back: bool = true) -> void:
 	_panel.visible = false
 	Game.ui_blocking = false
 	Game.ui_closed_frame = Engine.get_process_frames()
+	if hand_back:
+		Game.inspect_closed.emit()
+
+
+## Opens a found row in the info panel (the same view as on inspection).
+func view(d: Discovery) -> void:
+	close(false)
+	get_parent().get_node("InfoPanel").show_discovery(d)
+
+
+func _on_row_input(event: InputEvent, d: Discovery) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		view(d)
 
 
 func _process(_delta: float) -> void:
