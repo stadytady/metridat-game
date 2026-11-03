@@ -1,4 +1,5 @@
 .godot/
+tools/bin/
 build/
 *.tmp
 __pycache__/

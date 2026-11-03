@@ -1,4 +1,8 @@
 keys,en,ru
+TITLE_NAME,Panticapaeum: Echoes of the Bosporus,Пантикапей: Эхо Боспора
+TITLE_SUBTITLE,A walk through a Greek city on the Cimmerian Bosporus · 4th century BCE,Прогулка по греческому городу на Киммерийском Боспоре · IV век до н. э.
+TITLE_ENTER,Enter the city,Войти в город
+TITLE_NOTE,Look closely. The city remembers in fragments.,Смотри внимательно. Город помнит осколками.
 UI_HINT,WASD move   MOUSE look   SHIFT run   SPACE jump   E inspect   J journal   ESC pause,WASD — ходьба   МЫШЬ — обзор   SHIFT — бег   ПРОБЕЛ — прыжок   E — осмотр   J — журнал   ESC — пауза
 UI_INSPECT,[E] Inspect  %s,[E] Осмотреть: %s
 UI_DISCOVERIES,DISCOVERIES  %d / %d,НАХОДКИ  %d / %d

@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/core/main.gd" id="1_main"]
 [ext_resource type="Material" path="res://assets/materials/psx_post.tres" id="2_post"]
@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="6_pause"]
 [ext_resource type="PackedScene" path="res://scenes/ui/dialogue_panel.tscn" id="7_dlg"]
 [ext_resource type="PackedScene" path="res://scenes/ui/journal_panel.tscn" id="8_jrn"]
+[ext_resource type="Script" path="res://scripts/ui/title_screen.gd" id="9_title"]
 
 [node name="Main" type="Node"]
 script = ExtResource("1_main")
@@ -43,3 +44,7 @@ render_target_update_mode = 4
 [node name="JournalPanel" parent="." instance=ExtResource("8_jrn")]
 
 [node name="PauseMenu" parent="." instance=ExtResource("6_pause")]
+
+[node name="TitleScreen" type="CanvasLayer" parent="."]
+layer = 5
+script = ExtResource("9_title")
