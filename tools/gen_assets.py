@@ -560,6 +560,29 @@ def fleece(rng):
     save("fleece", ramp(field, ["#6e6250", "#9a8c74", "#c2b496", "#dccfb2", "#ece2c8"]))
 
 
+def worn(rng):
+    # Stone polished smooth by centuries of feet: pale, even, with a ragged
+    # dithered edge (cut out by alpha) so it melts into the paving around it.
+    s = 64
+    y, x = np.mgrid[0:s, 0:s]
+    r = np.hypot((x - s / 2) / (s / 2), (y - s / 2) / (s / 2))
+    edge = r + (vnoise(s, 6, rng) - 0.5) * 0.5
+    field = 0.6 + (vnoise(s, 4, rng) - 0.5) * 0.15
+    rgb = ramp(field, ["#a89b80", "#bfb193", "#d2c4a4", "#ded2b4"], dither=0.3)
+    alpha = (edge < 0.8).astype(np.float32)
+    alpha[(edge >= 0.65) & (edge < 0.8) & (bayer(s, s) > 0.5)] = 0.0  # dithered rim
+    save("worn", rgb, alpha)
+
+
+def fur(rng):
+    # Short tan dog's coat with darker streaks.
+    s = 32
+    y, x = np.mgrid[0:s, 0:s]
+    streak = 0.08 * np.sin(x * 0.9 + vnoise(s, 4, rng) * 4)
+    field = 0.55 + streak + (rng.random((s, s)) - 0.5) * 0.2
+    save("fur", ramp(field, ["#4a3220", "#6e4a2c", "#8c6238", "#a87a48", "#c09060"]))
+
+
 def dark(rng):
     s = 16
     save("dark", ramp(0.4 + vnoise(s, 4, rng) * 0.3, ["#140f0b", "#1f1813", "#2a211a"]))
@@ -619,6 +642,9 @@ MATERIALS = {
     "comb": ("psx_lit", "white", "#b42a1e", (1.0, 1.0)),
     "beak": ("psx_lit", "white", "#d8a440", (1.0, 1.0)),
     "fleece": ("psx_lit", "fleece", "#ffffff", (2.0, 2.0)),
+    "worn": ("psx_cutout", "worn", "#ffffff", (1.0, 1.0)),
+    "fur": ("psx_lit", "fur", "#ffffff", (2.0, 2.0)),
+    "pigeon": ("psx_lit", "feather", "#8c93a2", (1.0, 1.0)),
     "net": ("psx_cutout", "net", "#ffffff", (1.5, 1.5)),
     "fish": ("psx_lit", "fish", "#ffffff", (1.0, 1.0)),
     "water": ("psx_water", "water", "#ffffff", (1.0, 1.0)),
@@ -929,6 +955,8 @@ def main() -> None:
     fleece(np.random.default_rng(514))
     dream_drone(np.random.default_rng(515))
     dog_howl(np.random.default_rng(516))
+    worn(np.random.default_rng(517))
+    fur(np.random.default_rng(518))
     print(f"textures: {len(TEXTURES)}, materials: {len(MATERIALS)}, audio: {len(list(AUD.glob('*.wav')))}")
 
 

@@ -665,6 +665,14 @@ func _check_audio(player: CharacterBody3D) -> void:
 	if amb.gulls_played < 1:
 		_fail.append("no gull call during the walk")
 	print("audio: steps=%d gulls=%d" % [player.steps_played, amb.gulls_played])
+	var flew := 0
+	for b: Bird in get_tree().get_nodes_in_group(&"pigeon"):
+		flew += b.took_off
+	if get_tree().get_nodes_in_group(&"gull").size() < 5:
+		_fail.append("only %d gulls" % get_tree().get_nodes_in_group(&"gull").size())
+	if flew < 1:
+		_fail.append("no pigeon took off as the bot crossed the agora")
+	print("birds: %d gulls, pigeons took off %d times" % [get_tree().get_nodes_in_group(&"gull").size(), flew])
 
 
 func _check_pause() -> void:

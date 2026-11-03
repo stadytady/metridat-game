@@ -30,6 +30,7 @@ static func house(kit: MeshKit, xf: Transform3D, w: float, d: float, h: float, o
 	if roof == "gable":
 		kit.xform = xf * Transform3D(Basis.IDENTITY, Vector3(0, h, -d / 2.0))
 		kit.gable_roof("roof", "plaster", w, d, minf(d * 0.22, 1.4), 0.4)
+		missing_tiles(kit, w, d, minf(d * 0.22, 1.4), 0.4, opts.get("missing_tiles", 0), opts.get("seed", 0))
 		kit.xform = xf
 	else:
 		for e: Array in [[Vector3(0, h + 0.15, -0.12), Vector3(w, 0.3, 0.24)], [Vector3(0, h + 0.15, -d + 0.12), Vector3(w, 0.3, 0.24)],
@@ -207,6 +208,35 @@ static func naiskos(kit: MeshKit, xf: Transform3D, w: float, d: float, col_h: fl
 		kit.box("clay", Vector3(sx * (w / 2.0 + 0.2), top + 0.6, 0.12), Vector3(0.14, 0.32, 0.08), [])
 	kit.xform = Transform3D.IDENTITY
 	return [Vector3(-0.75, base, -0.1), Vector3(0.75, base, -0.1)] as Array[Vector3]
+
+
+## Gaps in the street-facing slope of a gable roof where tiles have slipped:
+## the battens show through. Same frame as gable_roof (ridge at y = h, z = 0,
+## the slope runs down to the eave at +z). Patches lie a hair above the tiles.
+static func missing_tiles(kit: MeshKit, w: float, d: float, h: float, overhang: float, count: int, seed: int) -> void:
+	if count <= 0:
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed
+	var hw := w / 2.0 + overhang
+	var od := d / 2.0 + overhang
+	var drop := -h * overhang / (d / 2.0)
+	var on_slope := func(u: float, v: float) -> Vector3:
+		# u across the roof (-1..1), v from the eave (0) to the ridge (1)
+		var p := Vector3(u * hw, lerpf(drop, h, v), lerpf(od, 0.0, v))
+		return p + Vector3(0, 0.03, 0.01)
+	for i in count:
+		var u := rng.randf_range(-0.7, 0.6)
+		var v := rng.randf_range(0.2, 0.7)
+		var du := rng.randf_range(0.35, 0.6) / hw
+		var dv := rng.randf_range(0.18, 0.3)
+		# the dark gap under the tiles, crossed by two pale battens
+		kit.quad("dark", on_slope.call(u, v), on_slope.call(u + du, v), on_slope.call(u + du, v + dv), on_slope.call(u, v + dv))
+		for b: float in [0.3, 0.7]:
+			var vb := v + dv * b
+			var lift := Vector3(0, 0.01, 0)
+			kit.quad("wood", on_slope.call(u, vb) + lift, on_slope.call(u + du, vb) + lift,
+					on_slope.call(u + du, vb + 0.035) + lift, on_slope.call(u, vb + 0.035) + lift)
 
 
 ## Stepped altar, fire on top. Local origin at ground center.

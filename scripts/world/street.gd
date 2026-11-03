@@ -58,6 +58,10 @@ func _build_side(kit: MeshKit, rng: RandomNumberGenerator, side: float) -> void:
 				"roof": "gable" if rng.randf() < 0.72 else "flat",
 				"door": rng.randf() < 0.85,
 				"door_x": rng.randf_range(-w / 2.0 + 1.0, w / 2.0 - 1.0),
+				# a few slipped tiles on some roofs; seeded by the house's place, not the
+				# street's rng, so nothing else on the street moves
+				"missing_tiles": 2 if int(absf(cx) * 7.0) % 3 == 0 else 0,
+				"seed": int(cx * 100.0),
 				"windows": rng.randi_range(0, 2),
 			})
 		x += w + (rng.randf_range(0.0, 1.4) if rng.randf() < 0.35 else 0.0)
