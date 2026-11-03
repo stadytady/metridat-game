@@ -48,10 +48,10 @@ jobs:
         run: tools/export.sh windows linux web
       - name: Package like a release
         run: tools/package.sh "ci-${GITHUB_SHA::7}"
-      - name: Install Wine (to run the Windows build)
+      - name: Install Wine (to run the Windows build) and ffmpeg (site poster)
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq --no-install-recommends wine wine64 xvfb
+          sudo apt-get install -y -qq --no-install-recommends wine wine64 xvfb ffmpeg
       - name: Smoke-test the packages (Linux natively, Windows under Wine)
         run: tools/smoke.sh
       - uses: actions/upload-artifact@v4
