@@ -38,5 +38,7 @@ func test_dream_key() -> void:
 	check(dream.fog_begin < night.fog_begin, "dream fog starts nearer")
 	check(dream.moon_energy > night.moon_energy, "the dream's moon is brighter")
 	check(dream.sun_energy == 0.0, "no sun in the dream")
+	var fog: Color = dream.fog_color
+	check(fog.get_luminance() < 0.2, "the dream's fog is night fog, not a grey day: %.2f" % fog.get_luminance())
 	check(DayCycle.sample(DayCycle.DREAM + 1.0).fog_end == dream.fog_end, "nothing past the dream")
 	check(DayCycle.sample(0.5).fog_end == night.fog_end, "the waking day keeps its far fog")
