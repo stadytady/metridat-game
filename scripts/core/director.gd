@@ -178,6 +178,16 @@ func _route() -> Array:
 	r.append(Vector2(20.0, 3.5))
 	r.append(Vector2(30.0, 3.0))
 	r.append(Vector2(34.0, -2.0))
+	# out through the gap in the east parapet, down to the fisherman's camp and back
+	r.append(Vector2(36.5, -7.0))
+	r.append(Vector2(56.0, 6.0))
+	r.append(Vector2(63.6, 14.4))
+	r.append("talk:fisher")
+	r.append(Vector2(64.6, 13.0))
+	r.append("net_sinkers")
+	r.append(Vector2(56.0, 6.0))
+	r.append(Vector2(36.5, -7.0))
+	r.append(Vector2(34.0, -5.5))  # around the torch at the foot of the stair
 	r.append(Vector2(34.0, -9.8))
 	r.append(Vector2(Topo.SANCT_STAIR[1].x, Topo.SANCT_STAIR[1].z))
 	r.append(Vector2(42.0, -21.0))

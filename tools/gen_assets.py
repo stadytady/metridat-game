@@ -512,6 +512,37 @@ def mud(rng):
     save("mud", ramp(field, ["#4a3426", "#634634", "#7c5a42", "#946e52", "#aa8464"]))
 
 
+def net(rng):
+    # Knotted diamond mesh, cut out by alpha (psx_cutout).
+    s = 64
+    y, x = np.mgrid[0:s, 0:s]
+    cord = ((x + y) % 16 < 2) | ((x - y) % 16 < 2)
+    knots = ((x + y) % 16 < 3) & ((x - y) % 16 < 3)
+    field = 0.45 + vnoise(s, 8, rng) * 0.3 + knots * 0.15
+    rgb = ramp(field, ["#3a3226", "#55493a", "#6e624e", "#857a63"], dither=0.0)
+    alpha = (cord | knots).astype(np.float32)
+    alpha[rng.random((s, s)) < 0.015] = 0.0  # a few torn strands
+    save("net", rgb, alpha)
+
+
+def fish(rng):
+    # Silver flank, dark back, scale rows; v runs back (0) to belly (1).
+    s = 32
+    y, x = np.mgrid[0:s, 0:s]
+    field = 0.25 + 0.6 * (y / s) + 0.08 * np.sin(x * 1.6 + (y % 4) * 1.2) + (vnoise(s, 4, rng) - 0.5) * 0.15
+    save("fish", ramp(field, ["#1e2a30", "#34474e", "#5e7378", "#8fa3a2", "#b9c6c0", "#d8ddd2"]))
+
+
+def sand(rng):
+    # Pale beach sand with scattered pebbles and shell grit.
+    s = 64
+    field = 0.5 + (fbm(s, rng, (8, 16, 32)) - 0.5) * 0.45
+    pebbles = rng.random((s, s))
+    field[pebbles < 0.02] -= 0.35
+    field[pebbles > 0.992] += 0.3
+    save("sand", ramp(field, ["#7a6a4e", "#94826a", "#ab9878", "#c0ac88", "#d2bf98", "#e2d2ac"]))
+
+
 def dark(rng):
     s = 16
     save("dark", ramp(0.4 + vnoise(s, 4, rng) * 0.3, ["#140f0b", "#1f1813", "#2a211a"]))
@@ -525,7 +556,7 @@ TEXTURES = [limestone, column, plaster, roof, wood, door, paving, earth, grass, 
             clay, redfigure, bronze, gold, water, cloth, basket, figurine, inscription, sky, dark, white]
 
 # Screen-filling surfaces swim too much with full affine mapping.
-AFFINE = {"earth": 0.25, "grass": 0.25, "rock": 0.4, "paving": 0.5, "distant_land": 0.0}
+AFFINE = {"sand": 0.25, "sand_wet": 0.25, "earth": 0.25, "grass": 0.25, "rock": 0.4, "paving": 0.5, "distant_land": 0.0}
 
 # name: (shader, texture, tint, uv_scale)
 MATERIALS = {
@@ -562,6 +593,10 @@ MATERIALS = {
     "chiton_dark": ("psx_lit", "chiton", "#a08a78", (1.0, 1.0)),
     "hair": ("psx_lit", "hair", "#ffffff", (2.0, 2.0)),
     "mud": ("psx_lit", "mud", "#ffffff", (0.5, 0.5)),
+    "sand": ("psx_lit", "sand", "#ffffff", (0.25, 0.25)),
+    "sand_wet": ("psx_lit", "sand", "#8f8476", (0.25, 0.25)),
+    "net": ("psx_cutout", "net", "#ffffff", (1.5, 1.5)),
+    "fish": ("psx_lit", "fish", "#ffffff", (1.0, 1.0)),
     "water": ("psx_water", "water", "#ffffff", (1.0, 1.0)),
 }
 
@@ -781,6 +816,9 @@ def main() -> None:
     chiton(np.random.default_rng(503))
     hair(np.random.default_rng(504))
     mud(np.random.default_rng(505))
+    net(np.random.default_rng(506))
+    fish(np.random.default_rng(507))
+    sand(np.random.default_rng(508))
     print(f"textures: {len(TEXTURES)}, materials: {len(MATERIALS)}, audio: {len(list(AUD.glob('*.wav')))}")
 
 

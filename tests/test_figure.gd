@@ -27,7 +27,11 @@ func test_poses_name_known_joints() -> void:
 
 
 func test_motion_is_stepped() -> void:
-	for pose: String in ["potter", "turner", "stand"]:
-		var a := Figure.motion(pose, 1.0)
-		check(a == Figure.motion(pose, 1.0 + 0.5 / 15.0), "%s: no change within one 15 fps step" % pose)
-		check(a != Figure.motion(pose, 1.0 + 3.0 / 15.0), "%s: moves across steps" % pose)
+	for pose: String in ["potter", "turner", "mender", "stand"]:
+		var moved := false
+		for i in 45:
+			var t := 1.0 + (i + 0.25) / 15.0  # mid-step: no float edge at the step boundary
+			var a := Figure.motion(pose, t)
+			check(a == Figure.motion(pose, t + 0.5 / 15.0), "%s: changes within one 15 fps step at %.2f" % [pose, t])
+			moved = moved or a != Figure.motion(pose, t + 1.0 / 15.0)
+		check(moved, "%s: never moves in 3 s" % pose)

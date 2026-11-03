@@ -37,6 +37,10 @@ const AGORA_H := 5.0
 const SANCT_CENTER := Vector2(46, -27)
 const SANCT_HALF := Vector2(8, 7)
 const SANCT_H := 8.5
+## Fisherman's camp on the beach below the agora.
+const CAMP_CENTER := Vector2(66.5, 14.0)
+const CAMP_HALF := Vector2(5.5, 4.0)
+
 ## Stair from the agora's north-east corner (past the stoa's end) up to the sanctuary terrace.
 const SANCT_STAIR: Array[Vector3] = [Vector3(34, 5.0, -10.5), Vector3(40.5, 8.5, -19.6)]
 const SANCT_STAIR_HALF := 1.6
