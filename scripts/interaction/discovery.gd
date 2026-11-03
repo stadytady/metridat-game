@@ -12,3 +12,5 @@ extends Resource
 @export_multiline var history: String
 @export var sources: String
 @export_multiline var narrative: String
+## Where to look, for the journal: a nudge, not a map pin.
+@export var hint: String

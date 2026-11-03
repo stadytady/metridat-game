@@ -89,6 +89,11 @@ func _ui_shots(player: CharacterBody3D) -> void:
 		await _frames(6)
 		_save("ui_dialogue")
 		dlg.close()
+	var jrn: Node = _main().get_node("JournalPanel")
+	jrn.open()
+	await _frames(6)
+	_save("ui_journal")
+	jrn.close()
 	_main().get_node("PauseMenu").open()
 	await _frames(6)
 	_save("ui_pause")
@@ -220,6 +225,7 @@ func _walkthrough() -> void:
 	print("walkthrough: %d inspectables registered, Game.total()=%d" % [items.size(), Game.total()])
 	if items.size() < 5:
 		_fail.append("fewer than 5 inspectables")
+	await _check_journal(Game.total())
 	var min_y := INF
 	for step in _route():
 		if Game.found_count() == Game.total():
@@ -241,6 +247,7 @@ func _walkthrough() -> void:
 	if Game.found_count() != Game.total():
 		_fail.append("found %d of %d discoveries" % [Game.found_count(), Game.total()])
 	_check_night()
+	await _check_journal(0)
 	_check_audio(player)
 	await _check_pause()
 	await _check_language()
@@ -343,6 +350,22 @@ func _talk(player: CharacterBody3D, npc_id: String) -> void:
 	if not Game.talked.get(npc_id, false) or shown != npc.lines.size():
 		_fail.append("talk with %s: %d of %d lines" % [npc_id, shown, npc.lines.size()])
 	print("talked to %s (%d lines)" % [npc_id, shown])
+
+
+## Opens the journal like pressing J: one row per find, a hint for each one
+## not yet found, then closes it.
+func _check_journal(expect_hints: int) -> void:
+	var j: Node = _main().get_node("JournalPanel")
+	j.open()
+	await _frames(3)
+	var c: Vector2i = j.counts()
+	if c.x != Game.total() or c.y != expect_hints:
+		_fail.append("journal: %d rows, %d hints; expected %d, %d" % [c.x, c.y, Game.total(), expect_hints])
+	if not Rect2(Vector2.ZERO, Vector2(1920, 1080)).encloses(j._panel.get_global_rect()):
+		_fail.append("journal off screen: %s" % j._panel.get_global_rect())
+	j.close()
+	await _frames(2)
+	print("journal: %d rows, %d hints" % [c.x, c.y])
 
 
 ## Steps up to the agora flock: the nearest chicken must scatter and stay home.
