@@ -2,7 +2,6 @@ extends Node3D
 ## Sea plane east of the shore plus the opposite (Asian) shore of the strait
 ## as a hazy silhouette beyond the fog.
 
-const HAZE := Color("#d9a774")
 
 
 ## Grid: 4 m cells near the shore (where the swell is seen up close),
@@ -18,9 +17,6 @@ func _ready() -> void:
 	var mat: ShaderMaterial = Mats.get_mat("water").duplicate()
 	mat.set_shader_parameter("shore_tex", _shore_texture())
 	mat.set_shader_parameter("shore_z_range", SHORE_Z)
-	var sun: DirectionalLight3D = get_parent().get_node_or_null("Atmosphere/Sun")
-	if sun:
-		mat.set_shader_parameter("sun_dir", sun.global_transform.basis.z)  # towards the sun
 	sea.material_override = mat
 	sea.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	# Waves move vertices; keep the sea from being culled when they rise.
@@ -104,7 +100,6 @@ func _far_shore() -> MeshInstance3D:
 	var mat := ShaderMaterial.new()
 	mat.shader = preload("res://assets/shaders/psx_haze.gdshader")
 	mat.set_shader_parameter("land_color", Color("#5a5446"))
-	mat.set_shader_parameter("haze_color", HAZE)
 	mat.set_shader_parameter("haze", 0.62)
 	mesh.surface_set_material(0, mat)
 	var mi := MeshInstance3D.new()

@@ -1,6 +1,6 @@
 extends Node
 ## Automation, started by user args after "--":
-##   --shots [--out=DIR] [--only=a,b] [--lang=ru]   save a PNG per viewpoint of World.viewpoints()
+##   --shots [--out=DIR] [--only=a,b] [--lang=ru] [--time=0..1] [--lamps]   save a PNG per viewpoint of World.viewpoints()
 ##                                      (the final composited frame: world + post + UI)
 ##   --clip=VIEW [--seconds=N]          hold a viewpoint for N s (record with --write-movie)
 ##   --walkthrough                       a bot walks the whole route with real physics,
@@ -17,6 +17,8 @@ func _ready() -> void:
 			_out = a.substr(6)
 		elif a.begins_with("--only="):
 			_only = a.substr(7).split(",")
+		elif a.begins_with("--time="):
+			Game.time_override = a.substr(7).to_float()
 		elif a.begins_with("--lang="):
 			# Not Game.set_language(): automation must not overwrite saved settings.
 			Game.language = a.substr(7)
@@ -39,6 +41,9 @@ func _shots() -> void:
 	DirAccess.make_dir_recursive_absolute(_out)
 	var player: CharacterBody3D = _main().player()
 	player.set_physics_process(false)
+	if "--lamps" in OS.get_cmdline_user_args():
+		for lamp: Lamp in Game.lamps:
+			lamp.interact()
 	await _frames(10)
 	var vps: Dictionary = _main().world.viewpoints()
 	for name: String in vps:
@@ -113,6 +118,8 @@ func _report_perf() -> void:
 # ---------------------------------------------------------------- walkthrough
 
 const STUCK_SECONDS := 4.0
+## Set once all finds are made: from then on the bot lights every lamp it passes.
+var _lighting := false
 var _fail := PackedStringArray()
 
 
@@ -156,6 +163,19 @@ func _route() -> Array:
 	r.append(Vector2(51.5, -21.0))
 	r.append(Vector2(51.6, -29.0))
 	r.append("votive_figurine")
+	# Night falls with the last find: walk back up to the hill, lighting lamps.
+	r.append(Vector2(51.5, -21.0))
+	r.append(Vector2(42.0, -21.0))
+	r.append(Vector2(Topo.SANCT_STAIR[1].x, Topo.SANCT_STAIR[1].z))
+	r.append(Vector2(34.0, -9.8))
+	r.append(Vector2(34.0, -2.0))
+	# around the bench and statue base, through the south half of the square
+	r.append(Vector2(33.0, 3.5))
+	r.append(Vector2(12.5, 3.5))
+	r.append(Vector2(Topo.STREET[-1].x, Topo.STREET[-1].z))
+	for i in range(Topo.STREET.size() - 1, -1, -1):
+		r.append(Vector2(Topo.STREET[i].x, Topo.STREET[i].z))
+	r.append(Vector2(Topo.HILL_CENTER.x + Topo.HILL_HALF.x - 3.0, 0.0))
 	return r
 
 
@@ -170,6 +190,8 @@ func _walkthrough() -> void:
 		_fail.append("fewer than 5 inspectables")
 	var min_y := INF
 	for step in _route():
+		if Game.found_count() == Game.total():
+			_lighting = true
 		if step is Vector2:
 			var ok := await _walk_to(player, step)
 			if not ok:
@@ -182,6 +204,7 @@ func _walkthrough() -> void:
 		_fail.append("player went below sea level (min y %.2f)" % min_y)
 	if Game.found_count() != Game.total():
 		_fail.append("found %d of %d discoveries" % [Game.found_count(), Game.total()])
+	_check_night()
 	_check_audio(player)
 	await _check_pause()
 	await _check_language()
@@ -200,6 +223,8 @@ func _walk_to(player: CharacterBody3D, target: Vector2) -> bool:
 		var pos := Vector2(player.global_position.x, player.global_position.z)
 		if pos.distance_to(target) < 0.6:
 			return true
+		if _lighting:
+			await _light_nearby(player)
 		player.look_at_point(Vector3(target.x, player.camera.global_position.y, target.y))
 		player.bot_move = Vector2(0, -1)
 		await get_tree().physics_frame
@@ -247,6 +272,44 @@ func _inspect(player: CharacterBody3D, items: Dictionary, id: String) -> void:
 	print("inspected %s (%d/%d)" % [id, Game.found_count(), Game.total()])
 	info.close()
 	await _frames(3)
+
+
+## Turns aside to any unlit lamp within reach, lights it through the
+## interactor ray (like pressing E), then returns to the route.
+func _light_nearby(player: CharacterBody3D) -> void:
+	for lamp: Lamp in Game.lamps:
+		if lamp.lit:
+			continue
+		var lp := Vector2(lamp.global_position.x, lamp.global_position.z)
+		var pp := Vector2(player.global_position.x, player.global_position.z)
+		if pp.distance_to(lp) > 4.0:
+			continue
+		var steps := 0
+		while Vector2(player.global_position.x, player.global_position.z).distance_to(lp) > 1.4 and steps < 240:
+			player.look_at_point(Vector3(lp.x, player.camera.global_position.y, lp.y))
+			player.bot_move = Vector2(0, -1)
+			await get_tree().physics_frame
+			steps += 1
+		player.bot_move = Vector2.ZERO
+		await _frames(3)
+		player.look_at_point(lamp.global_position + Vector3(0, 1.0, 0))
+		await get_tree().physics_frame
+		await get_tree().physics_frame
+		if not player.interactor.try_interact() or not lamp.lit:
+			_fail.append("could not light lamp at %s from %s" % [lamp.global_position, player.global_position])
+			lamp.lit = true  # do not retry forever
+		else:
+			print("lit lamp %d/%d" % [Game.lamps_lit(), Game.lamps.size()])
+
+
+## All finds bring the night; every lamp should be lit by the end of the route.
+func _check_night() -> void:
+	var atm: Node = _main().world.get_node("Atmosphere")
+	if atm.t < 0.99:
+		_fail.append("night did not fall: hour %.2f" % atm.t)
+	if Game.lamps_lit() != Game.lamps.size():
+		_fail.append("lit %d of %d lamps" % [Game.lamps_lit(), Game.lamps.size()])
+	print("night: hour %.2f, lamps %d/%d" % [atm.t, Game.lamps_lit(), Game.lamps.size()])
 
 
 ## Switching language live re-renders the open info panel and the HUD.

@@ -446,6 +446,43 @@ def sky(rng):
     save("sky", rgb)
 
 
+def sky_panorama(rng, name, bands, field_pow, clouds, stars=0, moon=None):
+    """Banded panorama like sky(): no dither, the image is magnified a lot."""
+    w, h = 512, 256
+    v = np.linspace(0, 1, h)[:, None] * np.ones((1, w))
+    t = np.clip(v / 0.5, 0, 1)
+    rgb = ramp(t ** field_pow, bands, 0.0)
+    noise = vnoise(w, 12, rng, h)
+    for cy, thick, col in clouds:
+        streak = (np.abs(v - cy - (noise - 0.5) * 0.02) < thick) & (noise > 0.48)
+        rgb[streak] = hexc(col)
+    for _ in range(stars):
+        x = int(rng.integers(0, w))
+        y = int(rng.integers(0, int(h * 0.42)))
+        rgb[y, x] = hexc("#f2ecd8") if rng.random() < 0.7 else hexc("#c8d4f0")
+    if moon:
+        mx, my, r = moon
+        yy, xx = np.mgrid[0:h, 0:w]
+        d = np.hypot(xx - mx, (yy - my) * 1.0)
+        rgb[d < r + 3] = rgb[d < r + 3] * 0.6 + hexc("#56607a") * 0.4
+        rgb[d < r] = hexc("#e8e4d0")
+        rgb[(d < r) & (xx > mx + r * 0.35)] = hexc("#c8c4b0")
+    rgb[v >= 0.5] = hexc(bands[-1])
+    save(name, rgb)
+
+
+def sky_dusk(rng):
+    sky_panorama(rng, "sky_dusk",
+                 ["#232a44", "#2e3350", "#3d3a5a", "#57435e", "#7a4c5c", "#a2554e", "#c8603e", "#e07a42", "#ec9452"],
+                 2.2, ((0.40, 0.012, "#5e3a48"), (0.445, 0.008, "#7e4248"), (0.33, 0.01, "#3e3450")), stars=25)
+
+
+def sky_night(rng):
+    sky_panorama(rng, "sky_night",
+                 ["#070b18", "#0b1122", "#10182e", "#162038", "#1d2842", "#26324c"],
+                 1.6, ((0.42, 0.01, "#1a2236"), (0.36, 0.008, "#151c30")), stars=420, moon=(140, 70, 9))
+
+
 def dark(rng):
     s = 16
     save("dark", ramp(0.4 + vnoise(s, 4, rng) * 0.3, ["#140f0b", "#1f1813", "#2a211a"]))
@@ -490,6 +527,7 @@ MATERIALS = {
     "distant_land": ("psx_lit", "earth", "#8a8070", (0.01, 0.01)),
     "marker": ("psx_unlit", "white", "#e8b34a", (1.0, 1.0)),
     "fire": ("psx_unlit", "white", "#ffb347", (1.0, 1.0)),
+    "flame": ("psx_unlit", "white", "#ffd27a", (1.0, 1.0)),
     "water": ("psx_water", "water", "#ffffff", (1.0, 1.0)),
 }
 
@@ -702,6 +740,9 @@ def main() -> None:
         step(rng, i, "dirt")
     fire(rng)
     trailer_theme(np.random.default_rng(77))
+    # Separate generators: adding these must not change any existing asset.
+    sky_dusk(np.random.default_rng(500))
+    sky_night(np.random.default_rng(501))
     print(f"textures: {len(TEXTURES)}, materials: {len(MATERIALS)}, audio: {len(list(AUD.glob('*.wav')))}")
 
 
