@@ -110,34 +110,128 @@ static func cypress(kit: MeshKit) -> void:
 
 
 ## Merchant ship silhouette (~16 m): lofted hull, raised stern, mast, square sail.
-static func ship(kit: MeshKit) -> void:
-	var sections := []
-	var n := 9
+## Plank hull, bow along +x, keel at y = 0. Each section is keel, bilge and
+## sheer: two bands of quads per side, so the hull has a rounded belly and not
+## a V. The sheer rises towards both ends. `inner` != "" adds the inside skin
+## (open boats, the hold). Returns the sections [x, half-beam, bilge y, sheer y]
+## for decks and fittings.
+static func hull(kit: MeshKit, length: float, beam: float, depth: float, sheer_mid: float, sheer_end: float,
+		n: int, low: String, high: String, inner: String = "") -> Array:
+	var sec := []
 	for i in n:
 		var t := float(i) / (n - 1)
-		var x := lerpf(-8.0, 8.0, t)
-		var w := 2.2 * sin(PI * clampf(t * 1.02, 0.02, 0.98)) ** 0.7
-		var sheer := 1.2 + 1.6 * pow(absf(t - 0.45) * 1.8, 3.0)
-		sections.append([x, w, sheer])
+		var e := absf(t * 2.0 - 1.0)  # 0 amidships, 1 at the ends
+		var w := beam * pow(maxf(sin(PI * clampf(t, 0.02, 0.98)), 0.0), 0.55)
+		sec.append([lerpf(-length / 2.0, length / 2.0, t), w, depth * (0.55 + 0.25 * e), depth + sheer_mid + sheer_end * pow(e, 2.4)])
 	for i in n - 1:
-		var a: Array = sections[i]
-		var b: Array = sections[i + 1]
+		var a: Array = sec[i]
+		var b: Array = sec[i + 1]
 		for s: float in [1.0, -1.0]:
-			var ka := Vector3(a[0], -0.6, 0)
-			var kb := Vector3(b[0], -0.6, 0)
-			var ta := Vector3(a[0], a[2], a[1] * s)
-			var tb := Vector3(b[0], b[2], b[1] * s)
+			var ka := Vector3(a[0], 0.0, 0.0)
+			var kb := Vector3(b[0], 0.0, 0.0)
+			var ba := Vector3(a[0], a[2], a[1] * 0.82 * s)
+			var bb := Vector3(b[0], b[2], b[1] * 0.82 * s)
+			var ta := Vector3(a[0], a[3], a[1] * s)
+			var tb := Vector3(b[0], b[3], b[1] * s)
 			if s > 0:
-				kit.quad("hull", ka, kb, tb, ta)
+				kit.quad(low, ka, kb, bb, ba)
+				kit.quad(high, ba, bb, tb, ta)
+				if inner != "":
+					kit.quad(inner, kb, ka, ba, bb)
+					kit.quad(inner, bb, ba, ta, tb)
 			else:
-				kit.quad("hull", kb, ka, ta, tb)
-		kit.quad("wood", Vector3(a[0], a[2] - 0.3, a[1] * 0.9), Vector3(b[0], b[2] - 0.3, b[1] * 0.9),
-				Vector3(b[0], b[2] - 0.3, -b[1] * 0.9), Vector3(a[0], a[2] - 0.3, -a[1] * 0.9))
-	kit.lathe("hull", PackedVector2Array([Vector2(0.12, 0.8), Vector2(0.08, 10.0)]), 4)
-	kit.box("hull", Vector3(0, 9.4, 0), Vector3(0.15, 0.15, 9.0), [])
-	var sail := [Vector3(0.05, 9.3, 4.4), Vector3(0.05, 9.3, -4.4), Vector3(0.6, 3.6, -4.0), Vector3(0.6, 3.6, 4.0)]
-	kit.quad("sail", sail[0], sail[1], sail[2], sail[3])
-	kit.quad("sail", sail[1], sail[0], sail[3], sail[2])
+				kit.quad(low, kb, ka, ba, bb)
+				kit.quad(high, bb, ba, ta, tb)
+				if inner != "":
+					kit.quad(inner, ka, kb, bb, ba)
+					kit.quad(inner, ba, bb, tb, ta)
+	return sec
+
+
+## A chain of boxes through `pts` (stem posts, the curling stern, rigging).
+static func beam_chain(kit: MeshKit, mat: String, pts: Array, thick: float) -> void:
+	var keep := kit.xform
+	for i in pts.size() - 1:
+		var p0: Vector3 = pts[i]
+		var p1: Vector3 = pts[i + 1]
+		var d := p0.distance_to(p1)
+		kit.xform = keep * align_y(p0, p1)
+		kit.box(mat, Vector3(0, d / 2.0, 0), Vector3(thick, d + thick * 0.5, thick), [])
+	kit.xform = keep
+
+
+## Half-beam of a hull at x, from the sections hull() returned.
+static func hull_width(sec: Array, x: float) -> Vector2:
+	for i in sec.size() - 1:
+		var a: Array = sec[i]
+		var b: Array = sec[i + 1]
+		if x <= b[0]:
+			var f := clampf((x - a[0]) / (b[0] - a[0]), 0.0, 1.0)
+			return Vector2(lerpf(a[1], b[1], f), lerpf(a[3], b[3], f))
+	return Vector2(sec[-1][1], sec[-1][3])
+
+
+## Merchant ship (holkas) of the 4th century BCE: round hull pitched black below
+## the wale, short decks fore and aft with an open hold of amphorae, a stem post,
+## the stern curling up and forward (aphlaston), two steering oars, a mast with a
+## yard and a square sail bellied by the wind from astern, fore- and backstay.
+## Keel at y = 0; it floats with the waterline at about y = 1.
+static func ship(kit: MeshKit) -> void:
+	var L := 16.0
+	var sec := hull(kit, L, 2.4, 1.3, 0.9, 1.3, 11, "dark", "hull", "wood")
+	var deck := func(x0: float, x1: float, y: float) -> void:
+		var w0 := hull_width(sec, x0).x * 0.95
+		var w1 := hull_width(sec, x1).x * 0.95
+		kit.quad("wood", Vector3(x0, y, w0), Vector3(x1, y, w1), Vector3(x1, y, -w1), Vector3(x0, y, -w0))
+	deck.call(-7.0, -4.2, 2.25)
+	deck.call(4.6, 7.0, 2.25)
+	# wale: a painted strake along the sheer
+	for i in sec.size() - 1:
+		var a: Array = sec[i]
+		var b: Array = sec[i + 1]
+		for s: float in [1.0, -1.0]:
+			var pa := Vector3(a[0], a[3] - 0.3, a[1] * s * 1.01)
+			var pb := Vector3(b[0], b[3] - 0.3, b[1] * s * 1.01)
+			var qa := pa + Vector3(0, 0.18, 0)
+			var qb := pb + Vector3(0, 0.18, 0)
+			if s > 0:
+				kit.quad("clay", pa, pb, qb, qa)
+			else:
+				kit.quad("clay", pb, pa, qa, qb)
+	var bow: Array = sec[-1]
+	var stern: Array = sec[0]
+	beam_chain(kit, "hull", [Vector3(bow[0] - 0.4, 0.0, 0), Vector3(bow[0] + 0.3, 1.6, 0), Vector3(bow[0] + 0.5, bow[3] + 0.5, 0)], 0.3)
+	beam_chain(kit, "hull", [Vector3(stern[0] + 0.4, 0.0, 0), Vector3(stern[0] - 0.3, 1.8, 0), Vector3(stern[0] - 0.4, stern[3] + 0.6, 0),
+		Vector3(stern[0] - 0.1, stern[3] + 1.5, 0), Vector3(stern[0] + 0.5, stern[3] + 1.9, 0), Vector3(stern[0] + 0.9, stern[3] + 1.6, 0)], 0.28)
+	for s: float in [1.0, -1.0]:
+		beam_chain(kit, "wood", [Vector3(-5.6, 3.0, 2.0 * s), Vector3(-6.9, -0.6, 2.6 * s)], 0.14)
+		kit.xform = align_y(Vector3(-6.9, -0.6, 2.6 * s), Vector3(-5.6, 3.0, 2.0 * s))
+		kit.box("wood", Vector3(0, 0.6, 0), Vector3(0.06, 1.2, 0.4), [])
+		kit.xform = Transform3D.IDENTITY
+	# hold: rows of amphorae lying in the open waist
+	for ix in 5:
+		for iz in 3:
+			var x := -3.0 + ix * 1.4
+			kit.xform = Transform3D(Basis(Vector3.FORWARD, PI / 2.0) * Basis().scaled(Vector3.ONE * 1.3), Vector3(x + 0.5, 1.05, (iz - 1) * 0.7))
+			amphora(kit)
+	kit.xform = Transform3D.IDENTITY
+	# mast, yard, sail (both faces), stays
+	kit.lathe("hull", PackedVector2Array([Vector2(0.13, 0.4), Vector2(0.09, 11.0)]), 5, Vector3(0.6, 0, 0))
+	var yard := 10.2
+	kit.box("hull", Vector3(0.75, yard, 0), Vector3(0.16, 0.16, 9.4), [])
+	var top_l := Vector3(0.82, yard - 0.05, 4.4)
+	var top_r := Vector3(0.82, yard - 0.05, -4.4)
+	var mid_l := Vector3(1.5, yard - 3.0, 4.3)
+	var mid_r := Vector3(1.5, yard - 3.0, -4.3)
+	var bot_l := Vector3(1.4, yard - 6.0, 4.0)
+	var bot_r := Vector3(1.4, yard - 6.0, -4.0)
+	for q: Array in [[top_l, top_r, mid_r, mid_l], [mid_l, mid_r, bot_r, bot_l]]:
+		kit.quad("sail", q[0], q[1], q[2], q[3])
+		kit.quad("sail", q[1], q[0], q[3], q[2])
+	beam_chain(kit, "dark", [Vector3(0.6, 10.9, 0), Vector3(bow[0] + 0.5, bow[3] + 0.4, 0)], 0.05)
+	beam_chain(kit, "dark", [Vector3(0.6, 10.9, 0), Vector3(stern[0] + 0.6, stern[3] + 0.2, 0)], 0.05)
+	for s: float in [1.0, -1.0]:
+		beam_chain(kit, "dark", [Vector3(0.6, 10.6, 0), Vector3(0.0, 2.4, 2.3 * s)], 0.04)
 
 
 ## Bronze tripod with a cauldron: a classic dedication in Greek sanctuaries.
@@ -216,35 +310,20 @@ static func mould(kit: MeshKit) -> void:
 	kit.blob("figurine", Vector3(0.0, 0.03, 0.2), Vector3(0.05, 0.03, 0.05), 0.2, RandomNumberGenerator.new())
 
 
-## Small open fishing boat, bow along +x, keel at y = 0. Same plank-quad hull
-## as the merchant ship, with thwarts and a pair of oars laid inside.
+## Small open fishing boat, bow along +x, keel at y = 0: the ship's hull in
+## small, open, with stem and stern posts, two thwarts and the oars shipped.
 static func boat(kit: MeshKit) -> void:
-	var n := 7
-	var sections := []
-	for i in n:
-		var t := float(i) / (n - 1)
-		var w := 0.78 * sin(PI * clampf(t, 0.03, 0.97)) ** 0.6
-		sections.append([lerpf(-2.3, 2.3, t), w, 0.62 + 0.9 * pow(absf(t - 0.5) * 2.0, 3.0) * 0.3])
-	for i in n - 1:
-		var a: Array = sections[i]
-		var b: Array = sections[i + 1]
-		var ka := Vector3(a[0], 0.0, 0)
-		var kb := Vector3(b[0], 0.0, 0)
-		for s: float in [1.0, -1.0]:
-			var ta := Vector3(a[0], a[2], a[1] * s)
-			var tb := Vector3(b[0], b[2], b[1] * s)
-			# outside and inside skin: the hull is open, both sides are seen
-			if s > 0:
-				kit.quad("hull", ka, kb, tb, ta)
-				kit.quad("wood", kb, ka, ta, tb)
-			else:
-				kit.quad("hull", kb, ka, ta, tb)
-				kit.quad("wood", ka, kb, tb, ta)
-	for x: float in [-0.9, 0.5]:
-		kit.box("wood", Vector3(x, 0.45, 0), Vector3(0.22, 0.05, 1.3), [])
+	var sec := hull(kit, 4.6, 0.82, 0.42, 0.14, 0.32, 9, "hull", "wood", "wood")
+	var bow: Array = sec[-1]
+	var stern: Array = sec[0]
+	beam_chain(kit, "hull", [Vector3(bow[0] - 0.15, 0.0, 0), Vector3(bow[0] + 0.12, bow[3] * 0.6, 0), Vector3(bow[0] + 0.18, bow[3] + 0.15, 0)], 0.09)
+	beam_chain(kit, "hull", [Vector3(stern[0] + 0.15, 0.0, 0), Vector3(stern[0] - 0.1, stern[3] * 0.6, 0), Vector3(stern[0] - 0.14, stern[3] + 0.1, 0)], 0.09)
+	for x: float in [-0.9, 0.6]:
+		var w := hull_width(sec, x)
+		kit.box("wood", Vector3(x, w.y - 0.12, 0), Vector3(0.2, 0.05, w.x * 1.9), [])
 	for s: float in [1.0, -1.0]:
-		kit.box("wood", Vector3(0.1, 0.5, 0.28 * s), Vector3(3.2, 0.05, 0.07), [])
-		kit.box("wood", Vector3(1.55, 0.5, 0.28 * s), Vector3(0.6, 0.06, 0.16), [])
+		beam_chain(kit, "wood", [Vector3(-1.7, 0.42, 0.18 * s), Vector3(1.9, 0.5, 0.3 * s)], 0.05)
+		kit.box("wood", Vector3(1.75, 0.5, 0.3 * s), Vector3(0.5, 0.025, 0.13), [])
 
 
 ## Net weights: pierced clay discs cut from broken pots, and two pyramidal
