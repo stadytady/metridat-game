@@ -172,7 +172,11 @@ static func naiskos(kit: MeshKit, xf: Transform3D, w: float, d: float, col_h: fl
 	kit.xform = xf
 	var base := 0.5
 	kit.solid_box("limestone", Vector3(0, base / 2.0 - 0.3, -d / 2.0), Vector3(w + 0.8, base + 0.6, d + 0.8), ["bottom"])
-	kit.solid_box("limestone", Vector3(0, base / 2.0 - 0.1, 0.65), Vector3(w * 0.7, base - 0.2 + 0.2, 0.5), ["bottom"])
+	# crepidoma: two more steps around the top one, three in all
+	for i in 2:
+		var grow := 0.8 + 0.6 * (i + 1)
+		var h := base - 0.17 * (i + 1)
+		kit.solid_box("limestone", Vector3(0, h / 2.0 - 0.3, -d / 2.0), Vector3(w + grow, h + 0.6, d + grow), ["bottom"])
 	var top := base + col_h
 	var t := 0.45
 	var porch := 1.6
@@ -186,11 +190,21 @@ static func naiskos(kit: MeshKit, xf: Transform3D, w: float, d: float, col_h: fl
 	for sx: float in [1.0, -1.0]:
 		kit.solid_box("plaster", Vector3(sx * (0.7 + side / 2.0), (base + top) / 2.0, fz), Vector3(side, col_h, t), ["bottom"])
 	kit.box("plaster", Vector3(0, top - 0.5, fz), Vector3(1.4, 1.0, t), ["bottom"])
-	kit.quad("dark", Vector3(-0.7, base, fz + t / 2.0 + 0.01), Vector3(0.7, base, fz + t / 2.0 + 0.01),
-			Vector3(0.7, top - 1.0, fz + t / 2.0 + 0.01), Vector3(-0.7, top - 1.0, fz + t / 2.0 + 0.01))
+	# the doors stand open, folded back against the cella's front wall inside
+	for sx: float in [1.0, -1.0]:
+		kit.box("door", Vector3(sx * 0.95, (base + top - 1.0) / 2.0, fz - t / 2.0 - 0.05), Vector3(0.5, top - 1.0 - base, 0.06), [])
 	kit.box("limestone", Vector3(0, top + 0.22, -d / 2.0), Vector3(w + 0.2, 0.44, d + 0.2), ["bottom"])
+	# painted frieze band across the front
+	kit.box("redfigure", Vector3(0, top + 0.22, 0.111), Vector3(w + 0.1, 0.3, 0.02), ["bottom", "top"])
 	kit.xform = xf * Transform3D(Basis(Vector3(0, 0, 1), Vector3.UP, Vector3(-1, 0, 0)), Vector3(0, top + 0.44, -d / 2.0))
-	kit.gable_roof("roof", "plaster", d + 0.2, w + 0.2, 1.0, 0.35, "wood")
+	kit.gable_roof("roof", "plaster", d + 0.2, w + 0.2, 1.0, 0.35, "wood", true)
+	# acroteria: a palmette at the apex and at the corners of the front gable
+	kit.xform = xf
+	var ridge := top + 0.44 + 1.0
+	kit.box("clay", Vector3(0, ridge + 0.22, 0.12), Vector3(0.18, 0.45, 0.08), [])
+	kit.box("clay", Vector3(0, ridge + 0.38, 0.12), Vector3(0.36, 0.14, 0.08), [])
+	for sx: float in [1.0, -1.0]:
+		kit.box("clay", Vector3(sx * (w / 2.0 + 0.2), top + 0.6, 0.12), Vector3(0.14, 0.32, 0.08), [])
 	kit.xform = Transform3D.IDENTITY
 	return [Vector3(-0.75, base, -0.1), Vector3(0.75, base, -0.1)] as Array[Vector3]
 

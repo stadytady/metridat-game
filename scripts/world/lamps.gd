@@ -28,6 +28,10 @@ func _ready() -> void:
 		for sgn: float in [-1.0, 1.0]:
 			var q := p + perp * sgn
 			_lamp("torch_post", Vector3(q.x, Topo.surface(q.x, q.z), q.z))
+	# two torches flanking the temple door (Hecate's torches)
+	var sc := Topo.SANCT_CENTER
+	for sx: float in [-1.9, 1.9]:
+		_lamp("torch_post", Vector3(sc.x + sx, Topo.SANCT_H, -25.7))
 
 
 func _lamp(kind: String, pos: Vector3) -> void:

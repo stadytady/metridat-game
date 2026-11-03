@@ -221,7 +221,11 @@ func _route() -> Array:
 	r.append(Vector2(51.5, -21.0))
 	r.append(Vector2(51.6, -29.0))
 	r.append("votive_figurine")
-	# Night falls with the last find: walk back up to the hill, lighting lamps.
+	# Night falls with the last find: light the temple door torches, then walk
+	# back up to the hill, lighting lamps.
+	r.append(Vector2(49.5, -25.5))
+	r.append(Vector2(46.0, -25.0))
+	r.append(Vector2(49.5, -25.5))
 	r.append(Vector2(51.5, -21.0))
 	r.append(Vector2(42.0, -21.0))
 	r.append(Vector2(Topo.SANCT_STAIR[1].x, Topo.SANCT_STAIR[1].z))
@@ -519,6 +523,8 @@ func _check_night() -> void:
 	var atm: Node = _main().world.get_node("Atmosphere")
 	if atm.t < 0.99:
 		_fail.append("night did not fall: hour %.2f" % atm.t)
+	if Game.lamps.size() < 15:
+		_fail.append("only %d lamps on the route" % Game.lamps.size())
 	if Game.lamps_lit() != Game.lamps.size():
 		_fail.append("lit %d of %d lamps" % [Game.lamps_lit(), Game.lamps.size()])
 	print("night: hour %.2f, lamps %d/%d" % [atm.t, Game.lamps_lit(), Game.lamps.size()])

@@ -181,7 +181,7 @@ func _cap(mat: String, pr: Vector2, segments: int, center: Vector3, ring: Callab
 ## Gable roof whose eaves line sits on the wall tops (local y = 0), ridge along x.
 ## Slopes continue past the walls by `overhang` and get an underside.
 func gable_roof(roof_mat: String, gable_mat: String, w: float, d: float, h: float, overhang: float,
-		under_mat: String = "wood") -> void:
+		under_mat: String = "wood", gable_inside: bool = false) -> void:
 	var hw := w / 2.0 + overhang
 	var hd := d / 2.0
 	var od := hd + overhang
@@ -198,6 +198,8 @@ func gable_roof(roof_mat: String, gable_mat: String, w: float, d: float, h: floa
 		var b := Vector3(gx * sx, 0, -hd * sx)
 		var c := Vector3(gx * sx, h, 0)
 		tri(gable_mat, a, b, c, Vector2(a.z, 0), Vector2(b.z, 0), Vector2(0, -h))
+		if gable_inside:  # seen from inside (an open temple): the sky must not show through
+			tri(gable_mat, b, a, c, Vector2(b.z, 0), Vector2(a.z, 0), Vector2(0, -h))
 
 
 ## Jittered icosahedron: the basic PS1 rock / canopy blob.
