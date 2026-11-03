@@ -12,6 +12,9 @@ const SETTINGS_PATH := "user://settings.cfg"
 var mouse_sensitivity := 1.0
 var invert_y := false
 var psx_effects := true
+## "en" or "ru". Empty until settings load: then the system language decides.
+var language := ""
+const LANGUAGES := ["en", "ru"]
 
 ## id -> Discovery, filled by inspectables as they enter the tree.
 var registry := {}
@@ -80,7 +83,20 @@ func load_settings() -> void:
 		mouse_sensitivity = clampf(float(cfg.get_value("input", "mouse_sensitivity", 1.0)), 0.1, 4.0)
 		invert_y = bool(cfg.get_value("input", "invert_y", false))
 		psx_effects = bool(cfg.get_value("video", "psx_effects", true))
+		language = String(cfg.get_value("ui", "language", ""))
+	if language not in LANGUAGES:
+		language = "ru" if OS.get_locale_language() == "ru" else "en"
+	TranslationServer.set_locale(language)
 	settings_changed.emit()
+
+
+## Switches the UI and all texts; Labels holding translation keys update
+## themselves, formatted ones listen for NOTIFICATION_TRANSLATION_CHANGED.
+func set_language(lang: String) -> void:
+	assert(lang in LANGUAGES)
+	language = lang
+	TranslationServer.set_locale(lang)
+	save_settings()
 
 
 func save_settings() -> void:
@@ -88,6 +104,7 @@ func save_settings() -> void:
 	cfg.set_value("input", "mouse_sensitivity", mouse_sensitivity)
 	cfg.set_value("input", "invert_y", invert_y)
 	cfg.set_value("video", "psx_effects", psx_effects)
+	cfg.set_value("ui", "language", language)
 	var err := cfg.save(SETTINGS_PATH)
 	if err != OK:
 		push_warning("settings not saved: %s" % error_string(err))

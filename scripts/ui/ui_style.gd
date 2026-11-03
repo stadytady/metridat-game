@@ -41,7 +41,13 @@ static func button(text: String) -> Button:
 		sb.set_content_margin_all(10)
 		if state == "hover" or state == "focus":
 			sb.bg_color = Color(0.25, 0.16, 0.08, 0.95)
+		elif state == "pressed":
+			# Toggle buttons (language) must show which one is on.
+			sb.bg_color = Color("#7a4a16")
+			sb.border_color = Color("#f2c48c")
 		b.add_theme_stylebox_override(state, sb)
+	b.add_theme_stylebox_override("hover_pressed", b.get_theme_stylebox("pressed"))
+	b.add_theme_color_override("font_pressed_color", Color.WHITE)
 	b.add_theme_color_override("font_color", TEXT)
 	b.add_theme_color_override("font_hover_color", Color.WHITE)
 	return b

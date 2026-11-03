@@ -22,10 +22,15 @@ func test_fields_complete() -> void:
 		check(not ids.has(d.id), "duplicate id " + label)
 		ids[d.id] = true
 		check(d.resource_path.get_file().get_basename() == label, "file name must match id: " + d.resource_path)
-		for field: String in ["title", "location"]:
-			check(String(d.get(field)).strip_edges().length() >= 3, "%s.%s is empty" % [label, field])
-		for field: String in ["description", "history", "sources", "narrative"]:
-			check(String(d.get(field)).strip_edges().length() > 40, "%s.%s is missing or too short" % [label, field])
+		# Text fields are translation keys; the texts themselves are checked in both languages.
+		for field: String in ["title", "location", "description", "history", "narrative"]:
+			var key := String(d.get(field))
+			for lang in ["en", "ru"]:
+				var t: Translation = load("res://data/i18n/strings.%s.translation" % lang)
+				var text := String(t.get_message(key))
+				var min_len := 3 if field in ["title", "location"] else 40
+				check(text.length() >= min_len, "%s.%s (%s) missing or too short in %s" % [label, field, key, lang])
+		check(String(d.sources).length() > 40, label + ".sources is missing or too short")
 		check(d.history != d.narrative, label + ": history and narrative must differ")
 
 

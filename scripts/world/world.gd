@@ -13,18 +13,18 @@ func _ready() -> void:
 	player.rotation.y = deg_to_rad(-90.0)  # face east, towards the strait
 	player._ready()
 	player.look_at_point(Vector3(20, 6, 0))
-	_zone("The Hill Above the Strait", Topo.HILL_CENTER, Topo.HILL_HALF, Topo.HILL_PLATFORM_TOP)
-	_zone("Street of the Jars", Vector2(-35, 0.5), Vector2(28, 4), 16.0, 30.0)
-	_zone("The Agora", Topo.AGORA_CENTER, Topo.AGORA_HALF - Vector2(1, 1), Topo.AGORA_H)
-	_zone("Sanctuary on the Terrace", Topo.SANCT_CENTER, Topo.SANCT_HALF, Topo.SANCT_H)
-	_zone("The Shore of the Strait", Vector2(64, 0), Vector2(6, 75), 1.0, 12.0)
+	_zone("LOC_HILL", Topo.HILL_CENTER, Topo.HILL_HALF, Topo.HILL_PLATFORM_TOP)
+	_zone("LOC_STREET", Vector2(-35, 0.5), Vector2(28, 4), 16.0, 30.0)
+	_zone("LOC_AGORA", Topo.AGORA_CENTER, Topo.AGORA_HALF - Vector2(1, 1), Topo.AGORA_H)
+	_zone("LOC_SANCTUARY", Topo.SANCT_CENTER, Topo.SANCT_HALF, Topo.SANCT_H)
+	_zone("LOC_SHORE", Vector2(64, 0), Vector2(6, 75), 1.0, 12.0)
 
 
 func _zone(title: String, c: Vector2, half: Vector2, y: float, h: float = 6.0) -> void:
 	var a := Area3D.new()
 	a.set_script(ZONE)
 	a.title = title
-	a.name = "Zone_" + title.replace(" ", "")
+	a.name = "Zone_" + title
 	var cs := CollisionShape3D.new()
 	var sh := BoxShape3D.new()
 	sh.size = Vector3(half.x * 2, h, half.y * 2)

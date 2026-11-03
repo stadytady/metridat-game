@@ -8,6 +8,7 @@ var _sens_label: Label
 var _sens: HSlider
 var _invert: CheckBox
 var _psx: CheckBox
+var _lang: Array[Button] = []
 
 
 func _ready() -> void:
@@ -21,17 +22,17 @@ func _ready() -> void:
 	_root.add_child(dim)
 	var panel := PanelContainer.new()
 	panel.add_theme_stylebox_override("panel", UiStyle.panel())
-	panel.custom_minimum_size = Vector2(620, 0)
+	panel.custom_minimum_size = Vector2(760, 0)
 	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	panel.position -= Vector2(310, 260)
+	panel.position -= Vector2(380, 300)
 	_root.add_child(panel)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 16)
 	panel.add_child(col)
-	var title := UiStyle.label("PAUSED", 40, UiStyle.BORDER)
+	var title := UiStyle.label("UI_PAUSED", 40, UiStyle.BORDER)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(title)
-	var resume := UiStyle.button("Resume")
+	var resume := UiStyle.button("UI_RESUME")
 	resume.pressed.connect(close)
 	col.add_child(resume)
 
@@ -45,23 +46,37 @@ func _ready() -> void:
 	_sens.value_changed.connect(_on_sens)
 	col.add_child(_sens)
 	_invert = CheckBox.new()
-	_invert.text = "Invert mouse Y"
+	_invert.text = "UI_INVERT_Y"
 	_invert.add_theme_font_size_override("font_size", 24)
 	_invert.toggled.connect(func(on: bool) -> void:
 		Game.invert_y = on
 		Game.save_settings())
 	col.add_child(_invert)
 	_psx = CheckBox.new()
-	_psx.text = "PS1 effects (low resolution, jitter, dither)"
+	_psx.text = "UI_PSX"
 	_psx.add_theme_font_size_override("font_size", 24)
 	_psx.toggled.connect(func(on: bool) -> void:
 		Game.psx_effects = on
 		Game.save_settings())
 	col.add_child(_psx)
-	var quit := UiStyle.button("Quit to desktop")
+	var lang_row := HBoxContainer.new()
+	lang_row.add_theme_constant_override("separation", 12)
+	lang_row.add_child(UiStyle.label("UI_LANGUAGE", 24))
+	var group := ButtonGroup.new()
+	for code: String in Game.LANGUAGES:
+		var b := UiStyle.button(code.to_upper())
+		b.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+		b.toggle_mode = true
+		b.button_group = group
+		b.custom_minimum_size = Vector2(90, 0)
+		b.pressed.connect(func() -> void: Game.set_language(code))
+		lang_row.add_child(b)
+		_lang.append(b)
+	col.add_child(lang_row)
+	var quit := UiStyle.button("UI_QUIT")
 	quit.pressed.connect(func() -> void: get_tree().quit())
 	col.add_child(quit)
-	var foot := UiStyle.label("History sections are sourced; story sections are fiction.", 18, UiStyle.MUTED)
+	var foot := UiStyle.label("UI_FOOTNOTE", 18, UiStyle.MUTED)
 	col.add_child(foot)
 	_root.visible = false
 
@@ -75,14 +90,21 @@ func _process(_delta: float) -> void:
 		open()
 
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and _sens_label:
+		_sens_label.text = tr("UI_SENSITIVITY") % Game.mouse_sensitivity
+
+
 func is_open() -> bool:
 	return _root.visible
 
 
 func open() -> void:
 	_sens.set_value_no_signal(Game.mouse_sensitivity)
-	_sens_label.text = "Mouse sensitivity  %.2f" % Game.mouse_sensitivity
+	_sens_label.text = tr("UI_SENSITIVITY") % Game.mouse_sensitivity
 	_invert.set_pressed_no_signal(Game.invert_y)
+	for b in _lang:
+		b.set_pressed_no_signal(b.text.to_lower() == Game.language)
 	_psx.set_pressed_no_signal(Game.psx_effects)
 	_root.visible = true
 	get_tree().paused = true
@@ -100,5 +122,5 @@ func close() -> void:
 
 func _on_sens(v: float) -> void:
 	Game.mouse_sensitivity = v
-	_sens_label.text = "Mouse sensitivity  %.2f" % v
+	_sens_label.text = tr("UI_SENSITIVITY") % v
 	Game.save_settings()

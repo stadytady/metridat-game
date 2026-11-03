@@ -1,7 +1,6 @@
 extends CanvasLayer
 ## Crosshair, interaction prompt, discovery counter, location and discovery toasts.
 
-const HINT := "WASD move   MOUSE look   SHIFT run   SPACE jump   E inspect   ESC pause"
 
 var _prompt: Label
 var _counter: Label
@@ -10,6 +9,8 @@ var _hint: Label
 var _toast_tween: Tween
 var _perf: Label
 var _click: Label
+var _target: Inspectable
+var _toast_key := ""
 
 
 func _ready() -> void:
@@ -55,7 +56,7 @@ func _ready() -> void:
 	_perf.visible = false
 	root.add_child(_perf)
 
-	_click = UiStyle.label("CLICK TO PLAY", 34, UiStyle.BORDER)
+	_click = UiStyle.label("UI_CLICK_TO_PLAY", 34, UiStyle.BORDER)
 	_click.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	_click.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_click.position += Vector2(-400, -120)
@@ -63,7 +64,7 @@ func _ready() -> void:
 	_click.visible = false
 	root.add_child(_click)
 
-	_hint = UiStyle.label(HINT, 22, UiStyle.MUTED)
+	_hint = UiStyle.label("UI_HINT", 22, UiStyle.MUTED)
 	_hint.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_hint.position += Vector2(-700, -70)
@@ -76,6 +77,14 @@ func _ready() -> void:
 	Game.discovered.connect(_on_discovered)
 	Game.location_entered.connect(func(title: String) -> void: show_toast(title))
 	_update_counter.call_deferred()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and _counter:
+		_update_counter()
+		_on_target(_target)
+		if _toast_key != "":
+			_toast.text = tr(_toast_key)
 
 
 func _process(_delta: float) -> void:
@@ -104,24 +113,27 @@ func bind_interactor(interactor: Node) -> void:
 
 
 func _on_target(target: Inspectable) -> void:
+	_target = target
 	if target == null or target.discovery == null:
 		_prompt.text = ""
 	else:
-		_prompt.text = "[E] Inspect  %s" % target.discovery.title
+		_prompt.text = tr("UI_INSPECT") % tr(target.discovery.title)
 
 
 func _update_counter() -> void:
-	_counter.text = "DISCOVERIES  %d / %d" % [Game.found_count(), Game.total()]
+	_counter.text = tr("UI_DISCOVERIES") % [Game.found_count(), Game.total()]
 
 
 func _on_discovered(_d: Discovery, is_new: bool) -> void:
 	_update_counter()
 	if is_new and Game.found_count() == Game.total():
-		show_toast("All discoveries found. The strait is yours to watch.")
+		show_toast("UI_ALL_FOUND")
 
 
-func show_toast(text: String) -> void:
-	_toast.text = text
+## `key` is a translation key, so a language switch can re-render it.
+func show_toast(key: String) -> void:
+	_toast_key = key
+	_toast.text = tr(key)
 	if _toast_tween:
 		_toast_tween.kill()
 	_toast_tween = create_tween()
