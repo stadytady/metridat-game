@@ -25,7 +25,8 @@ func _ready() -> void:
 		var director: Node = load("res://scripts/core/director.gd").new()
 		director.name = "Director"
 		add_child(director)
-	else:
+	elif not OS.has_feature("web"):
+		# Browsers only grant pointer lock on a click; the HUD asks for one.
 		capture_mouse(true)
 
 

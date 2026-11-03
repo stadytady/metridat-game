@@ -1,0 +1,77 @@
+name: release
+
+# Push a tag like v0.1.0 to build and publish a GitHub Release.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to (re)build the release for"
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  GODOT_VERSION: 4.5.1
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+      - name: Cache export templates
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
+          key: godot-templates-${{ env.GODOT_VERSION }}-windows-linux-web
+      - name: Install Godot and templates
+        run: |
+          tools/install-godot.sh --templates
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Tests and walkthrough
+        run: tools/test.sh
+      - name: Export
+        run: tools/export.sh windows linux web
+      - name: Smoke-test the exported pack
+        run: build/linux/panticapaeum.x86_64 --headless --fixed-fps 60 -- --walkthrough 2>&1 | grep -q "WALKTHROUGH PASS"
+      - name: Package
+        run: |
+          mkdir -p dist
+          name="Panticapaeum-${TAG}"
+          (cd build/windows && zip -9 -q "../../dist/${name}-windows-x86_64.zip" Panticapaeum.exe)
+          (cd build/linux && tar -czf "../../dist/${name}-linux-x86_64.tar.gz" panticapaeum.x86_64)
+          (cd build/web && zip -9 -q -r "../../dist/${name}-web.zip" .)
+          cp docs/trailer.mp4 "dist/${name}-trailer.mp4"
+          (cd dist && sha256sum ./* > SHA256SUMS.txt)
+          ls -la dist
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          notes="$(mktemp)"
+          cat > "$notes" <<NOTES
+          First-person exploration of Panticapaeum, 4th century BCE, in a PlayStation-era style (Godot ${GODOT_VERSION}).
+
+          **Windows:** unzip and run \`Panticapaeum.exe\` (unsigned, so SmartScreen may ask to confirm).
+          **Linux:** \`tar xzf\` and run \`panticapaeum.x86_64\`.
+          **Browser:** https://stadytady.github.io/metridat-game/
+
+          Controls: WASD, mouse, Shift run, Space jump, E inspect, Esc pause, F3 performance overlay.
+          Measure performance: \`Panticapaeum.exe -- --benchmark\` (results in \`%APPDATA%\\Godot\\app_userdata\\Panticapaeum- Echoes of the Bosporus\\benchmark.txt\`).
+
+          Checked in CI: unit tests, a scripted walkthrough of the whole scene, and a walkthrough of the exported Linux build. The Windows build has not been run on Windows by CI.
+          NOTES
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/* --clobber
+          else
+            gh release create "$TAG" dist/* --title "Panticapaeum ${TAG}" --notes-file "$notes"
+          fi

@@ -39,13 +39,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
-          key: godot-templates-${{ env.GODOT_VERSION }}-windows-linux
+          key: godot-templates-${{ env.GODOT_VERSION }}-windows-linux-web
       - name: Install Godot and templates
         run: |
           tools/install-godot.sh --templates
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - name: Export Windows and Linux
-        run: tools/export.sh windows linux
+      - name: Export Windows, Linux and Web
+        run: tools/export.sh windows linux web
       - name: Smoke-test the exported pack (Linux build, same resources)
         run: |
           out="$(build/linux/panticapaeum.x86_64 --headless --fixed-fps 60 -- --walkthrough 2>&1)"
@@ -61,6 +61,26 @@ jobs:
           name: panticapaeum-linux-x86_64
           path: build/linux/panticapaeum.x86_64
           if-no-files-found: error
+      - name: Assemble Pages site
+        run: tools/site.sh
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/site
+
+  pages:
+    # Needs Settings -> Pages -> Source: GitHub Actions (enabled once by the owner).
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: export
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
 
   screenshots:
     needs: test
