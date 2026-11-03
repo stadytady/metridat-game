@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="Discovery" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="Discovery" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/interaction/discovery.gd" id="1_d"]
+[ext_resource type="PackedScene" path="res://scenes/interactables/models/stele.tscn" id="2_m"]
 
 [resource]
 script = ExtResource("1_d")
@@ -12,3 +13,4 @@ history = "D_INSCRIPTION_STELE_HISTORY"
 sources = "Corpus Inscriptionum Regni Bosporani (CIRB, 1965); Strabo, Geography 7.4.4; Diodorus Siculus 20.22-26."
 narrative = "D_INSCRIPTION_STELE_NARRATIVE"
 hint = "D_INSCRIPTION_STELE_HINT"
+model = ExtResource("2_m")

@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="Discovery" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="Discovery" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/interaction/discovery.gd" id="1_d"]
+[ext_resource type="PackedScene" path="res://scenes/interactables/models/mould.tscn" id="2_m"]
 
 [resource]
 script = ExtResource("1_d")
@@ -12,3 +13,4 @@ history = "D_MOULD_FIGURINE_HISTORY"
 sources = "R. A. Higgins, Greek Terracottas (1967); V. F. Gajdukevic, Das Bosporanische Reich (1971); Penteskouphia pinakes (Corinthian votive plaques, Antikensammlung Berlin)."
 narrative = "D_MOULD_FIGURINE_NARRATIVE"
 hint = "D_MOULD_FIGURINE_HINT"
+model = ExtResource("2_m")

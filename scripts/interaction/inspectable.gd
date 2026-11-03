@@ -16,8 +16,9 @@ func _ready() -> void:
 	collision_layer = 3  # world + inspectable
 	add_to_group(&"inspectable")
 	set_meta(&"surface", &"stone")
-	if model:
-		var m := model.instantiate()
+	var scene := model if model else (discovery.model if discovery else null)
+	if scene:
+		var m := scene.instantiate()
 		add_child(m)
 		Mats.apply_to(m)
 	var cs := CollisionShape3D.new()

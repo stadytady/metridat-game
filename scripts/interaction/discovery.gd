@@ -14,3 +14,6 @@ extends Resource
 @export_multiline var narrative: String
 ## Where to look, for the journal: a nudge, not a map pin.
 @export var hint: String
+## The find itself: placed in the world by its Inspectable and shown large
+## in the info panel's viewer.
+@export var model: PackedScene

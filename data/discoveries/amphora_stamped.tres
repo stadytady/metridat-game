@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="Discovery" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="Discovery" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/interaction/discovery.gd" id="1_d"]
+[ext_resource type="PackedScene" path="res://assets/models/amphora.glb" id="2_m"]
 
 [resource]
 script = ExtResource("1_d")
@@ -12,3 +13,4 @@ history = "D_AMPHORA_STAMPED_HISTORY"
 sources = "V. F. Gajdukevic, Das Bosporanische Reich (1971); Y. Garlan, Amphores et timbres amphoriques grecs (2000)."
 narrative = "D_AMPHORA_STAMPED_NARRATIVE"
 hint = "D_AMPHORA_STAMPED_HINT"
+model = ExtResource("2_m")

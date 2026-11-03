@@ -1,6 +1,10 @@
 extends CanvasLayer
-## Panel shown when an object is inspected. History (established, with
-## sources) and the game's own story are separate, labelled sections.
+## Panel shown when an object is inspected: the find large on the left (an
+## ItemViewer the player can turn), the texts on the right. History
+## (established, with sources) and the game's own story are separate,
+## labelled sections.
+
+const TEXT_W := 820.0
 
 var _panel: PanelContainer
 var _title: Label
@@ -11,18 +15,24 @@ var _src: Label
 var _story: Label
 var _opened_frame := -1
 var _shown: Discovery
+var viewer: ItemViewer
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_panel = PanelContainer.new()
 	_panel.add_theme_stylebox_override("panel", UiStyle.panel())
-	_panel.custom_minimum_size = Vector2(820, 0)
-	_panel.position = Vector2(1920 - 820 - 60, 120)
 	add_child(_panel)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 24)
+	_panel.add_child(row)
+	viewer = ItemViewer.new()
+	viewer.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(viewer)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 10)
-	_panel.add_child(col)
+	col.custom_minimum_size.x = TEXT_W
+	row.add_child(col)
 	_title = UiStyle.label("", 36, UiStyle.BORDER)
 	_where = UiStyle.label("", 22, UiStyle.MUTED)
 	_desc = _wrap(UiStyle.label("", 24))
@@ -69,21 +79,34 @@ func _fill(d: Discovery) -> void:
 	_hist.text = tr(d.history)
 	_src.text = tr("UI_SOURCES") % d.sources
 	_story.text = tr(d.narrative)
+	_center()
+
+
+func _center() -> void:
 	_panel.reset_size()
-	_panel.position.y = maxf(40.0, (1080.0 - _panel.size.y) / 2.0)
+	_panel.position = ((Vector2(1920, 1080) - _panel.size) / 2.0).max(Vector2(40, 40))
 
 
 func _on_discovered(d: Discovery, _is_new: bool) -> void:
+	show_discovery(d)
+
+
+## Opens the panel for a find (on inspection, or from the journal).
+func show_discovery(d: Discovery) -> void:
 	_fill(d)
+	viewer.show_model(d.model)
 	_panel.visible = true
-	_panel.reset_size()
-	_panel.position.y = maxf(40.0, (1080.0 - _panel.size.y) / 2.0)
+	viewer.set_active(true)
+	_center()
 	_opened_frame = Engine.get_process_frames()
 	Game.ui_blocking = true
+	# A free cursor to turn the find; Main captures it again on close.
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 
 func close() -> void:
 	_panel.visible = false
+	viewer.set_active(false)
 	Game.ui_blocking = false
 	Game.ui_closed_frame = Engine.get_process_frames()
 	Game.inspect_closed.emit()

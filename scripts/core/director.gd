@@ -60,6 +60,8 @@ func _shots() -> void:
 		print("shot ", path)
 	if _only.is_empty() or "ui" in _only:
 		await _ui_shots(player)
+	if _only.is_empty() or "finds" in _only:
+		await _find_shots()
 	_report_perf()
 	get_tree().quit()
 
@@ -98,6 +100,17 @@ func _ui_shots(player: CharacterBody3D) -> void:
 	await _frames(6)
 	_save("ui_pause")
 	_main().get_node("PauseMenu").close()
+
+
+## The info panel with its viewer for every find, to look at each model large.
+func _find_shots() -> void:
+	var info: Node = _main().get_node("InfoPanel")
+	for d: Discovery in preload("res://scripts/ui/journal_panel.gd").ordered(Game.registry):
+		info.show_discovery(d)
+		await _frames(12)
+		_save("find_%s" % d.id)
+		info.close()
+		await _frames(2)
 
 
 func _save(name: String) -> void:
@@ -248,6 +261,7 @@ func _walkthrough() -> void:
 		_fail.append("found %d of %d discoveries" % [Game.found_count(), Game.total()])
 	_check_night()
 	await _check_journal(0)
+	await _check_journal_view()
 	_check_audio(player)
 	await _check_pause()
 	await _check_language()
@@ -310,6 +324,8 @@ func _inspect(player: CharacterBody3D, items: Dictionary, id: String) -> void:
 	var screen := Rect2(Vector2.ZERO, Vector2(1920, 1080))
 	if not screen.encloses(info._panel.get_global_rect()):
 		_fail.append("info panel off screen for %s: %s" % [id, info._panel.get_global_rect()])
+	await _frames(2)
+	_check_viewer(info, id)
 	if Game.found_count() != before + 1:
 		_fail.append("counter did not advance for " + id)
 	print("inspected %s (%d/%d)" % [id, Game.found_count(), Game.total()])
@@ -352,6 +368,16 @@ func _talk(player: CharacterBody3D, npc_id: String) -> void:
 	print("talked to %s (%d lines)" % [npc_id, shown])
 
 
+## The viewer must hold the find's model, with real geometry, and render.
+func _check_viewer(info: Node, id: String) -> void:
+	var v: ItemViewer = info.viewer
+	var box: AABB = v.shown_aabb()
+	if box.size.length() < 0.02:
+		_fail.append("viewer empty for %s: %s" % [id, box])
+	if not v.is_visible_in_tree() or Input.mouse_mode != Input.MOUSE_MODE_VISIBLE:
+		_fail.append("viewer not shown or cursor not free for %s" % id)
+
+
 ## Opens the journal like pressing J: one row per find, a hint for each one
 ## not yet found, then closes it.
 func _check_journal(expect_hints: int) -> void:
@@ -366,6 +392,24 @@ func _check_journal(expect_hints: int) -> void:
 	j.close()
 	await _frames(2)
 	print("journal: %d rows, %d hints" % [c.x, c.y])
+
+
+## A found row in the journal opens that find in the info panel's viewer.
+func _check_journal_view() -> void:
+	var j: Node = _main().get_node("JournalPanel")
+	var info: Node = _main().get_node("InfoPanel")
+	var d: Discovery = Game.registry.values()[0]
+	j.open()
+	await _frames(2)
+	j.view(d)
+	await _frames(4)
+	if j.is_open() or not info.is_open() or info._shown != d:
+		_fail.append("journal did not open %s in the info panel" % d.id)
+	else:
+		_check_viewer(info, String(d.id))
+	info.close()
+	await _frames(2)
+	print("journal view: %s" % d.id)
 
 
 ## Steps up to the agora flock: the nearest chicken must scatter and stay home.
