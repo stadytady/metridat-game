@@ -29,3 +29,12 @@ func test_key_places_are_above_sea() -> void:
 func test_hill_overlooks_city() -> void:
 	var sp := Topo.spawn_point()
 	check(sp.y - Topo.AGORA_H > 15.0, "hilltop must stand well above the agora")
+
+
+func test_waterline_is_where_land_meets_sea() -> void:
+	# The sea shader foams along it, so it must sit on the real coast.
+	for z in range(-200, 201, 25):
+		var x := Topo.waterline_x(z)
+		check(x > 30.0 and x < 200.0, "no waterline found at z=%d" % z)
+		check(absf(Topo.terrain(x, z) - Topo.SEA_LEVEL) < 0.1, "terrain at waterline z=%d is %.2f" % [z, Topo.terrain(x, z)])
+		check(Topo.terrain(x - 2.0, z) > Topo.SEA_LEVEL, "land side is wet at z=%d" % z)

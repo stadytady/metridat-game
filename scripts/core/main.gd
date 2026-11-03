@@ -21,7 +21,8 @@ func _ready() -> void:
 		var trailer: Node = load("res://scripts/core/trailer.gd").new()
 		trailer.name = "Trailer"
 		add_child(trailer)
-	elif "--shots" in OS.get_cmdline_user_args() or "--walkthrough" in OS.get_cmdline_user_args():
+	elif "--shots" in OS.get_cmdline_user_args() or "--walkthrough" in OS.get_cmdline_user_args() \
+			or Array(OS.get_cmdline_user_args()).any(func(a: String) -> bool: return a.begins_with("--clip=")):
 		var director: Node = load("res://scripts/core/director.gd").new()
 		director.name = "Director"
 		add_child(director)

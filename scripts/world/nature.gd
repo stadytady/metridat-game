@@ -54,13 +54,18 @@ func _shore(rng: RandomNumberGenerator) -> void:
 		var t := Topo.terrain(x, z)
 		kit.color = Color(1, 1, 1) * rng.randf_range(0.8, 1.0)
 		kit.color.a = 1
-		kit.blob("rock", Vector3(x, maxf(t, -0.6) + r * 0.3, z), Vector3(r * 1.3, r * 0.8, r), 0.3, rng)
+		if t >= 0.0:
+			kit.blob("rock", Vector3(x, t + r * 0.3, z), Vector3(r * 1.3, r * 0.8, r), 0.3, rng)
+		else:
+			# In the surf: tall enough that its foot stays below the deepest trough.
+			kit.blob("rock", Vector3(x, -0.8 - r * 0.1, z), Vector3(r * 1.3, r + 1.0, r), 0.3, rng)
 		z += rng.randf_range(2.0, 5.0)
 	for i in 6:
 		var sx := rng.randf_range(75, 110)
 		var sz := rng.randf_range(-90, 90)
 		var r := rng.randf_range(1.5, 4.0)
-		kit.blob("rock", Vector3(sx, r * 0.4, sz), Vector3(r, r * 1.3, r * 0.9), 0.35, rng)
+		# Sunk deep: wave troughs reach about a metre below sea level.
+		kit.blob("rock", Vector3(sx, -r * 0.2, sz), Vector3(r, r * 1.6, r * 0.9), 0.35, rng)
 	add_child(kit.build("Shore"))
 
 

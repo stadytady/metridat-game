@@ -44,5 +44,7 @@ static func viewpoints() -> Dictionary:
 		"street_up": [Vector3(-12, Topo.street_height(-12) + 1.6, Topo.street_z(-12)), Vector3(-60, 22, 0)],
 		"agora": [Vector3(11, Topo.AGORA_H + 1.6, 6), Vector3(30, 6, -8)],
 		"sanctuary": [Vector3(40, Topo.SANCT_H + 1.6, -22), Vector3(50, 10, -31)],
+		"surf": [Vector3(Topo.waterline_x(12) - 4.0, Topo.terrain(Topo.waterline_x(12) - 4.0, 12) + 1.6, 12),
+				Vector3(Topo.waterline_x(12) + 40.0, 0.0, -18)],
 		"shore": [Vector3(54, Topo.terrain(54, 18) + 1.6, 18), Vector3(400, 2, 60)],
 	}

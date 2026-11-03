@@ -79,6 +79,7 @@ tools/trailer.sh [out.mp4]   # Movie Maker (--write-movie, --fixed-fps 30) + ffm
 | Текстуры 64×64 и 128×64, палитра 5–8 цветов на текстуру, ordered dither, nearest, без мипмапов | `tools/gen_assets.py` |
 | Flat shading, Lambert без бликов, тени с жёстким фильтром (в 640×360 они получаются ступенчатыми) | `MeshKit`, `atmosphere.gd` |
 | Линейный depth fog: море уходит в дымку горизонта | `atmosphere.gd` |
+| Море: сетка 4 м у берега и крупнее к горизонту; 4 направленные волны с дисперсией глубокой воды и обмелением у берега; плоские грани ловят солнце; барашки и полосы прибоя к реальной линии берега (`Topo.waterline_x`), края пены дизерингом | `psx_water.gdshader`, `sea.gd` |
 | Небо — расписная панорама полосами без фильтрации | `sky.png`, `PanoramaSkyMaterial.filter = false` |
 | Огонь — квадратные частицы с 15 FPS | `scenes/environment/altar_fire.tscn` |
 | UI в нативном разрешении: плоские панели с жёсткой рамкой, шрифт без сглаживания | `scripts/ui/` |
@@ -120,7 +121,9 @@ tools/                      генерация, тесты, скриншоты, 
 
 ```sh
 tools/test.sh                         # импорт, 15 unit-тестов, проход ботом по всей сцене
-tools/shots.sh /tmp/shots             # скриншоты точек обзора и UI (Forward+, на машине без GPU — lavapipe + Xvfb)
+tools/shots.sh /tmp/shots             # скриншоты точек обзора и UI (--lang=ru — на русском)
+# клип одной точки обзора (например, прибой) через Movie Maker:
+#   godot --path . --write-movie out.png --fixed-fps 30 -- --clip=surf --seconds=5 (Forward+, на машине без GPU — lavapipe + Xvfb)
 tools/export.sh windows linux web     # нужны export templates 4.5.1 (tools/install-godot.sh --templates)
 tools/site.sh                         # сайт для Pages в build/site (лендинг + трейлер + web-сборка в play/)
 git tag v0.1.0 && git push origin v0.1.0   # релиз: release.yml собирает и публикует GitHub Release
