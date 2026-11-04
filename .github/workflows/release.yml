@@ -14,6 +14,10 @@ on:
       tag:
         description: "Release tag, e.g. v0.0.1 (created from the selected branch if missing)"
         required: true
+      trailer_only:
+        description: "Only replace the trailer of an existing release with docs/trailer.mp4 from the selected branch"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -22,7 +26,31 @@ env:
   GODOT_VERSION: 4.5.1
 
 jobs:
+  # A re-rendered trailer for a release already out: the packages stay as they
+  # are (built from the tag), only the trailer and its checksum are replaced.
+  trailer:
+    if: ${{ inputs.trailer_only }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Replace the trailer and its checksum
+        run: |
+          name="Panticapaeum-${TAG}-trailer.mp4"
+          cp docs/trailer.mp4 "$name"
+          gh release download "$TAG" --pattern SHA256SUMS.txt --clobber
+          grep -v -- "-trailer.mp4" SHA256SUMS.txt > sums.new || true
+          sha256sum "./$name" >> sums.new  # same form as tools/package.sh writes
+          sort -k2 sums.new > SHA256SUMS.txt
+          gh release upload "$TAG" "$name" SHA256SUMS.txt --clobber
+          cat SHA256SUMS.txt
+
   release:
+    if: ${{ !inputs.trailer_only }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
