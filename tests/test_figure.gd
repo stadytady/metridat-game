@@ -35,3 +35,26 @@ func test_motion_is_stepped() -> void:
 			check(a == Figure.motion(pose, t + 0.5 / 15.0), "%s: changes within one 15 fps step at %.2f" % [pose, t])
 			moved = moved or a != Figure.motion(pose, t + 1.0 / 15.0)
 		check(moved, "%s: never moves in 3 s" % pose)
+
+
+func test_shrouded_figure_hides_the_body() -> void:
+	var root := Node3D.new()
+	var joints := Figure.shrouded(root)
+	var void_z := INF  # front-most z of the void, in the head's frame (the face looks to -z)
+	var hem := INF  # lowest point of the robe, in the root's frame
+	for mi: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
+		var joint := mi.get_parent() as Node3D
+		for s in mi.mesh.get_surface_count():
+			var mat: Material = mi.material_override if mi.material_override else mi.mesh.surface_get_material(s)
+			check(mat.resource_name in ["robe", "void"], "%s shows %s" % [joint.name, mat.resource_name])
+			var verts: PackedVector3Array = mi.mesh.surface_get_arrays(s)[Mesh.ARRAY_VERTEX]
+			for v in verts:
+				if mat.resource_name == "void" and joint == joints["head"]:
+					void_z = minf(void_z, v.z)
+				if joint == joints["pelvis"]:
+					hem = minf(hem, joint.position.y + v.y)
+	check(void_z < INF, "no void under the hood")
+	# the head's face is at z = -0.105: the void covers it, inside the hood's -0.19 rim
+	check(void_z < -0.105 and void_z > -0.19, "the void is not under the hood: z %.3f" % void_z)
+	check(hem < 0.1, "the robe stops %.2f m above the ground" % hem)
+	root.free()

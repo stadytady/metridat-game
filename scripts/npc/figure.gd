@@ -80,6 +80,49 @@ static func build(root: Node3D, body_mat: String = "chiton") -> Dictionary:
 	return joints
 
 
+## The mysterious figure (the night street, the dream path): a standing body
+## wrapped in a black robe to the ground, a mantle over the shoulders, wide
+## sleeves over the hands and a deep hood. Under the hood there is no face,
+## only an unlit black (`void`), the same from every angle and in any light.
+static func shrouded(root: Node3D) -> Dictionary:
+	var joints := build(root, "robe")
+	apply_pose(joints, "stand")
+	var robe: Material = Mats.get_mat("robe")
+	for mi: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
+		mi.material_override = robe  # skin and hair too: nothing of the body shows
+	var pelvis := MeshKit.new()
+	# flared to the ground, a little short of it so it never sinks into a slope
+	pelvis.lathe("robe", PackedVector2Array([Vector2(0.36, -0.9), Vector2(0.27, -0.45), Vector2(0.2, 0.12)]), 7)
+	_attach(joints["pelvis"], pelvis)
+	var chest := MeshKit.new()
+	chest.box("robe", Vector3(0, 0.26, 0), Vector3(0.42, 0.56, 0.27), [])
+	chest.box("robe", Vector3(0, 0.45, 0.01), Vector3(0.58, 0.14, 0.33), [])  # mantle over the shoulders
+	_attach(joints["chest"], chest)
+	for side: String in ["l", "r"]:
+		var upper := MeshKit.new()
+		upper.box("robe", Vector3(0, -0.15, 0), Vector3(0.15, 0.32, 0.15), [])
+		_attach(joints[side + "_shoulder"], upper)
+		var sleeve := MeshKit.new()
+		sleeve.box("robe", Vector3(0, -0.17, 0), Vector3(0.19, 0.36, 0.19), [])  # wide, swallowing the hand
+		_attach(joints[side + "_elbow"], sleeve)
+	var hood := MeshKit.new()
+	hood.box("robe", Vector3(0, 0.34, -0.01), Vector3(0.31, 0.07, 0.36), [])  # crown, peaked forward
+	for sx: float in [-1.0, 1.0]:
+		hood.box("robe", Vector3(sx * 0.13, 0.13, -0.01), Vector3(0.05, 0.38, 0.36), [])
+	hood.box("robe", Vector3(0, 0.13, 0.15), Vector3(0.31, 0.38, 0.06), [])  # back
+	hood.box("robe", Vector3(0, -0.03, 0.12), Vector3(0.36, 0.14, 0.14), [])  # falling onto the mantle
+	hood.box("void", Vector3(0, 0.13, -0.12), Vector3(0.21, 0.27, 0.02), [])  # where the face should be
+	_attach(joints["head"], hood)
+	return joints
+
+
+static func _attach(joint: Node3D, kit: MeshKit) -> void:
+	var mi := MeshInstance3D.new()
+	mi.name = "Shroud"
+	mi.mesh = kit.commit()
+	joint.add_child(mi)
+
+
 static func apply_pose(joints: Dictionary, pose: String, extra: Dictionary = {}) -> void:
 	var p: Dictionary = POSES.get(pose, {})
 	for name: String in joints:
