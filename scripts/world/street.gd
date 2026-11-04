@@ -7,6 +7,9 @@ const START_X := -64.0
 const END_X := 3.0
 
 var courtyards: Array[Transform3D] = []
+var _glow: Node3D
+var _glow_kit := MeshKit.new()
+var _atm: Node
 
 
 func _ready() -> void:
@@ -17,6 +20,9 @@ func _ready() -> void:
 	for side: float in [1.0, -1.0]:
 		_build_side(kit, rng, side)
 	add_child(kit.build("Street"))
+	_glow = _glow_kit.build("WindowGlow")
+	add_child(_glow)
+	_atm = get_parent().get_node_or_null("Atmosphere")
 	_furnish(rng)
 
 
@@ -63,6 +69,7 @@ func _build_side(kit: MeshKit, rng: RandomNumberGenerator, side: float) -> void:
 				"missing_tiles": 2 if int(absf(cx) * 7.0) % 3 == 0 else 0,
 				"seed": int(cx * 100.0),
 				"windows": rng.randi_range(0, 2),
+				"glow": _glow_kit,  # lamps in some windows after dusk
 			})
 		x += w + (rng.randf_range(0.0, 1.4) if rng.randf() < 0.35 else 0.0)
 		slot += 1
@@ -92,3 +99,7 @@ func _furnish(rng: RandomNumberGenerator) -> void:
 		var out := Vector3(-dir.z, 0, dir.x) * side
 		var pos := Vector3(x, Topo.street_height(x), Topo.street_z(x)) + out * (Topo.STREET_HALF - 0.25)
 		place("amphora", pos, rng.randf_range(0, 360), Vector3.ONE, 0.17, 0.8)
+
+
+func _process(_delta: float) -> void:
+	_glow.visible = _atm != null and _atm.t >= 0.75
