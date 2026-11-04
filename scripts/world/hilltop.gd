@@ -42,4 +42,23 @@ func _ready() -> void:
 	# two standing columns frame the view and the steps down to the city
 	for sz: float in [-1.0, 1.0]:
 		place("column_doric", Vector3(x1 - 0.6, top, sz * 3.1), 0.0, Vector3.ONE, 0.32, 3.6)
+	_olives()
 	spawn_inspectable("sherd_kerch", Vector3(c.x + 3.0, top + 0.4, -6.2), 20.0)
+
+
+## Olive bushes round the terrace: low and wide, on the slopes outside the
+## parapet and one in the corner by the view. Clear of the steps down (east).
+const OLIVES := [
+	Vector2(-95.5, 10.2), Vector2(-88.0, 10.8), Vector2(-82.5, 9.6), Vector2(-101.2, 4.5),
+	Vector2(-101.6, -3.8), Vector2(-96.0, -10.4), Vector2(-89.5, -10.9), Vector2(-83.0, -9.8),
+	Vector2(-83.4, 6.4),
+]
+
+
+func _olives() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 314
+	for p: Vector2 in OLIVES:
+		var y := Topo.surface(p.x, p.y) - (0.0 if Topo.in_rect(p.x, p.y, Topo.HILL_CENTER, Topo.HILL_HALF - Vector2(1, 1)) else 0.15)
+		var s := rng.randf_range(0.5, 0.7)
+		place("olive_tree", Vector3(p.x, y, p.y), rng.randf_range(0, 360), Vector3(s * 1.3, s * 0.75, s * 1.3))
