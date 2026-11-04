@@ -1,18 +1,26 @@
 extends District
-## The rest of the city as seen from the hill: terraces of simple houses on the
-## slopes, batched into one mesh, and the city wall with towers on the ridges.
-## Everything collides, but the walls also bound the play area north and south.
+## The rest of the city on the slopes of the hill, built as Panticapaeum was:
+## the slopes cut into terraces held up by stone retaining walls, a street
+## along each terrace following the lie of the ground, rows of houses fronting
+## it, wall to wall, and steep stepped lanes running straight down the slope
+## between the terraces. On the flatter ground east of the agora the streets
+## keep the same north-south run. Batched into one mesh; everything collides,
+## and the city wall bounds the play area north and south.
 ##
-## Lived in: trodden lanes run between the rows down towards the main street,
-## hearth smoke rises from some roofs through the day, and after dusk lamps
-## show in some windows.
+## Lived in: hearth smoke rises from some roofs through the day, and after
+## dusk lamps show in some windows.
 
 const WALL_Z := 78.0
-const STEP := 9.0
-## Lanes: east-west in every other gap between the rows, north-south every
-## third; houses standing on a lane are nudged off it.
-const LANES_Z := [-67.5, -49.5, -31.5, -13.5, 22.5, 40.5, 58.5]
-const LANES_X := [-59.5, -32.5, -5.5, 21.5, 48.5]
+## Terrace streets: about every ten metres down the slope, each following the
+## contour through that point; north-south runs at these x on the flatter
+## ground east of the agora.
+const TERRACES_X := [-58.0, -48.0, -38.0, -28.0, -18.0, -8.0]
+const FLAT_STREETS_X := [14.0, 28.0, 42.0]
+const TERRACE_SLOPE_END := 4.0
+## Stepped lanes down the slope, at about these z.
+const STAIRS_Z := [-64.0, -46.0, -28.0, 20.0, 37.0, 55.0]
+const Z_SPAN := Vector2(-73.0, 73.0)
+const Z_STEP := 2.5
 const LANE_HALF := 0.9
 const LANE_SEG := 1.5
 ## Hearths smoking: one roof in this many.
@@ -25,87 +33,206 @@ var _smoke: Array[GPUParticles3D] = []
 var _atm: Node
 
 
-## The houses, drawn from the city's seed in the order the city has always
-## been built (so nothing moves): {pos, yaw, w, d, h, opts}. Houses on the
-## walk-in house's plot keep their draws but are left out.
+## Where the ground falls through `level` going east (downhill) at z: the contour.
+static func _contour_x(level: float, z: float) -> float:
+	var x := -66.0
+	while x < TERRACE_SLOPE_END:
+		if Topo.terrain(x, z) <= level:
+			var lo := x - 1.0
+			var hi := x
+			for i in 6:
+				var mid := (lo + hi) / 2.0
+				if Topo.terrain(mid, z) > level:
+					lo = mid
+				else:
+					hi = mid
+			return hi
+		x += 1.0
+	return NAN
+
+
+## The terrace streets as polylines of (x, z), north to south. A contour that
+## leaves the slope is broken there; each run is smoothed so the street bends
+## with the hill, not with every bump in it.
+static func streets() -> Array:
+	var out := []
+	for x_at: float in TERRACES_X:
+		# the terrace's height: the ground at that x, either side of the street axis
+		var level := (Topo.terrain(x_at, 30.0) + Topo.terrain(x_at, -30.0)) / 2.0
+		var run := PackedVector2Array()
+		var z := Z_SPAN.x
+		while z <= Z_SPAN.y:
+			var x := _contour_x(level, z)
+			if is_nan(x):
+				if run.size() > 3:
+					out.append(_smooth(run))
+				run = PackedVector2Array()
+			else:
+				run.append(Vector2(x, z))
+			z += Z_STEP
+		if run.size() > 3:
+			out.append(_smooth(run))
+	for x0: float in FLAT_STREETS_X:
+		var run := PackedVector2Array()
+		var z := Z_SPAN.x
+		while z <= Z_SPAN.y:
+			run.append(Vector2(x0 + 2.2 * sin(z * 0.045 + x0) + 1.2 * sin(z * 0.11), z))
+			z += Z_STEP
+		out.append(run)
+	return out
+
+
+static func _smooth(run: PackedVector2Array) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	for i in run.size():
+		var sx := 0.0
+		var n := 0
+		for k in range(maxi(0, i - 2), mini(run.size(), i + 3)):
+			sx += run[k].x
+			n += 1
+		out.append(Vector2(sx / n, run[i].y))
+	return out
+
+
+## The stepped lanes, straight down the slope (west to east), wandering a little.
+static func stairs() -> Array:
+	var out := []
+	for z0: float in STAIRS_Z:
+		var run := PackedVector2Array()
+		var x := -66.0
+		while x <= 56.0:
+			run.append(Vector2(x, z0 + 2.0 * sin(x * 0.06 + z0) + 0.8 * sin(x * 0.17)))
+			x += Z_STEP
+		out.append(run)
+	return out
+
+
+static func _dist_to(runs: Array, p: Vector2) -> float:
+	var best := INF
+	for run: PackedVector2Array in runs:
+		for i in run.size() - 1:
+			var a := run[i]
+			var b := run[i + 1]
+			if minf(absf(p.x - a.x), absf(p.x - b.x)) > best + 4.0 and minf(absf(p.y - a.y), absf(p.y - b.y)) > best + 4.0:
+				continue  # a segment (at most a few metres long) this far off cannot be nearer
+			var ab := b - a
+			var t := clampf((p - a).dot(ab) / ab.length_squared(), 0.0, 1.0)
+			best = minf(best, p.distance_to(a + ab * t))
+	return best
+
+
+static func _footprint(hs: Dictionary) -> Array[Vector2]:
+	var basis := Basis.from_euler(Vector3(0, hs.yaw, 0))
+	var out: Array[Vector2] = []
+	for sx: float in [-0.5, 0.0, 0.5]:
+		for sz: float in [-0.5, 0.0, 0.5]:
+			var q := basis * Vector3(sx * hs.w, 0, sz * hs.d)
+			out.append(hs.pos + Vector2(q.x, q.z))
+	return out
+
+
+## `others`: the street runs other than the one the house fronts (its own
+## street bends under the corners of a straight house on a curve).
+static func _site_ok(hs: Dictionary, houses: Array, stair_runs: Array, others: Array) -> bool:
+	for p in _footprint(hs):
+		if Topo.is_reserved(p.x, p.y, 1.0) or Topo.in_house(p.x, p.y, 2.0) or Topo.on_pier(p.x, p.y, 2.0):
+			return false
+		if Topo.terrain(p.x, p.y) < 2.2 or absf(p.y) > WALL_Z - 4.0:
+			return false
+		if _dist_to(stair_runs, p) < LANE_HALF + 0.4 or _dist_to(others, p) < LANE_HALF + 0.2:
+			return false
+		if on_house(houses, p.x, p.y, -0.15):  # neighbours may share a wall, not overlap
+			return false
+	return true
+
+
+## The houses: rows along both sides of each street, fronts on the street,
+## neighbours wall to wall with now and then a gap or a yard.
+## {pos, yaw, w, d, h, opts}.
 static func plan() -> Array:
 	var out := []
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 2024
-	var x := -64.0
-	while x < 60.0:
-		var z := -72.0
-		while z < 72.0:
-			var px := x + rng.randf_range(-2.0, 2.0)
-			var pz := z + rng.randf_range(-2.0, 2.0)
-			z += STEP
-			if absf(pz) < 12.0 or Topo.is_reserved(px, pz, 2.0) or rng.randf() < 0.18:
+	var street_runs := streets()
+	var stair_runs := stairs()
+	# every street gets a row on its uphill (west) side first, then a row on
+	# its downhill side wherever the ground between the terraces is still free
+	for r in street_runs.size() * 2:
+		var run: PackedVector2Array = street_runs[r % street_runs.size()]
+		var east := r >= street_runs.size()
+		var others := street_runs.filter(func(o: PackedVector2Array) -> bool: return o != run)
+		var i := 0
+		var carry := rng.randf_range(0.0, 3.0)
+		while i < run.size() - 1:
+			var a := run[i]
+			var b := run[i + 1]
+			var seg := a.distance_to(b)
+			if carry > seg:
+				carry -= seg
+				i += 1
 				continue
-			if Topo.terrain(px, pz) < 2.2:
-				continue  # keep the shore free
-			var w := rng.randf_range(5.0, 8.0)
-			var d := rng.randf_range(4.5, 7.0)
-			# face downhill (east) or towards the street axis, with a little jitter
-			var yaw := (PI / 2.0 if rng.randf() < 0.5 else (0.0 if pz < 0 else PI)) + rng.randf_range(-0.12, 0.12)
-			var h := rng.randf_range(3.0, 4.3)
-			var opts := {
-				"roof": "gable" if rng.randf() < 0.65 else "flat",
-				"door": rng.randf() < 0.6,
-				"windows": rng.randi_range(0, 1),
-				"seed": int(px * 10.0) * 1000 + int(pz * 10.0),
+			var w := rng.randf_range(4.5, 7.5)
+			var d := rng.randf_range(4.5, 6.5)
+			var p := a.lerp(b, carry / seg)
+			var t := (b - a).normalized()
+			var n := Vector2(-t.y, t.x)
+			if (n.x > 0.0) != east:
+				n = -n  # uphill (west) on the first pass, downhill (east) on the second
+			var front := p + n * (LANE_HALF + 0.4)
+			var hs := {
+				"pos": front + n * (d / 2.0),
+				"yaw": atan2(-n.x, -n.y),
+				"w": w, "d": d,
+				"h": rng.randf_range(3.0, 4.3),
+				"opts": {
+					"roof": "gable" if rng.randf() < 0.65 else "flat",
+					"door": rng.randf() < 0.7,
+					"door_x": rng.randf_range(-w / 2.0 + 1.0, w / 2.0 - 1.0),
+					"windows": rng.randi_range(0, 2),
+					"seed": int(p.x * 10.0) * 1000 + int(p.y * 10.0),
+				},
 			}
-			if not Topo.in_house(px, pz, 6.0):
-				var p := clear_of_lanes(Vector2(px, pz), yaw, w, d)
-				out.append({"pos": p, "yaw": yaw, "w": w, "d": d, "h": h, "opts": opts})
-		x += STEP
+			# along the row: the next house about one width on, wall to wall,
+			# sometimes after a gap (a yard, a passage)
+			var step := w + (rng.randf_range(1.5, 3.5) if rng.randf() < 0.25 else 0.05)
+			if _site_ok(hs, out, stair_runs, others):
+				out.append(hs)
+			else:
+				step = 2.0
+			carry += step
 	return out
-
-
-## A house's centre moved just far enough that its footprint leaves the lanes free.
-static func clear_of_lanes(p: Vector2, yaw: float, w: float, d: float) -> Vector2:
-	var ex := absf(cos(yaw)) * w / 2.0 + absf(sin(yaw)) * d / 2.0
-	var ez := absf(sin(yaw)) * w / 2.0 + absf(cos(yaw)) * d / 2.0
-	for lz: float in LANES_Z:
-		var need := ez + LANE_HALF + 0.3
-		if absf(p.y - lz) < need:
-			p.y = lz + need * (1.0 if p.y >= lz else -1.0)
-	for lx: float in LANES_X:
-		var need := ex + LANE_HALF + 0.3
-		if absf(p.x - lx) < need:
-			p.x = lx + need * (1.0 if p.x >= lx else -1.0)
-	return p
 
 
 ## Is (x, z) on a house's footprint (with a margin)?
 static func on_house(houses: Array, x: float, z: float, margin: float) -> bool:
 	for hs: Dictionary in houses:
+		if absf(x - hs.pos.x) > 6.0 + margin or absf(z - hs.pos.y) > 6.0 + margin:
+			continue  # far off: no house here is more than 12 m across
 		var local := Basis.from_euler(Vector3(0, hs.yaw, 0)).inverse() * Vector3(x - hs.pos.x, 0, z - hs.pos.y)
 		if absf(local.x) < hs.w / 2.0 + margin and absf(local.z) < hs.d / 2.0 + margin:
 			return true
 	return false
 
 
-## Lane pieces [a, b] (on the ground plane) between the rows, cut wherever a
-## house, the reserved city centre or the shore is in the way.
+static func _lane_ok(houses: Array, m: Vector2) -> bool:
+	return not (on_house(houses, m.x, m.y, LANE_HALF) or Topo.is_reserved(m.x, m.y, 1.0) or Topo.in_house(m.x, m.y, 1.0)
+			or Topo.on_pier(m.x, m.y, 1.0) or Topo.terrain(m.x, m.y) < 2.4 or absf(m.y) > WALL_Z - 3.0)
+
+
+## Lane pieces [a, b] along the terrace streets and down the stepped lanes,
+## cut wherever a house, the city centre or the shore is in the way.
 static func lanes(houses: Array) -> Array:
 	var out := []
-	var runs := []
-	for z: float in LANES_Z:
-		runs.append([Vector2(-66.0, z), Vector2(62.0, z)])
-	for x: float in LANES_X:
-		runs.append([Vector2(x, -74.0), Vector2(x, 74.0)])
-	for r: Array in runs:
-		var a: Vector2 = r[0]
-		var b: Vector2 = r[1]
-		var n := int(a.distance_to(b) / LANE_SEG)
-		for k in n:
-			var p0 := a.lerp(b, float(k) / n)
-			var p1 := a.lerp(b, float(k + 1) / n)
-			var m := (p0 + p1) / 2.0
-			if on_house(houses, m.x, m.y, LANE_HALF + 0.2) or Topo.is_reserved(m.x, m.y, 1.0) \
-					or Topo.in_house(m.x, m.y, 1.0) or Topo.terrain(m.x, m.y) < 2.4 or absf(m.y) > WALL_Z - 3.0:
-				continue
-			out.append([p0, p1])
+	for run: PackedVector2Array in streets() + stairs():
+		for i in run.size() - 1:
+			var a := run[i]
+			var b := run[i + 1]
+			var n := maxi(1, int(a.distance_to(b) / LANE_SEG))
+			for k in n:
+				var p0 := a.lerp(b, float(k) / n)
+				var p1 := a.lerp(b, float(k + 1) / n)
+				if _lane_ok(houses, (p0 + p1) / 2.0):
+					out.append([p0, p1])
 	return out
 
 
@@ -121,6 +248,7 @@ func _ready() -> void:
 	_glow = glow.build("WindowGlow")
 	add_child(_glow)
 	_lanes(houses)
+	_terraces(houses)
 	_hearths(houses)
 
 
@@ -159,6 +287,47 @@ func _lanes(houses: Array) -> void:
 	var node := kit.build("Lanes")
 	add_child(node)
 	(node.get_node("Mesh") as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+
+## Retaining walls along the downhill edge of each terrace street (left open
+## where a stepped lane comes through), and stone steps down the steep lanes.
+func _terraces(houses: Array) -> void:
+	var kit := MeshKit.new()
+	var stair_runs := stairs()
+	for run: PackedVector2Array in streets():
+		for i in run.size() - 1:
+			var a := run[i]
+			var b := run[i + 1]
+			var m := (a + b) / 2.0
+			if not _lane_ok(houses, m) or _dist_to(stair_runs, m) < 2.2:
+				continue
+			var t := (b - a).normalized()
+			var down := Vector2(t.y, -t.x)
+			if down.x < 0.0:
+				down = -down  # east, downhill
+			var e := m + down * (LANE_HALF + 0.2)
+			var top := Topo.terrain(m.x, m.y) + 0.35
+			var foot := Topo.terrain(e.x + down.x * 0.8, e.y + down.y * 0.8)
+			if top - foot < 0.5:
+				continue  # the ground hardly falls here: no wall needed
+			kit.xform = Transform3D(Basis(Vector3.UP, atan2(-t.y, t.x)), Vector3(e.x, (top + foot - 0.4) / 2.0, e.y))
+			kit.solid_box("limestone", Vector3.ZERO, Vector3(a.distance_to(b) + 0.08, top - foot + 0.4, 0.45), ["bottom"])
+	for run: PackedVector2Array in stair_runs:
+		for i in run.size() - 1:
+			var a := run[i]
+			var b := run[i + 1]
+			var t := (b - a).normalized()
+			var n := int(a.distance_to(b) / 1.1)
+			for k in n:
+				var p := a.lerp(b, (k + 0.5) / n)
+				var q := p + t * 1.1
+				var drop := Topo.terrain(p.x, p.y) - Topo.terrain(q.x, q.y)
+				if drop < 0.15 or not _lane_ok(houses, p):
+					continue
+				kit.xform = Transform3D(Basis(Vector3.UP, atan2(-t.y, t.x)), Vector3(p.x, Topo.terrain(p.x, p.y) + 0.02, p.y))
+				kit.box("limestone", Vector3.ZERO, Vector3(0.3, 0.16, LANE_HALF * 2.0), ["bottom"])
+	kit.xform = Transform3D.IDENTITY
+	add_child(kit.build("Terraces"))
 
 
 ## Smoke from the hearths under some roofs, through the day.
