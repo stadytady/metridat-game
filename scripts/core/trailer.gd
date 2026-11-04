@@ -11,7 +11,7 @@ extends Node
 ## lamps are lit. Camera moves are Catmull-Rom splines through three points,
 ## short and gently eased at both ends, with a faint handheld drift; cuts are
 ## one-second dissolves, so the film breathes. Letterbox and titles live inside
-## the 640x360 viewport. Shot boundaries follow the score (night falls at
+## the low-res viewport. Shot boundaries follow the score (night falls at
 ## 16.6 s, the dream at 22.2 s, the hit lands at 25.4 s).
 ##
 ## By default the film is rendered clean: full window resolution, no dither,
@@ -69,7 +69,7 @@ var _t := 0.0
 ## --benchmark: same camera path in real time (no fixed fps), frame times recorded.
 var benchmark := "--benchmark" in OS.get_cmdline_user_args()
 var psx := benchmark or "--psx" in OS.get_cmdline_user_args()
-## Overlay scale: layout is in 640x360 units, the clean film renders larger.
+## Overlay scale: layout is in 640x360 units, the viewport is larger.
 var _k := 1.0
 var _frame_ms := PackedFloat32Array()
 var _result: Label
@@ -91,7 +91,9 @@ func _ready() -> void:
 		main.native = true
 		Game.settings_changed.emit()
 		main._fit()
-		_k = main.get_viewport().get_visible_rect().size.y / VIEW.y
+	# layout is in 640x360 units; the viewport is larger (540 at 1080p, or the
+	# whole frame for the clean film)
+	_k = main.get_viewport().get_visible_rect().size.y / main.screen.stretch_shrink / VIEW.y
 	var player: CharacterBody3D = main.player()
 	player.set_physics_process(false)
 	for n in get_tree().get_nodes_in_group(&"inspectable"):
