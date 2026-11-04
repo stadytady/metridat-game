@@ -1,9 +1,12 @@
 extends Node
 ## Root. The world renders into a SubViewport at PS1-like internal resolution
-## (~640x360), which the container scales up with nearest filtering and a
-## 15-bit dither pass. UI layers are drawn at native resolution on top.
+## (~960x540 on a 1080p screen), which the container scales up with nearest
+## filtering and a 15-bit dither pass. UI layers are drawn at native resolution
+## on top.
 
-const INTERNAL_HEIGHT := 360.0
+## Target height of the low-res image; the shrink stays an integer, so the real
+## height is 540 at 1080p, 480 at 1440p and 360 at 720p.
+const INTERNAL_HEIGHT := 480.0
 
 ## Render the world at the window's full resolution (the trailer without PS1 effects).
 var native := false

@@ -3,7 +3,7 @@
 # then encodes H.264 + AAC with ffmpeg.
 #   tools/trailer.sh [OUT.mp4]      default: docs/trailer.mp4
 #   SIZE=1920x1080 tools/trailer.sh out.mp4   (default 1280x720)
-#   PSX=1 tools/trailer.sh out.mp4   the game's PS1 look (640x360, dither, jitter);
+#   PSX=1 tools/trailer.sh out.mp4   the game's PS1 look (960x540, dither, jitter);
 #   by default the film renders clean at SIZE, without those effects
 # Without a GPU it runs on Mesa lavapipe under Xvfb (a few minutes).
 set -euo pipefail
