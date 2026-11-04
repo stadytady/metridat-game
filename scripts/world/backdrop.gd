@@ -163,14 +163,25 @@ func _lanes(houses: Array) -> void:
 
 ## Smoke from the hearths under some roofs, through the day.
 func _hearths(houses: Array) -> void:
+	var pots := MeshKit.new()
 	for i in houses.size():
 		if i % SMOKE_EVERY != 3:
 			continue
 		var hs: Dictionary = houses[i]
 		var basis := Basis.from_euler(Vector3(0, hs.yaw, 0))
-		var ridge := minf(hs.d * 0.22, 1.4) if hs.opts.roof == "gable" else 0.3
-		var top: Vector3 = hs.front + basis * Vector3(hs.w * 0.25, hs.h + ridge, -hs.d / 2.0)
-		var smoke := Lamp._make_flame(0.9)
+		var gable: bool = hs.opts.roof == "gable"
+		var ridge := minf(hs.d * 0.22, 1.4) if gable else 0.0
+		var base: Vector3 = hs.front + basis * Vector3(hs.w * 0.25, hs.h + ridge, -hs.d / 2.0)
+		# no chimneys: a terracotta smoke pot astride the ridge tiles, or on a flat
+		# roof a smoke hole with a clay rim; the smoke leaves from its mouth
+		var mouth := 0.55 if gable else 0.16
+		if gable:
+			pots.lathe("clay", PackedVector2Array([Vector2(0.24, -0.15), Vector2(0.2, 0.3), Vector2(0.15, 0.5), Vector2(0.17, mouth)]), 7,
+					base, 2.0, false, "dark", true)
+		else:
+			pots.lathe("clay", PackedVector2Array([Vector2(0.4, -0.05), Vector2(0.36, mouth)]), 8, base, 2.0, false, "dark", true)
+		var top := base + Vector3(0, mouth, 0)
+		var smoke := Lamp._make_flame(0.4)
 		var pm: ParticleProcessMaterial = smoke.process_material
 		var g := Gradient.new()
 		g.set_color(0, Color(0.36, 0.34, 0.32))
@@ -178,10 +189,10 @@ func _hearths(houses: Array) -> void:
 		(pm.color_ramp as GradientTexture1D).gradient = g
 		pm.initial_velocity_min = 0.25
 		pm.initial_velocity_max = 0.45
-		pm.spread = 30.0
+		pm.spread = 18.0
 		pm.gravity = Vector3(0.2, 0.1, 0)  # the breeze off the strait leans it a little
-		pm.scale_min = 0.5
-		pm.scale_max = 1.0
+		pm.scale_min = 0.6
+		pm.scale_max = 1.3
 		# each puff swells as it rises, then shrinks away: a ragged plume, not a column
 		var curve := Curve.new()
 		curve.add_point(Vector2(0.0, 0.4))
@@ -191,14 +202,15 @@ func _hearths(houses: Array) -> void:
 		ct.curve = curve
 		pm.scale_curve = ct
 		(smoke.draw_pass_1.surface_get_material(0) as StandardMaterial3D).blend_mode = BaseMaterial3D.BLEND_MODE_MIX
-		smoke.amount = 5
-		smoke.lifetime = 5.0
+		smoke.amount = 12
+		smoke.lifetime = 4.5
 		smoke.position = top
 		smoke.visibility_aabb = AABB(Vector3(-3, 0, -3), Vector3(6, 6, 6))
 		smoke.emitting = true
 		smoke.visible = true
 		add_child(smoke)
 		_smoke.append(smoke)
+	add_child(pots.build("SmokePots"))
 
 
 func _process(_delta: float) -> void:
