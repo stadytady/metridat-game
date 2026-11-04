@@ -13,6 +13,10 @@ extends Node
 ## one-second dissolves, so the film breathes. Letterbox and titles live inside
 ## the 640x360 viewport. Shot boundaries follow the score (night falls at
 ## 16.6 s, the dream at 22.2 s, the hit lands at 25.4 s).
+##
+## By default the film is rendered clean: full window resolution, no dither,
+## vertex snapping or affine warp (the low-res textures stay). `--psx` keeps
+## the game's look; the benchmark always does, it measures the real game.
 
 const DURATION := 31.0
 const DISSOLVE := 1.0
@@ -64,6 +68,9 @@ const SHOTS := [
 var _t := 0.0
 ## --benchmark: same camera path in real time (no fixed fps), frame times recorded.
 var benchmark := "--benchmark" in OS.get_cmdline_user_args()
+var psx := benchmark or "--psx" in OS.get_cmdline_user_args()
+## Overlay scale: layout is in 640x360 units, the clean film renders larger.
+var _k := 1.0
 var _frame_ms := PackedFloat32Array()
 var _result: Label
 var _cam: Camera3D
@@ -79,6 +86,12 @@ var _subtitle: Label
 func _ready() -> void:
 	var main := get_parent()
 	main.get_node("HUD").visible = false
+	if not psx:
+		Game.psx_effects = false  # not saved: the player's setting stays
+		main.native = true
+		Game.settings_changed.emit()
+		main._fit()
+		_k = main.get_viewport().get_visible_rect().size.y / VIEW.y
 	var player: CharacterBody3D = main.player()
 	player.set_physics_process(false)
 	for n in get_tree().get_nodes_in_group(&"inspectable"):
@@ -107,19 +120,19 @@ func _build_overlay(vp: SubViewport) -> void:
 	vp.add_child(layer)
 	# Frozen last frame of the previous shot, faded out for the dissolve.
 	_ghost = TextureRect.new()
-	_ghost.size = VIEW
+	_ghost.size = VIEW * _k
 	_ghost.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_ghost.modulate.a = 0.0
 	layer.add_child(_ghost)
 	for y: float in [0.0, VIEW.y - BAR]:
 		var bar := ColorRect.new()
 		bar.color = Color.BLACK
-		bar.position = Vector2(0, y)
-		bar.size = Vector2(VIEW.x, BAR)
+		bar.position = Vector2(0, y) * _k
+		bar.size = Vector2(VIEW.x, BAR) * _k
 		layer.add_child(bar)
 	_fade = ColorRect.new()
 	_fade.color = Color.BLACK
-	_fade.size = VIEW
+	_fade.size = VIEW * _k
 	layer.add_child(_fade)
 	_caption = _label(11, Color("#e6d6b4"), Vector2(0, VIEW.y - BAR + 17))
 	_title = _label(34, Color("#f2c48c"), Vector2(0, 62))
@@ -135,14 +148,14 @@ func _build_overlay(vp: SubViewport) -> void:
 
 func _label(size: int, color: Color, pos: Vector2) -> Label:
 	var l := Label.new()
-	l.add_theme_font_size_override("font_size", size)
+	l.add_theme_font_size_override("font_size", roundi(size * _k))
 	l.add_theme_color_override("font_color", color)
 	l.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.9))
-	l.add_theme_constant_override("shadow_offset_x", 1)
-	l.add_theme_constant_override("shadow_offset_y", 1)
+	l.add_theme_constant_override("shadow_offset_x", roundi(_k))
+	l.add_theme_constant_override("shadow_offset_y", roundi(_k))
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.position = pos
-	l.size = Vector2(VIEW.x, size + 6)
+	l.position = pos * _k
+	l.size = Vector2(VIEW.x, size + 6) * _k
 	l.modulate.a = 0.0
 	return l
 

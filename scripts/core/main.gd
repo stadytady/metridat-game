@@ -5,6 +5,9 @@ extends Node
 
 const INTERNAL_HEIGHT := 360.0
 
+## Render the world at the window's full resolution (the trailer without PS1 effects).
+var native := false
+
 @onready var screen: SubViewportContainer = $Screen
 @onready var viewport: SubViewport = $Screen/Viewport
 @onready var world: Node3D = $Screen/Viewport/World
@@ -45,7 +48,7 @@ func _ready() -> void:
 func _fit() -> void:
 	# Integer shrink keeps every low-res pixel the same size on screen.
 	var h := get_viewport().get_visible_rect().size.y
-	screen.stretch_shrink = maxi(1, roundi(h / INTERNAL_HEIGHT))
+	screen.stretch_shrink = 1 if native else maxi(1, roundi(h / INTERNAL_HEIGHT))
 	RenderingServer.global_shader_parameter_set(&"psx_resolution", Vector2(viewport.size))
 
 
