@@ -83,7 +83,8 @@ static func build(root: Node3D, body_mat: String = "chiton") -> Dictionary:
 ## The mysterious figure (the night street, the dream path): a standing body
 ## wrapped in a black robe to the ground, a mantle over the shoulders, wide
 ## sleeves over the hands and a deep hood. Under the hood there is no face,
-## only an unlit black (`void`), the same from every angle and in any light.
+## only black (`void`), the same from every angle and in any light. Both
+## materials use psx_ghost, so an Apparition can dissolve it.
 static func shrouded(root: Node3D) -> Dictionary:
 	var joints := build(root, "robe")
 	apply_pose(joints, "stand")

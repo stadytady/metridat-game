@@ -20,7 +20,7 @@ const VANISH_DIST := 12.0
 const HOWL_FROM := Vector3(70, 14, -60)
 const SANCTUARY := Vector3(46.0, Topo.SANCT_H + 1.0, -27.0)
 
-var figure: Node3D
+var figure: Apparition
 var vanished := false
 var wisp: Node3D
 var supper_lamp: OmniLight3D
@@ -138,7 +138,7 @@ func _wisp() -> void:
 
 ## A hooded shape in black, like the figures on the dream path.
 func _figure() -> void:
-	figure = Node3D.new()
+	figure = Apparition.new()
 	figure.name = "NightFigure"
 	figure.position = figure_point()
 	figure.rotation.y = -PI / 2.0  # faces +x, up the street towards the agora
@@ -165,10 +165,10 @@ func _process(delta: float) -> void:
 		return
 	wisp.position = wisp_at(_t)
 	var cam := get_viewport().get_camera_3d()
-	if cam and figure.visible:
+	if cam and figure.visible and not figure.gone:
 		var d := Vector2(figure.global_position.x - cam.global_position.x, figure.global_position.z - cam.global_position.z)
 		if d.length() < VANISH_DIST:
-			figure.visible = false  # a pop, not a fade
+			figure.vanish()  # crumbles away over Apparition.DISSOLVE
 			vanished = true
 	if Game.dreaming:
 		return

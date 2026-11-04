@@ -22,7 +22,7 @@ const ALTAR_TOP := 1.03  # top of the altar's crowning slab
 const MIRROR_LIFT := 0.33  # disc centre above it: the handle (0.32) stands on the slab
 const MIRROR_LEAN := 70.0  # degrees from lying flat
 
-var figures: Array[Node3D] = []
+var figures: Array[Apparition] = []
 ## Sound of the dream: a low drone, and a dog howling somewhere ahead in the
 ## fog (the dog was Hecate's animal). Only while dreaming.
 var howls := 0
@@ -264,7 +264,7 @@ func _olives() -> void:
 ## are close. A rigid Figure, not an Npc: nothing to talk to, nothing to hit.
 func _figures() -> void:
 	for z: float in FIGURES_Z:
-		var root := Node3D.new()
+		var root := Apparition.new()
 		root.name = "Figure%d" % figures.size()
 		root.position = ORIGIN + Vector3(path_x(z) + (0.8 if figures.size() % 2 == 0 else -0.8), 0, z)
 		root.rotation.y = PI  # faces back down the path, towards the dreamer
@@ -280,8 +280,8 @@ func _process(_delta: float) -> void:
 	if cam == null:
 		return
 	for f in figures:
-		if f.visible and Vector2(f.global_position.x - cam.global_position.x, f.global_position.z - cam.global_position.z).length() < VANISH_DIST:
-			f.visible = false  # gone, the PS1 way: a pop, not a fade
+		if not f.gone and Vector2(f.global_position.x - cam.global_position.x, f.global_position.z - cam.global_position.z).length() < VANISH_DIST:
+			f.vanish()  # crumbles away over Apparition.DISSOLVE
 			vanished += 1
 
 
@@ -321,7 +321,7 @@ func enter() -> void:
 	Game.dreaming = true
 	Game.dream_changed.emit(true)
 	for f in figures:
-		f.visible = true
+		f.reset()
 	vanished = 0
 	ended = false
 	_mirror_found = Game.found.has(&"bronze_mirror")
