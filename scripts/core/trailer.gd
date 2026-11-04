@@ -3,8 +3,8 @@ extends Node
 ## Started by `-- --trailer`; record with Movie Maker (tools/trailer.sh):
 ## --write-movie + --fixed-fps make every frame exact, however slow the GPU.
 ##
-## Afternoon to night, as the game goes, in eight long, slow shots: the
-## strait, the actor rehearsing in the summit theatre, through Myrto's door to
+## Afternoon to night, as the game goes, in eight long, slow shots: a crane
+## over the terraced city to the strait, the actor rehearsing in the summit theatre, through Myrto's door to
 ## her oven, along the pier to the moored ship at sunset, the lit street at
 ## night, Hecate's temple, the dream's misty path, and the hill at night. Each
 ## shot sets its own hour (the atmosphere snaps to it) and, after dusk, the
@@ -25,9 +25,10 @@ const EASE := 0.6
 
 ## start, end, hour (0 afternoon .. 1 night), camera path, look-at path, fov from/to, caption
 const SHOTS := [
-	{"t": [0.0, 4.4], "hour": 0.0, "fov": [40.0, 38.0], "caption": "The Cimmerian Bosporus, 4th century BCE",
-		"pos": [Vector3(236, 2.2, -60), Vector3(238, 2.45, -55), Vector3(240.5, 2.7, -50)],
-		"look": [Vector3(260, 4.5, -70), Vector3(260.3, 4.7, -70), Vector3(260.6, 4.9, -70)]},
+	# a crane down over the terraced city, hearth smoke on the roofs, to the strait
+	{"t": [0.0, 4.4], "hour": 0.0, "fov": [52.0, 48.0], "caption": "The Cimmerian Bosporus, 4th century BCE",
+		"pos": [Vector3(-54, 37, 54), Vector3(-46, 34, 47), Vector3(-38, 31, 40)],
+		"look": [Vector3(20, 2, 10), Vector3(30, 1.5, 7), Vector3(40, 1, 5)]},
 	# the summit theatre: from the top row, past the actor declaiming to the empty
 	# seats, and over his shoulder the city and the strait
 	{"t": [4.4, 8.2], "hour": 0.1, "fov": [46.0, 42.0], "caption": "",
