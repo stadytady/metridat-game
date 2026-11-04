@@ -45,12 +45,18 @@ func _house(kit: MeshKit, rng: RandomNumberGenerator, px: float, pz: float) -> v
 			hi = maxf(hi, t)
 	var front := center + basis * Vector3(0, 0, d / 2.0)
 	front.y = hi
-	Arch.house(kit, Transform3D(basis, front), w, d, rng.randf_range(3.0, 4.3), {
+	var h := rng.randf_range(3.0, 4.3)  # drawn before the options, as it always was
+	var opts := {
 		"drop": hi - lo + 1.0,
 		"roof": "gable" if rng.randf() < 0.65 else "flat",
 		"door": rng.randf() < 0.6,
 		"windows": rng.randi_range(0, 1),
-	})
+	}
+	# the walk-in house stands here: draw the same numbers, build nothing, so
+	# the rest of the city keeps its place
+	if Topo.in_house(px, pz, 6.0):
+		return
+	Arch.house(kit, Transform3D(basis, front), w, d, h, opts)
 
 
 func _walls(kit: MeshKit) -> void:

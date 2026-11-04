@@ -648,6 +648,8 @@ MATERIALS = {
     "wisp": ("psx_unlit", "white", "#bfe6ff", (1.0, 1.0)),
     "mask": ("psx_lit", "white", "#e6d8b8", (1.0, 1.0)),
     "mask_ochre": ("psx_lit", "white", "#c08a46", (1.0, 1.0)),
+    "bread": ("psx_lit", "clay", "#e0b070", (1.0, 1.0)),
+    "dough": ("psx_lit", "white", "#e6dcc0", (1.0, 1.0)),
     "net": ("psx_cutout", "net", "#ffffff", (1.5, 1.5)),
     "fish": ("psx_lit", "fish", "#ffffff", (1.0, 1.0)),
     "water": ("psx_water", "water", "#ffffff", (1.0, 1.0)),

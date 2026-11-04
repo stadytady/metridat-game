@@ -217,6 +217,18 @@ func _route() -> Array:
 	r.append(Vector2(12.5, 4.5))
 	r.append(Vector2(20.0, 3.5))
 	r.append(Vector2(30.0, 3.0))
+	# down the footpath to Myrto's house: talk at the oven, look into both rooms
+	r.append(Vector2(26.0, 9.6))
+	r.append(Vector2(26.0, 17.4))
+	r.append(Vector2(27.3, 18.2))
+	r.append("talk:baker")
+	for door: float in [22.9, 29.1]:
+		r.append(Vector2(door, 20.7))
+		r.append(Vector2(door, 23.4))
+		r.append(Vector2(door, 20.7))
+	r.append(Vector2(26.0, 17.4))
+	r.append(Vector2(26.0, 9.6))
+	r.append(Vector2(30.0, 3.0))
 	r.append(Vector2(34.0, -2.0))
 	# out through the gap in the east parapet, down to the fisherman's camp and back
 	r.append(Vector2(36.5, -7.0))
