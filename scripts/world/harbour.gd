@@ -148,7 +148,7 @@ func _crew() -> void:
 	splicer.pose = "mender"
 	splicer.body_mat = "chiton"
 	splicer.talkable = false
-	splicer.position = Vector3(ship_pos().x - 4.5, Topo.PIER_H - Figure.SEAT["mender"] + 0.05, Topo.PIER_Z + Topo.PIER_HALF - 0.1)
+	splicer.position = Vector3(ship_pos().x + 1.5, Topo.PIER_H - Figure.SEAT["mender"] + 0.05, Topo.PIER_Z + Topo.PIER_HALF - 0.1)
 	splicer.rotation.y = PI  # faces +z, the open water
 	add_child(splicer)
 
