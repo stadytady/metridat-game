@@ -60,19 +60,19 @@ func _shore(rng: RandomNumberGenerator) -> void:
 		# Rocks on the camp are built into a scratch kit: the rng sequence, and
 		# with it every other rock, stays as it was.
 		var k := MeshKit.new() if Topo.in_rect(x, z, Topo.CAMP_CENTER, Topo.CAMP_HALF, r) \
-				or Topo.in_house(x, z, r + 1.0) else kit
+				or Topo.in_house(x, z, r + 1.0) or Topo.on_pier(x, z, r + 1.0) else kit
 		if t >= 0.0:
 			k.blob("rock", Vector3(x, t + r * 0.3, z), Vector3(r * 1.3, r * 0.8, r), 0.3, rng)
 		else:
 			# In the surf: tall enough that its foot stays below the deepest trough.
-			kit.blob("rock", Vector3(x, -0.8 - r * 0.1, z), Vector3(r * 1.3, r + 1.0, r), 0.3, rng)
+			k.blob("rock", Vector3(x, -0.8 - r * 0.1, z), Vector3(r * 1.3, r + 1.0, r), 0.3, rng)
 		z += rng.randf_range(2.0, 5.0)
 	for i in 6:
 		var sx := rng.randf_range(75, 110)
 		var sz := rng.randf_range(-90, 90)
 		var r := rng.randf_range(1.5, 4.0)
 		# Sunk deep: wave troughs reach about a metre below sea level.
-		kit.blob("rock", Vector3(sx, -r * 0.2, sz), Vector3(r, r * 1.6, r * 0.9), 0.35, rng)
+		(MeshKit.new() if Topo.on_pier(sx, sz, r + 4.0) else kit).blob("rock", Vector3(sx, -r * 0.2, sz), Vector3(r, r * 1.6, r * 0.9), 0.35, rng)
 	add_child(kit.build("Shore"))
 
 
@@ -81,20 +81,41 @@ func _boundary() -> void:
 	var body := StaticBody3D.new()
 	body.name = "Boundary"
 	add_child(body)
+	for w: Array in boundary_walls():
+		_wall(body, w[0], w[1])
+
+
+## The wall segments [a, b]. Along the waterline, except where the pier goes
+## out: there the wall runs round the pier's sides and end instead.
+static func boundary_walls() -> Array:
+	var out := []
 	var prev := Vector3.INF
 	var z := -80.0
+	var lo := Topo.PIER_Z - Topo.PIER_HALF - 0.3
+	var hi := Topo.PIER_Z + Topo.PIER_HALF + 0.3
 	while z <= 80.0:
 		var x := 40.0
 		while x < 120.0 and Topo.terrain(x, z) > 0.4:
 			x += 0.5
 		var p := Vector3(x, 0, z)
 		if prev != Vector3.INF:
-			_wall(body, prev, p)
+			if prev.z < hi and p.z > lo:
+				var a := prev.lerp(p, (lo - prev.z) / (p.z - prev.z))
+				var b := prev.lerp(p, (hi - prev.z) / (p.z - prev.z))
+				var end := Topo.pier_x1() + 0.3
+				out.append([prev, a])
+				out.append([a, Vector3(end, 0, lo)])
+				out.append([Vector3(end, 0, lo), Vector3(end, 0, hi)])
+				out.append([Vector3(end, 0, hi), b])
+				out.append([b, p])
+			else:
+				out.append([prev, p])
 		prev = p
 		z += 4.0
-	_wall(body, Vector3(-128, 0, -80), Vector3(-128, 0, 80))
-	_wall(body, Vector3(-128, 0, -80), Vector3(prev.x, 0, -80))
-	_wall(body, Vector3(-128, 0, 80), Vector3(prev.x, 0, 80))
+	out.append([Vector3(-128, 0, -80), Vector3(-128, 0, 80)])
+	out.append([Vector3(-128, 0, -80), Vector3(prev.x, 0, -80)])
+	out.append([Vector3(-128, 0, 80), Vector3(prev.x, 0, 80)])
+	return out
 
 
 func _wall(body: StaticBody3D, a: Vector3, b: Vector3) -> void:
