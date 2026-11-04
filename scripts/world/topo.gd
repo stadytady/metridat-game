@@ -244,8 +244,13 @@ static func _find_pier_x0() -> float:
 	return x
 
 
+static var _pier_x1 := NAN
+
+
 static func pier_x1() -> float:
-	return waterline_x(PIER_Z) + PIER_OUT
+	if is_nan(_pier_x1):
+		_pier_x1 = waterline_x(PIER_Z) + PIER_OUT
+	return _pier_x1
 
 
 ## On the pier deck, or on the walk from the beach path to it (rocks keep off).

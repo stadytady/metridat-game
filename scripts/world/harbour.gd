@@ -177,8 +177,9 @@ func _end_lantern() -> void:
 
 func _process(delta: float) -> void:
 	_t += delta
-	# moored, she still rides the swell a little
-	_ship.position.y = WATERLINE + sin(_t * 0.7) * 0.08
-	_ship.rotation.x = sin(_t * 0.6) * 0.015
+	# moored, she still rides the swell: heave in full, her lines check the rolling
+	var f := Sea.float_pose(ship_pos(), 0.0, 7.0, 2.2)
+	_ship.position.y = WATERLINE + f.x
+	_ship.rotation = Vector3(f.y * 0.5, 0.0, f.z * 0.5)
 	var hour: float = _atm.t if _atm else 0.0
 	_lantern.visible = hour >= LANTERN_FROM

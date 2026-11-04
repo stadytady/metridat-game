@@ -80,8 +80,10 @@ func _process(delta: float) -> void:
 		var n := _ships[i]
 		var s: Array = SHIPS[i]
 		var p := position_at(s[0], s[3], hour)
-		n.position = Vector3(p.x, WATERLINE * float(s[2]) + sin(_t * 0.7 + i) * 0.25, p.z)
-		n.rotation.y = deg_to_rad(heading_at(s[0], s[1], s[3], hour))
-		n.rotation.z = sin(_t * 0.5 + i * 2.0) * 0.03
-		n.rotation.x = sin(_t * 0.6 + i) * 0.02
+		var yaw := deg_to_rad(heading_at(s[0], s[1], s[3], hour))
+		var k := float(s[2])
+		# ride the same waves the sea draws, so no crest ever washes over the deck
+		var f := Sea.float_pose(p, yaw, 7.0 * k, 2.2 * k)
+		n.position = Vector3(p.x, WATERLINE * k + f.x, p.z)
+		n.rotation = Vector3(f.y, yaw, f.z)
 		_lanterns[i].visible = hour >= LANTERN_FROM
