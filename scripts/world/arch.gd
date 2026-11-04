@@ -46,11 +46,25 @@ static func house(kit: MeshKit, xf: Transform3D, w: float, d: float, h: float, o
 		kit.box("limestone", Vector3(dx, 2.05, 0.06), Vector3(1.4, 0.2, 0.14), ["bottom"])
 		kit.box("limestone", Vector3(dx, -0.06, 0.25), Vector3(1.3, 0.12, 0.5), ["bottom"])
 	var windows: int = opts.get("windows", 1)
+	# opts.glow: a separate kit for windows lit at night (some of them, chosen
+	# by the house's seed); its node is shown only after dusk
+	var glow: MeshKit = opts.get("glow", null)
 	for i in windows:
 		var wx := (-w / 2.0 + 1.0) + i * (w - 2.0) / maxf(1.0, windows - 1.0) if windows > 1 else w / 2.0 - 1.0
 		kit.quad("dark", Vector3(wx - 0.25, h - 1.1, 0.02), Vector3(wx + 0.25, h - 1.1, 0.02),
 				Vector3(wx + 0.25, h - 0.7, 0.02), Vector3(wx - 0.25, h - 0.7, 0.02))
+		if glow and window_lit(opts.get("seed", 0), i):
+			glow.xform = xf
+			# a touch larger than the opening: lamplight spills onto the plaster
+			glow.quad("window_glow", Vector3(wx - 0.3, h - 1.15, 0.04), Vector3(wx + 0.3, h - 1.15, 0.04),
+					Vector3(wx + 0.3, h - 0.65, 0.04), Vector3(wx - 0.3, h - 0.65, 0.04))
+			glow.xform = Transform3D.IDENTITY
 	kit.xform = Transform3D.IDENTITY
+
+
+## Whether a house's window shows a lamp at night: one in two, by its seed.
+static func window_lit(seed: int, i: int) -> bool:
+	return posmod(hash(seed * 31 + i), 2) == 0
 
 
 ## Walled courtyard with a gate on the front (local frame as house()).

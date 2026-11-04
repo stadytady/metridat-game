@@ -596,7 +596,7 @@ TEXTURES = [limestone, column, plaster, roof, wood, door, paving, earth, grass, 
             clay, redfigure, bronze, gold, water, cloth, basket, figurine, inscription, sky, dark, white]
 
 # Screen-filling surfaces swim too much with full affine mapping.
-AFFINE = {"sand": 0.25, "sand_wet": 0.25, "earth": 0.25, "grass": 0.25, "rock": 0.4, "paving": 0.5, "distant_land": 0.0}
+AFFINE = {"path": 0.25, "sand": 0.25, "sand_wet": 0.25, "earth": 0.25, "grass": 0.25, "rock": 0.4, "paving": 0.5, "distant_land": 0.0}
 
 # name: (shader, texture, tint, uv_scale)
 MATERIALS = {
@@ -650,6 +650,8 @@ MATERIALS = {
     "mask_ochre": ("psx_lit", "white", "#c08a46", (1.0, 1.0)),
     "bread": ("psx_lit", "clay", "#e0b070", (1.0, 1.0)),
     "dough": ("psx_lit", "white", "#e6dcc0", (1.0, 1.0)),
+    "path": ("psx_lit", "sand", "#e2cfa6", (0.25, 0.25)),
+    "window_glow": ("psx_unlit", "white", "#ffb45a", (1.0, 1.0)),
     "net": ("psx_cutout", "net", "#ffffff", (1.5, 1.5)),
     "fish": ("psx_lit", "fish", "#ffffff", (1.0, 1.0)),
     "water": ("psx_water", "water", "#ffffff", (1.0, 1.0)),
