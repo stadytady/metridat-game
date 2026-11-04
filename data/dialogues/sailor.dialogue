@@ -1,0 +1,21 @@
+# Damon, skipper of the Swallow, on the pier. Four questions: the cargo, the
+# strait, the light beyond the ships, and passage out of the city.
+# Text is a key: the panel translates it, so EN/RU stay in strings.csv.
+# Indent with tabs: DM's INDENT_REGEX is ^\t+.
+
+~ start
+Damon: NPC_SAILOR_1
+- LOC_SAILOR_CHOICE_1
+	Damon: NPC_SAILOR_2
+	Damon: LOC_SAILOR_CARGO_1
+- LOC_SAILOR_CHOICE_2
+	Damon: NPC_SAILOR_3
+	Damon: LOC_SAILOR_STRAIT_1
+- LOC_SAILOR_CHOICE_3
+	Damon: NPC_SAILOR_4
+	Damon: LOC_SAILOR_LIGHT_1
+	Damon: LOC_SAILOR_LIGHT_2
+- LOC_SAILOR_CHOICE_4
+	Damon: NPC_SAILOR_5
+	Damon: LOC_SAILOR_LEAVE_1
+=> END

@@ -111,7 +111,8 @@ func _actor() -> void:
 	var a: Npc = NPC.new()
 	a.npc_id = "actor"
 	a.name_key = "NPC_ACTOR_NAME"
-	a.lines = PackedStringArray(["NPC_ACTOR_1", "NPC_ACTOR_2", "NPC_ACTOR_3", "NPC_ACTOR_4", "NPC_ACTOR_5"])
+	a.dialogue = load("res://data/dialogues/fedr.dialogue") as DialogueResource
+	a.dialogue_start = "start"
 	a.pose = "declaim"
 	a.body_mat = "chiton"
 	a.position = Vector3(ACTOR.x, Topo.HILL_PLATFORM_TOP, ACTOR.y)

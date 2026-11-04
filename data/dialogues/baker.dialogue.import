@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=15
+type="Resource"
+uid="uid://dn61kuedhegtg"
+path="res://.godot/imported/baker.dialogue-04c9ddbf19a6c1fefcf60a531e4b2464.tres"
+
+[deps]
+
+source_file="res://data/dialogues/baker.dialogue"
+dest_files=["res://.godot/imported/baker.dialogue-04c9ddbf19a6c1fefcf60a531e4b2464.tres"]
+
+[params]
+
+defaults=true

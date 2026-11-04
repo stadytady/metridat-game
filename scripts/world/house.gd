@@ -237,7 +237,7 @@ func _baker(y: float) -> void:
 	var b: Npc = NPC.new()
 	b.npc_id = "baker"
 	b.name_key = "NPC_BAKER_NAME"
-	b.lines = PackedStringArray(["NPC_BAKER_1", "NPC_BAKER_2", "NPC_BAKER_3", "NPC_BAKER_4"])
+	b.dialogue = load("res://data/dialogues/baker.dialogue") as DialogueResource
 	b.pose = "baker"
 	b.body_mat = "chiton_dark"
 	b.position = Vector3(OVEN.x - 0.95, y, OVEN.y)

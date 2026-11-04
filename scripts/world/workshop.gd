@@ -109,7 +109,7 @@ func _people(y: float) -> void:
 	var potter: Npc = NPC.new()
 	potter.npc_id = "potter"
 	potter.name_key = "NPC_POTTER_NAME"
-	potter.lines = PackedStringArray(["NPC_POTTER_1", "NPC_POTTER_2", "NPC_POTTER_3", "NPC_POTTER_4"])
+	potter.dialogue = load("res://data/dialogues/potter.dialogue") as DialogueResource
 	potter.pose = "potter"
 	potter.position = Vector3(13.4, y, 9.4)
 	add_child(potter)

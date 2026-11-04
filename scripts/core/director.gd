@@ -403,6 +403,8 @@ func _talk(player: CharacterBody3D, npc_id: String) -> void:
 	if npc == null:
 		_fail.append("no npc " + npc_id)
 		return
+	if npc.marker == null or not npc.marker.visible:
+		_fail.append("no talk marker over " + npc_id)
 	player.look_at_point(npc.global_position + Vector3(0, 0.9, 0))
 	await get_tree().physics_frame
 	await get_tree().physics_frame
@@ -414,16 +416,19 @@ func _talk(player: CharacterBody3D, npc_id: String) -> void:
 	if not panel.is_open():
 		_fail.append("dialogue did not open for " + npc_id)
 		return
+	if npc.marker != null and npc.marker.visible:
+		_fail.append("talk marker still shown during the talk with " + npc_id)
 	var shown := 0
 	while panel.is_open() and shown < 20:
 		shown += 1
 		var text: String = panel._line.text
-		if text.begins_with("NPC_"):
+		if text.begins_with("NPC_") or text.begins_with("LOC_"):
 			_fail.append("untranslated line %s" % text)
 		panel.advance()
 		await _frames(2)
-	if not Game.talked.get(npc_id, false) or shown != npc.lines.size():
-		_fail.append("talk with %s: %d of %d lines" % [npc_id, shown, npc.lines.size()])
+	# A branching talk has no fixed length; reaching the end of one branch is enough.
+	if not Game.talked.get(npc_id, false) or shown < 3:
+		_fail.append("talk with %s: %d lines, expected at least 3" % [npc_id, shown])
 	print("talked to %s (%d lines)" % [npc_id, shown])
 
 
