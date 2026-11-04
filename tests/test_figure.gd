@@ -58,3 +58,29 @@ func test_shrouded_figure_hides_the_body() -> void:
 	check(void_z < -0.105 and void_z > -0.19, "the void is not under the hood: z %.3f" % void_z)
 	check(hem < 0.1, "the robe stops %.2f m above the ground" % hem)
 	root.free()
+
+
+func test_apparition_crumbles_away() -> void:
+	check(is_equal_approx(Apparition.fade_at(0.0), 1.0) and is_equal_approx(Apparition.fade_at(0.05), 1.0), "fades before its first 15 fps step")
+	check(Apparition.fade_at(Apparition.DISSOLVE) == 0.0, "still there after %.1f s" % Apparition.DISSOLVE)
+	var last := 1.0
+	for i in 40:
+		var f := Apparition.fade_at(i * 0.05)
+		check(f <= last, "comes back at %.2f s" % (i * 0.05))
+		last = f
+	var a := Apparition.new()
+	Figure.shrouded(a)
+	for mi: MeshInstance3D in a.find_children("*", "MeshInstance3D", true, false):
+		for s in mi.mesh.get_surface_count():
+			var mat := (mi.material_override if mi.material_override else mi.mesh.surface_get_material(s)) as ShaderMaterial
+			check(mat.shader.resource_path.ends_with("psx_ghost.gdshader"), "%s can not dissolve" % mi.get_parent().name)
+	var head: GeometryInstance3D = a.find_children("Shroud", "MeshInstance3D", true, false)[0]
+	a.vanish()
+	a._process(Apparition.DISSOLVE / 2.0)
+	var half: float = head.get_instance_shader_parameter(&"fade")
+	check(a.visible and half > 0.3 and half < 0.7, "half way: visible %s, fade %.2f" % [a.visible, half])
+	a._process(Apparition.DISSOLVE)
+	check(not a.visible, "still there after the dissolve")
+	a.reset()
+	check(a.visible and not a.gone and head.get_instance_shader_parameter(&"fade") == 1.0, "not whole again after reset")
+	a.free()

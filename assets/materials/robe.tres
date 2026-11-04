@@ -1,6 +1,6 @@
 [gd_resource type="ShaderMaterial" load_steps=3 format=3]
 
-[ext_resource type="Shader" path="res://assets/shaders/psx_lit.gdshader" id="1_s"]
+[ext_resource type="Shader" path="res://assets/shaders/psx_ghost.gdshader" id="1_s"]
 [ext_resource type="Texture2D" path="res://assets/textures/cloth.png" id="2_t"]
 
 [resource]
