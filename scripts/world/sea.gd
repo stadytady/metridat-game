@@ -21,8 +21,13 @@ const CALM_RADIUS := 26.0
 const CALM := 0.68
 
 
+static var _calm := Vector2.INF
+
+
 static func calm_center() -> Vector2:
-	return Vector2((Topo.pier_x0() + Topo.pier_x1()) / 2.0 + 4.0, Topo.PIER_Z - 3.0)
+	if _calm == Vector2.INF:
+		_calm = Vector2((Topo.pier_x0() + Topo.pier_x1()) / 2.0 + 4.0, Topo.PIER_Z - 3.0)
+	return _calm
 
 ## Seconds on the sea's clock; the shader reads it as sea_time.
 static var clock := 0.0
@@ -32,7 +37,7 @@ var _mat: ShaderMaterial
 ## Height of the water surface above sea level at (x, z) and time t, exactly as
 ## psx_water's vertex shader moves it (shoaling towards the shore, calm at the waterline).
 static func height_at(x: float, z: float, t: float = clock) -> float:
-	var shore_d := x - Topo.waterline_x(z)
+	var shore_d := x - shore_x(z)
 	var shoal := 1.0 - smoothstep(0.0, 70.0, shore_d)
 	var h := 0.0
 	for i in WAVES.size():
@@ -125,10 +130,33 @@ static func _grid() -> ArrayMesh:
 ## Waterline x per z as a 1-px-high float texture for the shader.
 static func _shore_texture() -> ImageTexture:
 	var img := Image.create(SHORE_SAMPLES, 1, false, Image.FORMAT_RF)
+	var table := _shore_table()
 	for i in SHORE_SAMPLES:
-		var z := lerpf(SHORE_Z.x, SHORE_Z.y, float(i) / (SHORE_SAMPLES - 1))
-		img.set_pixel(i, 0, Color(Topo.waterline_x(z), 0, 0))
+		img.set_pixel(i, 0, Color(table[i], 0, 0))
 	return ImageTexture.create_from_image(img)
+
+
+## The waterline sampled once (Topo.waterline_x walks the terrain, far too slow
+## to call per wave sample); the shader gets the same table as shore_tex.
+static var _shore := PackedFloat32Array()
+
+
+static func _shore_table() -> PackedFloat32Array:
+	if _shore.is_empty():
+		_shore.resize(SHORE_SAMPLES)
+		for i in SHORE_SAMPLES:
+			_shore[i] = Topo.waterline_x(lerpf(SHORE_Z.x, SHORE_Z.y, float(i) / (SHORE_SAMPLES - 1)))
+	return _shore
+
+
+## The waterline as the shader reads it: shore_tex with linear filtering
+## (texel centres at (i + 0.5) / N, clamped at the ends).
+static func shore_x(z: float) -> float:
+	var table := _shore_table()
+	var u := clampf((z - SHORE_Z.x) / (SHORE_Z.y - SHORE_Z.x), 0.0, 1.0)
+	var f := clampf(u * SHORE_SAMPLES - 0.5, 0.0, SHORE_SAMPLES - 1.0)
+	var i := mini(int(f), SHORE_SAMPLES - 2)
+	return lerpf(table[i], table[i + 1], f - i)
 
 
 ## The strait is narrowed for readability: the real one is wider than the fog allows.
