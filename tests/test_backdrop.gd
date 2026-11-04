@@ -53,3 +53,18 @@ func test_about_half_the_windows_are_lit() -> void:
 		if Arch.window_lit(s * 7919, 0):
 			lit += 1
 	check(lit > 150 and lit < 250, "lit windows: %d of 400" % lit)
+
+
+func test_lamps_flicker_out_of_step() -> void:
+	# psx_lamp reads each window's phase from its vertex alpha
+	var glow := MeshKit.new()
+	for s in 40:
+		Arch.house(MeshKit.new(), Transform3D(Basis(), Vector3(s * 10.0, 0, 0)), 6.0, 5.0, 4.0, {"seed": s * 7919, "windows": 2, "glow": glow})
+	var mesh := glow.commit()
+	check(mesh.get_surface_count() == 1, "no lit windows")
+	var mat := mesh.surface_get_material(0) as ShaderMaterial
+	check(mat != null and mat.shader.resource_path.ends_with("psx_lamp.gdshader"), "window glow is not lamplight")
+	var phases := {}
+	for c: Color in mesh.surface_get_arrays(0)[Mesh.ARRAY_COLOR]:
+		phases[snappedf(c.a, 0.001)] = true
+	check(phases.size() >= 20, "lamps pulse in step: %d phases" % phases.size())

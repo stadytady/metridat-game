@@ -55,16 +55,24 @@ static func house(kit: MeshKit, xf: Transform3D, w: float, d: float, h: float, o
 				Vector3(wx + 0.25, h - 0.7, 0.02), Vector3(wx - 0.25, h - 0.7, 0.02))
 		if glow and window_lit(opts.get("seed", 0), i):
 			glow.xform = xf
+			glow.color = Color(1, 1, 1, lamp_phase(opts.get("seed", 0), i))
 			# a touch larger than the opening: lamplight spills onto the plaster
 			glow.quad("window_glow", Vector3(wx - 0.3, h - 1.15, 0.04), Vector3(wx + 0.3, h - 1.15, 0.04),
 					Vector3(wx + 0.3, h - 0.65, 0.04), Vector3(wx - 0.3, h - 0.65, 0.04))
 			glow.xform = Transform3D.IDENTITY
+			glow.color = Color.WHITE
 	kit.xform = Transform3D.IDENTITY
 
 
 ## Whether a house's window shows a lamp at night: one in two, by its seed.
 static func window_lit(seed: int, i: int) -> bool:
 	return posmod(hash(seed * 31 + i), 2) == 0
+
+
+## Where a window's lamp is in its flicker (psx_lamp reads it from the vertex
+## alpha), so the lamps of a street never pulse in step.
+static func lamp_phase(seed: int, i: int) -> float:
+	return posmod(hash(seed * 131 + i * 17), 1024) / 1024.0
 
 
 ## Walled courtyard with a gate on the front (local frame as house()).
