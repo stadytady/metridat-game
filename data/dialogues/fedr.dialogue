@@ -1,0 +1,21 @@
+# Fedr, the actor rehearsing on the hill. Three questions, three different
+# conversations; a shorter one after `Game.talked` is set.
+# Text is a key, not prose: DialoguePanel translates it, so EN/RU stay in
+# strings.csv and the language switch keeps working mid-conversation.
+# Indent with tabs: DM's INDENT_REGEX is ^\t+.
+
+~ start
+if Game.talked.get("actor", false)
+	Fedr: LOC_FEDR_AGAIN
+	=> END
+Fedr: NPC_ACTOR_1
+- LOC_FEDR_CHOICE_MASKS
+	Fedr: NPC_ACTOR_2
+	Fedr: LOC_FEDR_MASKS_1
+- LOC_FEDR_CHOICE_VIEW
+	Fedr: NPC_ACTOR_4
+	Fedr: NPC_ACTOR_3
+- LOC_FEDR_CHOICE_SEATS
+	Fedr: LOC_FEDR_SEATS_1
+	Fedr: NPC_ACTOR_5
+=> END

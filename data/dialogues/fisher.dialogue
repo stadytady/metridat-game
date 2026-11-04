@@ -1,0 +1,19 @@
+# Glaukos, on the beach by his net. Three questions: the weights, his father's
+# ice, and the light on the water. Each ends the talk in its own place.
+# Text is a key: the panel translates it, so EN/RU stay in strings.csv.
+# Indent with tabs: DM's INDENT_REGEX is ^\t+.
+
+~ start
+Glaukos: NPC_FISHER_1
+Glaukos: NPC_FISHER_2
+- LOC_FISHER_CHOICE_1
+	Glaukos: NPC_FISHER_4
+	Glaukos: LOC_FISHER_WEIGHTS_1
+	Glaukos: LOC_FISHER_WEIGHTS_2
+- LOC_FISHER_CHOICE_2
+	Glaukos: NPC_FISHER_3
+	Glaukos: LOC_FISHER_ICE_1
+- LOC_FISHER_CHOICE_3
+	Glaukos: NPC_FISHER_5
+	Glaukos: LOC_FISHER_OMEN_1
+=> END

@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=15
+type="Resource"
+uid="uid://b2fltos6pmgwx"
+path="res://.godot/imported/sailor.dialogue-73753f5fc35959f188789b421c54b3c4.tres"
+
+[deps]
+
+source_file="res://data/dialogues/sailor.dialogue"
+dest_files=["res://.godot/imported/sailor.dialogue-73753f5fc35959f188789b421c54b3c4.tres"]
+
+[params]
+
+defaults=true

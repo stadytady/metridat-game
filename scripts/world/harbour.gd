@@ -115,7 +115,7 @@ func _crew() -> void:
 	var skipper: Npc = NPC.new()
 	skipper.npc_id = "sailor"
 	skipper.name_key = "NPC_SAILOR_NAME"
-	skipper.lines = PackedStringArray(["NPC_SAILOR_1", "NPC_SAILOR_2", "NPC_SAILOR_3", "NPC_SAILOR_4", "NPC_SAILOR_5"])
+	skipper.dialogue = load("res://data/dialogues/sailor.dialogue") as DialogueResource
 	skipper.body_mat = "cloth"
 	skipper.position = skipper_pos()
 	skipper.rotation.y = deg_to_rad(90.0)  # faces -x, the land

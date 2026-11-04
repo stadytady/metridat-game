@@ -1,0 +1,19 @@
+# Kallias, the potter at the agora workshop. Three questions that lead into
+# three different conversations, each with its own ending.
+# Text is a key: the panel translates it, so EN/RU stay in strings.csv.
+# Indent with tabs: DM's INDENT_REGEX is ^\t+.
+
+~ start
+Kallias: NPC_POTTER_1
+- LOC_POTTER_CHOICE_1
+	Kallias: LOC_POTTER_CUPS_1
+	Kallias: LOC_POTTER_CUPS_2
+	Kallias: LOC_POTTER_CUPS_3
+- LOC_POTTER_CHOICE_2
+	Kallias: NPC_POTTER_2
+	Kallias: LOC_POTTER_BREAK_1
+	Kallias: NPC_POTTER_4
+- LOC_POTTER_CHOICE_3
+	Kallias: NPC_POTTER_3
+	Kallias: LOC_POTTER_GODS_1
+=> END

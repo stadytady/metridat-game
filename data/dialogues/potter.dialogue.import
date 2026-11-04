@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=15
+type="Resource"
+uid="uid://b5rpw1rycayml"
+path="res://.godot/imported/potter.dialogue-4dfca28eda70ab1c810d2d836b1a6977.tres"
+
+[deps]
+
+source_file="res://data/dialogues/potter.dialogue"
+dest_files=["res://.godot/imported/potter.dialogue-4dfca28eda70ab1c810d2d836b1a6977.tres"]
+
+[params]
+
+defaults=true

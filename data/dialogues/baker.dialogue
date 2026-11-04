@@ -1,0 +1,18 @@
+# Myrto, baking in her yard. Three questions, three conversations: her house,
+# her mother's counting, and the quarrel with the potter over smoke.
+# Text is a key: the panel translates it, so EN/RU stay in strings.csv.
+# Indent with tabs: DM's INDENT_REGEX is ^\t+.
+
+~ start
+Myrto: NPC_BAKER_1
+- LOC_BAKER_CHOICE_1
+	Myrto: NPC_BAKER_3
+	Myrto: LOC_BAKER_HOUSE_1
+- LOC_BAKER_CHOICE_2
+	Myrto: NPC_BAKER_2
+	Myrto: LOC_BAKER_COUNT_1
+	Myrto: NPC_BAKER_4
+- LOC_BAKER_CHOICE_3
+	Myrto: LOC_BAKER_SMOKE_1
+	Myrto: LOC_BAKER_SMOKE_2
+=> END

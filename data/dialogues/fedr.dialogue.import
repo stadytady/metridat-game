@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=15
+type="Resource"
+uid="uid://cg7cbdwmg5p5p"
+path="res://.godot/imported/fedr.dialogue-1062af2ff8d330811fda0821f04fefd3.tres"
+
+[deps]
+
+source_file="res://data/dialogues/fedr.dialogue"
+dest_files=["res://.godot/imported/fedr.dialogue-1062af2ff8d330811fda0821f04fefd3.tres"]
+
+[params]
+
+defaults=true
