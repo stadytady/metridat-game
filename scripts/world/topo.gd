@@ -44,6 +44,15 @@ const HOUSE_HALF := Vector2(6.5, 5.5)
 const HOUSE_H := AGORA_H
 const LANE: Array[Vector3] = [Vector3(26, AGORA_H, 10.4), Vector3(26, AGORA_H, 16.2)]
 const LANE_HALF := 1.0
+## A wooden pier from the beach north of the fisherman's camp out into the
+## strait, with a merchant ship moored alongside. The deck is level; the land
+## end starts where the sand is low enough to pass under it.
+const PIER_Z := -6.0
+const PIER_HALF := 1.3
+const PIER_H := 1.1
+const PIER_OUT := 20.0  # deck length beyond the waterline
+## Where the walk to the pier leaves the way down to the beach.
+const PIER_FROM := Vector2(56.0, 6.0)
 ## Fisherman's camp on the beach below the agora.
 const CAMP_CENTER := Vector2(66.5, 14.0)
 const CAMP_HALF := Vector2(5.5, 4.0)
@@ -196,6 +205,8 @@ static func surface(x: float, z: float) -> float:
 		return SANCT_H
 	if in_house(x, z, 0.0):
 		return HOUSE_H
+	if x >= pier_x0() and x <= pier_x1() and absf(z - PIER_Z) <= PIER_HALF:
+		return PIER_H
 	if in_rect(x, z, HILL_CENTER, HILL_HALF - Vector2(1, 1)):
 		return HILL_PLATFORM_TOP
 	if x >= STREET[0].x and x <= STREET[-1].x and absf(z - street_z(x)) <= STREET_HALF:
@@ -209,6 +220,41 @@ static func in_house(x: float, z: float, margin: float) -> bool:
 	if in_rect(x, z, HOUSE_CENTER, HOUSE_HALF, margin):
 		return true
 	return _segment(x, z, LANE[0], LANE[1]).x < LANE_HALF + margin
+
+
+## Land end of the pier: the first x (coming inland from the water) where the
+## sand would rise into the deck.
+static var _pier_x0 := NAN
+
+
+static func pier_x0() -> float:
+	if not is_nan(_pier_x0):
+		return _pier_x0
+	_pier_x0 = _find_pier_x0()
+	return _pier_x0
+
+
+static func _find_pier_x0() -> float:
+	var x := waterline_x(PIER_Z)
+	while x > waterline_x(PIER_Z) - 12.0:
+		for dz: float in [-PIER_HALF, 0.0, PIER_HALF]:
+			if terrain(x - 0.5, PIER_Z + dz) > PIER_H - 0.3:
+				return x
+		x -= 0.5
+	return x
+
+
+static func pier_x1() -> float:
+	return waterline_x(PIER_Z) + PIER_OUT
+
+
+## On the pier deck, or on the walk from the beach path to it (rocks keep off).
+static func on_pier(x: float, z: float, margin: float) -> bool:
+	if x >= pier_x0() - margin and x <= pier_x1() + margin and absf(z - PIER_Z) <= PIER_HALF + margin:
+		return true
+	var a := Vector3(PIER_FROM.x, 0, PIER_FROM.y)
+	var b := Vector3(pier_x0(), 0, PIER_Z)
+	return _segment(x, z, a, b).x < 1.5 + margin
 
 
 ## Areas the backdrop city must keep clear of.

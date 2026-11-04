@@ -15,6 +15,9 @@ const ARC_TO := 240.0
 const ARC_STEP := 10.0
 const ORCHESTRA_R := 3.0
 const STAND := Vector2(-88.6, 3.9)
+## The actor rehearses in the orchestra, facing the empty seats.
+const ACTOR := Vector2(-90.6, 0.3)
+const NPC := preload("res://scripts/npc/npc.gd")
 
 
 ## Every seat block: [centre on the floor, yaw (rad), size].
@@ -51,6 +54,7 @@ func _ready() -> void:
 	_orchestra(kit)
 	_stand(kit)
 	add_child(kit.build("Theatre"))
+	_actor()
 
 
 ## A ring of pale slabs flush with the paving marks the orchestra.
@@ -101,3 +105,24 @@ func _mask(kit: MeshKit, c: Vector3, tragic: bool, mat: String, bearded: bool) -
 		kit.box("hair", c + Vector3(0, 0.185, 0.005), Vector3(0.3, 0.06, 0.06), [])
 		kit.box("hair", c + Vector3(0, -0.2, -0.005), Vector3(0.18, 0.08, 0.04), [])
 	kit.box("wood", c + Vector3(0, 0.2 if not bearded else 0.24, 0.03), Vector3(0.025, 0.06, 0.025), [])  # peg
+
+
+func _actor() -> void:
+	var a: Npc = NPC.new()
+	a.npc_id = "actor"
+	a.name_key = "NPC_ACTOR_NAME"
+	a.lines = PackedStringArray(["NPC_ACTOR_1", "NPC_ACTOR_2", "NPC_ACTOR_3", "NPC_ACTOR_4", "NPC_ACTOR_5"])
+	a.pose = "declaim"
+	a.body_mat = "chiton"
+	a.position = Vector3(ACTOR.x, Topo.HILL_PLATFORM_TOP, ACTOR.y)
+	a.rotation.y = deg_to_rad(90.0)  # faces -x, the seats
+	add_child(a)
+	# a mask in the left hand, face out
+	var k := MeshKit.new()
+	k.box("mask", Vector3(0, -0.36, -0.08), Vector3(0.2, 0.26, 0.04), [])
+	k.box("dark", Vector3(-0.05, -0.32, -0.102), Vector3(0.05, 0.03, 0.01), [])
+	k.box("dark", Vector3(0.05, -0.32, -0.102), Vector3(0.05, 0.03, 0.01), [])
+	k.box("dark", Vector3(0, -0.42, -0.102), Vector3(0.09, 0.05, 0.01), [])
+	var mi := MeshInstance3D.new()
+	mi.mesh = k.commit()
+	(a.joints["l_elbow"] as Node3D).add_child(mi)

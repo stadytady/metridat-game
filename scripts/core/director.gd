@@ -184,6 +184,9 @@ func _inspectables() -> Dictionary:
 func _route() -> Array:
 	var r: Array = []
 	var c := Topo.HILL_CENTER
+	# the actor rehearsing in the theatre, a few steps from the start
+	r.append(Vector2(-88.4, -0.8))
+	r.append("talk:actor")
 	r.append(Vector2(c.x + 3.0, -4.6))
 	r.append("sherd_kerch")
 	r.append(Vector2(c.x + Topo.HILL_HALF.x - 1.0, 0.0))
@@ -237,6 +240,13 @@ func _route() -> Array:
 	r.append("talk:fisher")
 	r.append(Vector2(64.6, 13.0))
 	r.append("net_sinkers")
+	r.append(Vector2(56.0, 6.0))
+	# along the beach to the pier, out to the skipper by the gangway, and back
+	var px0 := Topo.pier_x0()
+	r.append(Vector2(px0 - 1.0, Topo.PIER_Z))
+	r.append(Vector2(Topo.pier_x1() - 7.0, Topo.PIER_Z - 0.4))
+	r.append("talk:sailor")
+	r.append(Vector2(px0 - 1.0, Topo.PIER_Z))
 	r.append(Vector2(56.0, 6.0))
 	r.append(Vector2(36.5, -7.0))
 	r.append(Vector2(34.0, -5.5))  # around the torch at the foot of the stair
