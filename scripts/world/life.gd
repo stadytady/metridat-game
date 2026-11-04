@@ -4,7 +4,12 @@ extends District
 ## and a woodpile by the potter's kiln, stone worn pale by centuries of feet,
 ## and a dog asleep by the stoa. Nothing here has a collider in anyone's way.
 
-const DOG := Vector3(12.9, Topo.AGORA_H, -4.6)  # against the stoa's west end
+## Out on the paving by the stoa's west end, clear of its end wall (x 12.6)
+## and of the raised stylobate (z -4.7).
+const DOG := Vector3(13.6, Topo.AGORA_H, -3.9)
+## The well on the agora, in front of the stoa and off the way across.
+const WELL := Vector3(17.2, Topo.AGORA_H, -3.0)
+const NPC := preload("res://scripts/npc/npc.gd")
 ## Where feet have worn the stone: [centre, size, yaw deg].
 const WORN := [
 	[Vector3(9.6, Topo.AGORA_H, 0.0), Vector2(2.6, 3.4), 0.0],  # where the street enters the agora
@@ -52,6 +57,7 @@ func _ready() -> void:
 	_woodpile(kit, rng)
 	add_child(kit.build("Life"))
 	_washing()
+	_well()
 	var dog := Dog.new()
 	dog.position = DOG
 	dog.scale = Vector3.ONE * 1.3  # a big yard dog, and readable at 640x360
@@ -147,3 +153,44 @@ func _process(delta: float) -> void:
 	var q := floorf(_t * 15.0) / 15.0
 	for i in _cloths.size():
 		_cloths[i].rotation.x = sin(q * 1.3 + i * 1.7) * 0.12
+
+
+## A stone well-head with a wooden frame and pulley, and a woman drawing water
+## hand over hand, her hydria waiting by the curb.
+func _well() -> void:
+	var w := WELL
+	var kit := MeshKit.new()
+	kit.lathe("limestone", PackedVector2Array([Vector2(0.6, 0.0), Vector2(0.62, 0.12), Vector2(0.54, 0.2), Vector2(0.54, 0.74),
+		Vector2(0.62, 0.8), Vector2(0.6, 0.86)]), 10, w, 2.0, false, "dark", true)
+	kit.add_collider(w + Vector3(0, 0.43, 0), Vector3(1.24, 0.86, 1.24))
+	for sx: float in [-0.78, 0.78]:
+		kit.solid_box("wood", w + Vector3(sx, 1.1, 0), Vector3(0.12, 2.2, 0.12), ["bottom"])
+	kit.box("wood", w + Vector3(0, 2.15, 0), Vector3(1.8, 0.12, 0.12), [])
+	kit.xform = Transform3D(Basis(Vector3.FORWARD, PI / 2.0), w + Vector3(0, 1.98, 0))
+	kit.lathe("wood", PackedVector2Array([Vector2(0.14, -0.04), Vector2(0.14, 0.04)]), 8, Vector3.ZERO, 1.0, false, "wood", true)  # pulley
+	kit.xform = Transform3D.IDENTITY
+	kit.box("cloth", w + Vector3(0, 1.4, -0.12), Vector3(0.03, 1.2, 0.03), [])  # the rope down into the shaft
+	kit.xform = Transform3D(Basis(Vector3.RIGHT, -0.62), w + Vector3(0, 1.5, 0.32))
+	kit.box("cloth", Vector3.ZERO, Vector3(0.03, 0.03, 0.95), [])  # and over to her hands
+	kit.xform = Transform3D.IDENTITY
+	add_child(kit.build("Well"))
+	place("amphora", w + Vector3(0.75, 0, 0.75), 30.0, Vector3.ONE * 0.75)
+	var woman: Npc = NPC.new()
+	woman.npc_id = "water_carrier"
+	woman.name_key = "NPC_SAILOR_NAME"
+	woman.pose = "draw"
+	woman.body_mat = "chiton"
+	woman.talkable = false
+	woman.position = w + Vector3(0, 0, 1.0)  # faces -z, the well
+	add_child(woman)
+	var hk := MeshKit.new()
+	hk.box("hair", Vector3(0, 0.02, 0.12), Vector3(0.18, 0.3, 0.06), [])  # hair down the back
+	hk.box("chiton_dark", Vector3(0, 0.25, 0.02), Vector3(0.23, 0.06, 0.25), [])  # kerchief
+	var hm := MeshInstance3D.new()
+	hm.mesh = hk.commit()
+	(woman.joints["head"] as Node3D).add_child(hm)
+	var sk := MeshKit.new()
+	sk.box("chiton", Vector3(0, -0.45, 0), Vector3(0.36, 0.8, 0.26), [])  # a long chiton to the ankles
+	var sm := MeshInstance3D.new()
+	sm.mesh = sk.commit()
+	(woman.joints["pelvis"] as Node3D).add_child(sm)
