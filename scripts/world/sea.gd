@@ -1,6 +1,9 @@
+class_name Sea
 extends Node3D
 ## Sea plane east of the shore plus the opposite (Asian) shore of the strait
-## as a hazy silhouette beyond the fog.
+## as a hazy silhouette beyond the fog. The waves are computed in the water
+## shader; height_at() is the same sum on the CPU, on the same clock, so
+## ships can ride them instead of being washed over.
 
 
 
@@ -8,6 +11,56 @@ extends Node3D
 ## coarser towards the horizon, where fog hides it anyway.
 const SHORE_Z := Vector2(-512.0, 512.0)
 const SHORE_SAMPLES := 256
+## psx_water defaults: dir.x, dir.y, wavelength, amplitude.
+const WAVES := [Vector4(1.0, 0.25, 42.0, 0.55), Vector4(0.75, -0.65, 24.0, 0.28), Vector4(0.3, 1.0, 14.0, 0.16),
+	Vector4(1.0, -0.1, 8.0, 0.09)]
+const SPEED := 0.75
+const AMPLITUDE := 1.0
+## The harbour by the pier is sheltered: the swell there is a third of the open strait's.
+const CALM_RADIUS := 26.0
+const CALM := 0.68
+
+
+static func calm_center() -> Vector2:
+	return Vector2((Topo.pier_x0() + Topo.pier_x1()) / 2.0 + 4.0, Topo.PIER_Z - 3.0)
+
+## Seconds on the sea's clock; the shader reads it as sea_time.
+static var clock := 0.0
+var _mat: ShaderMaterial
+
+
+## Height of the water surface above sea level at (x, z) and time t, exactly as
+## psx_water's vertex shader moves it (shoaling towards the shore, calm at the waterline).
+static func height_at(x: float, z: float, t: float = clock) -> float:
+	var shore_d := x - Topo.waterline_x(z)
+	var shoal := 1.0 - smoothstep(0.0, 70.0, shore_d)
+	var h := 0.0
+	for i in WAVES.size():
+		var wv: Vector4 = WAVES[i]
+		var d := Vector2(wv.x, wv.y).normalized()
+		var len := wv.z * lerpf(1.0, 0.6, shoal)
+		var k := TAU / len
+		var w := sqrt(9.8 * k) * SPEED
+		var a := wv.w * lerpf(1.0, 1.7, shoal)
+		var s := sin(d.dot(Vector2(x, z)) * k - w * t + float(i) * 1.7)
+		h += a * (s + 0.25 * s * absf(s))
+	var calm := 1.0 - CALM * (1.0 - smoothstep(CALM_RADIUS * 0.5, CALM_RADIUS, Vector2(x, z).distance_to(calm_center())))
+	return h * AMPLITUDE * smoothstep(-1.0, 6.0, shore_d) * calm
+
+
+## How a hull floats at `pos` heading `yaw` (rad about y; the model's bow is +x):
+## Vector3(heave, roll, pitch) in metres and radians. The hull spans the waves,
+## so it rides their average over its length and beam, not each crest.
+static func float_pose(pos: Vector3, yaw: float, half_len: float, half_beam: float, t: float = clock) -> Vector3:
+	var fwd := Vector3(cos(yaw), 0, -sin(yaw))
+	var side := Vector3(sin(yaw), 0, cos(yaw))
+	var bow := height_at(pos.x + fwd.x * half_len, pos.z + fwd.z * half_len, t)
+	var stern := height_at(pos.x - fwd.x * half_len, pos.z - fwd.z * half_len, t)
+	var port := height_at(pos.x + side.x * half_beam, pos.z + side.z * half_beam, t)
+	var star := height_at(pos.x - side.x * half_beam, pos.z - side.z * half_beam, t)
+	var mid := height_at(pos.x, pos.z, t)
+	var heave := (bow + stern + port + star + mid * 2.0) / 6.0
+	return Vector3(heave, -atan2(port - star, half_beam * 2.0), atan2(bow - stern, half_len * 2.0))
 
 
 func _ready() -> void:
@@ -15,14 +68,22 @@ func _ready() -> void:
 	sea.name = "Water"
 	sea.mesh = _grid()
 	var mat: ShaderMaterial = Mats.get_mat("water").duplicate()
+	_mat = mat
 	mat.set_shader_parameter("shore_tex", _shore_texture())
 	mat.set_shader_parameter("shore_z_range", SHORE_Z)
+	var c := calm_center()
+	mat.set_shader_parameter("calm", Vector4(c.x, c.y, CALM_RADIUS, CALM))
 	sea.material_override = mat
 	sea.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	# Waves move vertices; keep the sea from being culled when they rise.
 	sea.extra_cull_margin = 4.0
 	add_child(sea)
 	add_child(_far_shore())
+
+
+func _process(delta: float) -> void:
+	clock = fmod(clock + delta, 3600.0)
+	_mat.set_shader_parameter("sea_time", clock)
 
 
 static func _axis(segments: Array) -> PackedFloat32Array:
