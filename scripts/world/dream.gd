@@ -260,7 +260,7 @@ func _olives() -> void:
 		place("olive_tree", ORIGIN + Vector3(x, 0, z), rng.randf_range(0, 360), Vector3(s * 1.3, s * 0.8, s * 1.3))
 
 
-## The figure on the path: a standing person, all dark, who is there until you
+## The figure on the path: a hooded shape in black, who is there until you
 ## are close. A rigid Figure, not an Npc: nothing to talk to, nothing to hit.
 func _figures() -> void:
 	for z: float in FIGURES_Z:
@@ -269,11 +269,7 @@ func _figures() -> void:
 		root.position = ORIGIN + Vector3(path_x(z) + (0.8 if figures.size() % 2 == 0 else -0.8), 0, z)
 		root.rotation.y = PI  # faces back down the path, towards the dreamer
 		add_child(root)
-		var joints := Figure.build(root, "dark")
-		Figure.apply_pose(joints, "stand")
-		var dark: Material = Mats.get_mat("dark")
-		for mi: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
-			mi.material_override = dark
+		Figure.shrouded(root)
 		figures.append(root)
 
 

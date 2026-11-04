@@ -136,18 +136,14 @@ func _wisp() -> void:
 	wisp.position = wisp_at(0.0)
 
 
-## A standing person, all dark, like the figures on the dream path.
+## A hooded shape in black, like the figures on the dream path.
 func _figure() -> void:
 	figure = Node3D.new()
 	figure.name = "NightFigure"
 	figure.position = figure_point()
 	figure.rotation.y = -PI / 2.0  # faces +x, up the street towards the agora
 	add_child(figure)
-	var joints := Figure.build(figure, "dark")
-	Figure.apply_pose(joints, "stand")
-	var dark: Material = Mats.get_mat("dark")
-	for mi: MeshInstance3D in figure.find_children("*", "MeshInstance3D", true, false):
-		mi.material_override = dark
+	Figure.shrouded(figure)
 
 
 func _set_night(on: bool) -> void:

@@ -651,6 +651,8 @@ MATERIALS = {
     "bread": ("psx_lit", "clay", "#e0b070", (1.0, 1.0)),
     "dough": ("psx_lit", "white", "#e6dcc0", (1.0, 1.0)),
     "path": ("psx_lit", "sand", "#e2cfa6", (0.25, 0.25)),
+    "robe": ("psx_lit", "cloth", "#3a3640", (0.5, 0.5)),
+    "void": ("psx_unlit", "white", "#000000", (1.0, 1.0)),
     "window_glow": ("psx_lamp", "white", "#ffc46a", (1.0, 1.0)),
     "net": ("psx_cutout", "net", "#ffffff", (1.5, 1.5)),
     "fish": ("psx_lit", "fish", "#ffffff", (1.0, 1.0)),
