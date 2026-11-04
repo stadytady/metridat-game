@@ -71,7 +71,7 @@ jobs:
 
           Walk down from the hill above the strait through the Street of the Jars and the agora, past the potter's workshop and the fisherman's camp on the beach, up to the sanctuary of Hecate. Eight finds, each turnable in close-up, keep sourced history apart from the game's own fiction. Every find brings the evening on and the ships in to anchor; at night, light the lamps, lie down in Hecate's abaton and follow the dream. EN / RU.
 
-          New in v0.0.3: the sanctuary of Hecate and the dream, a close-up viewer for finds, a journal with hints, ships that come in to anchor by evening, and a city that looks lived in: sherds on the street, washing in a yard, a dog asleep by the stoa, gulls over the shore and pigeons that take off from the agora.
+          New in v0.0.4: an actor rehearsing in a small theatre on the summit, a walk-in house where Myrto bakes flatbread in the yard, a pier with a moored ship and her crew, quiet omens after dark (a light on the strait, a lamp at Hecate's supper, a figure that is gone when you come close), olive bushes, and reworked dialogue in which the townspeople talk about each other.
 
           **Windows:** unzip and run \`Panticapaeum.exe\`. It is not code-signed: if SmartScreen says "Windows protected your PC", click *More info* → *Run anyway*. If it does not start, run \`Panticapaeum.console.exe\` to see the engine log.
           **Linux:** \`tar xzf\` and run \`./panticapaeum.x86_64\`.
