@@ -8,7 +8,7 @@ extends District
 const NPC := preload("res://scripts/npc/npc.gd")
 
 ## The ship lies along the pier's south side, bow out to sea.
-const SHIP_GAP := 2.75  # the hull is 2.4 m either side of the keel
+const SHIP_GAP := 3.7  # the hull is 2.4 m either side of the keel, the yard about 3.5
 const WATERLINE := -1.0
 const LANTERN_FROM := 0.8
 
@@ -148,7 +148,7 @@ func _crew() -> void:
 	splicer.pose = "mender"
 	splicer.body_mat = "chiton"
 	splicer.talkable = false
-	splicer.position = Vector3(ship_pos().x - 4.5, Topo.PIER_H - Figure.SEAT["mender"] + 0.05, Topo.PIER_Z + Topo.PIER_HALF - 0.1)
+	splicer.position = Vector3(ship_pos().x + 1.5, Topo.PIER_H - Figure.SEAT["mender"] + 0.05, Topo.PIER_Z + Topo.PIER_HALF - 0.1)
 	splicer.rotation.y = PI  # faces +z, the open water
 	add_child(splicer)
 

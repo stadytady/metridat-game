@@ -15,6 +15,8 @@ func test_deck_clears_the_sand_and_reaches_the_water() -> void:
 		check(absf(Topo.surface(x, Topo.PIER_Z) - Topo.PIER_H) < 0.01, "deck height at x %.1f" % x)
 		x += 0.5
 	check(Topo.pier_x1() > Topo.waterline_x(Topo.PIER_Z) + 10.0, "the pier does not reach deep water")
+	# psx_water: four waves, 1.08 m of amplitude, x1.7 shoaling, x1.25 choppy crests
+	check(Topo.PIER_H > 1.08 * 1.7 * 1.25, "surf crests wash over the deck")
 	check(Topo.terrain(Topo.pier_x0() - 1.0, Topo.PIER_Z) < Topo.PIER_H + 0.3, "a step up onto the pier the player cannot take")
 
 
