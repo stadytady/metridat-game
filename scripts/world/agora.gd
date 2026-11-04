@@ -16,7 +16,13 @@ func _ready() -> void:
 	var cols := Arch.stoa(kit, stoa_xf, 20.0, 5.5, 6, COL_H)
 	# parapet on the east edge, where the square stands above the slope
 	kit.solid_box("limestone", Vector3(c.x + h.x - 0.3, y + 0.45, 3.0), Vector3(0.5, 0.9, h.y * 2 - 6.0), ["bottom"])
-	kit.solid_box("limestone", Vector3(c.x + 5.0, y + 0.45, c.y + h.y - 0.3), Vector3(16.0, 0.9, 0.5), ["bottom"])
+	# south parapet, with a gap where the footpath leaves for the courtyard house
+	var gap0 := Topo.LANE[0].x - Topo.LANE_HALF - 0.2
+	var gap1 := Topo.LANE[0].x + Topo.LANE_HALF + 0.2
+	for seg: Vector2 in [Vector2(c.x - 3.0, gap0), Vector2(gap1, c.x + 13.0)]:
+		kit.solid_box("limestone", Vector3((seg.x + seg.y) / 2.0, y + 0.45, c.y + h.y - 0.3), Vector3(seg.y - seg.x, 0.9, 0.5), ["bottom"])
+	for gx: float in [gap0 - 0.25, gap1 + 0.25]:
+		kit.solid_box("limestone", Vector3(gx, y + 0.65, c.y + h.y - 0.3), Vector3(0.6, 1.3, 0.6), ["bottom"])  # gate posts
 	# stall on the south side, facing the stoa
 	var stall_pos := Vector3(c.x - 2.0, y, 6.5)
 	Arch.stall(kit, Arch.frame(stall_pos, Vector3.LEFT))

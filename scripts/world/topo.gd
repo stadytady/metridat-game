@@ -37,6 +37,13 @@ const AGORA_H := 5.0
 const SANCT_CENTER := Vector2(46, -27)
 const SANCT_HALF := Vector2(8, 7)
 const SANCT_H := 8.5
+## A courtyard house south of the agora that you can walk into, reached by a
+## footpath through a gap in the agora's south parapet.
+const HOUSE_CENTER := Vector2(26, 21.5)
+const HOUSE_HALF := Vector2(6.5, 5.5)
+const HOUSE_H := AGORA_H
+const LANE: Array[Vector3] = [Vector3(26, AGORA_H, 10.4), Vector3(26, AGORA_H, 16.2)]
+const LANE_HALF := 1.0
 ## Fisherman's camp on the beach below the agora.
 const CAMP_CENTER := Vector2(66.5, 14.0)
 const CAMP_HALF := Vector2(5.5, 4.0)
@@ -129,6 +136,8 @@ static func terrain(x: float, z: float) -> float:
 	h = lerpf(h, HILL_H - 0.3, _rect_weight(x, z, HILL_CENTER, HILL_HALF, 7.0))
 	h = _apply_path(h, x, z, STREET, STREET_HALF + 1.5, 4.0, 0.25)
 	h = lerpf(h, AGORA_H - 0.25, _rect_weight(x, z, AGORA_CENTER, AGORA_HALF, 6.0))
+	h = lerpf(h, HOUSE_H - 0.25, _rect_weight(x, z, HOUSE_CENTER, HOUSE_HALF, 4.0))
+	h = _apply_path(h, x, z, LANE, LANE_HALF + 1.0, 2.0, 0.25)
 	h = _apply_path(h, x, z, SANCT_STAIR, SANCT_STAIR_HALF + 1.0, 2.0, 0.25)
 	h = lerpf(h, SANCT_H - 0.25, _rect_weight(x, z, SANCT_CENTER, SANCT_HALF, 3.0))
 	return h
@@ -185,11 +194,21 @@ static func surface(x: float, z: float) -> float:
 		return AGORA_H
 	if in_rect(x, z, SANCT_CENTER, SANCT_HALF):
 		return SANCT_H
+	if in_house(x, z, 0.0):
+		return HOUSE_H
 	if in_rect(x, z, HILL_CENTER, HILL_HALF - Vector2(1, 1)):
 		return HILL_PLATFORM_TOP
 	if x >= STREET[0].x and x <= STREET[-1].x and absf(z - street_z(x)) <= STREET_HALF:
 		return street_height(x)
 	return terrain(x, z)
+
+
+## The courtyard house and its footpath (kept apart from is_reserved: the
+## backdrop and the shrubs skip it without shifting their random sequences).
+static func in_house(x: float, z: float, margin: float) -> bool:
+	if in_rect(x, z, HOUSE_CENTER, HOUSE_HALF, margin):
+		return true
+	return _segment(x, z, LANE[0], LANE[1]).x < LANE_HALF + margin
 
 
 ## Areas the backdrop city must keep clear of.

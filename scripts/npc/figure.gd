@@ -35,13 +35,17 @@ const POSES := {
 	# lying on the back on a fleece, the body tipped over the pelvis, arms by the sides
 	"sleep": {"pelvis": Vector3(90, 0, 0), "head": Vector3(-12, 0, 0), "l_shoulder": Vector3(0, 0, 6), "r_shoulder": Vector3(0, 0, -6),
 		"l_knee": Vector3(-8, 0, 0), "r_knee": Vector3(-8, 0, 0)},
+	# kneeling by the bread oven, leaning in, one hand at the oven's mouth
+	"baker": {"chest": Vector3(-30, 0, 0), "head": Vector3(-18, 0, 0),
+		"r_shoulder": Vector3(70, 0, -6), "r_elbow": Vector3(15, 0, 0), "l_shoulder": Vector3(40, 0, 10), "l_elbow": Vector3(55, 0, 0),
+		"l_hip": Vector3(25, 0, 6), "r_hip": Vector3(25, 0, -6), "l_knee": Vector3(-115, 0, 0), "r_knee": Vector3(-115, 0, 0)},
 	"mender": {"chest": Vector3(-28, 0, 0), "head": Vector3(-22, 0, 0),
 		"l_shoulder": Vector3(20, 0, 10), "r_shoulder": Vector3(20, 0, -10), "l_elbow": Vector3(45, 0, 0), "r_elbow": Vector3(45, 0, 0),
 		"l_hip": Vector3(80, 0, 10), "r_hip": Vector3(80, 0, -10), "l_knee": Vector3(-60, 0, 0), "r_knee": Vector3(-60, 0, 0)},
 }
 
 ## Pelvis height for a pose (seated figures sit on something low).
-const SEAT := {"stand": 0.92, "potter": 0.46, "turner": 0.32, "mender": 0.4, "sleep": 0.12}
+const SEAT := {"stand": 0.92, "potter": 0.46, "turner": 0.32, "mender": 0.4, "sleep": 0.12, "baker": 0.5}
 
 
 ## Builds the joints under `root`; returns {joint name: Node3D}.
@@ -87,6 +91,14 @@ static func motion(pose: String, t: float) -> Dictionary:
 		"turner":
 			return {"r_shoulder": Vector3(sin(q * 6.0) * 18, cos(q * 6.0) * 15, 0), "r_elbow": Vector3(cos(q * 6.0) * 12, 0, 0),
 				"chest": Vector3(sin(q * 6.0) * 4, 0, 0)}
+		"baker":
+			# pat the dough flat between the hands, then reach in and slap it on the oven wall
+			var k := fposmod(q * 0.35, 1.0)
+			if k < 0.6:
+				var pat := absf(sin(q * 9.0))
+				return {"l_elbow": Vector3(pat * 18, 0, 0), "r_shoulder": Vector3(-25, 0, 10), "r_elbow": Vector3(50 - pat * 18, 0, 0)}
+			var reach := sin((k - 0.6) / 0.4 * PI)
+			return {"r_shoulder": Vector3(reach * 25, 0, 0), "r_elbow": Vector3(-reach * 15, 0, 0), "chest": Vector3(-reach * 10, 0, 0)}
 		"sleep":
 			# slow breathing
 			return {"chest": Vector3(sin(q * 1.4) * 2.0, 0, 0)}
