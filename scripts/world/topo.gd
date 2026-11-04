@@ -49,7 +49,7 @@ const LANE_HALF := 1.0
 ## end starts where the sand is low enough to pass under it.
 const PIER_Z := -6.0
 const PIER_HALF := 1.3
-const PIER_H := 1.1
+const PIER_H := 2.4  # above the highest surf crests (about 2.3 m inshore)
 const PIER_OUT := 20.0  # deck length beyond the waterline
 ## Where the walk to the pier leaves the way down to the beach.
 const PIER_FROM := Vector2(56.0, 6.0)

@@ -8,7 +8,7 @@ extends District
 const NPC := preload("res://scripts/npc/npc.gd")
 
 ## The ship lies along the pier's south side, bow out to sea.
-const SHIP_GAP := 2.75  # the hull is 2.4 m either side of the keel
+const SHIP_GAP := 3.7  # the hull is 2.4 m either side of the keel, the yard about 3.5
 const WATERLINE := -1.0
 const LANTERN_FROM := 0.8
 

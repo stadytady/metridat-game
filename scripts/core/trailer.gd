@@ -39,8 +39,8 @@ const SHOTS := [
 		"look": [Vector3(26.0, 6.1, 20.5), Vector3(26.6, 6.0, 20.2), Vector3(28.8, 5.6, 18.9)]},
 	# sunset: along the middle of the pier to the Swallow, her crew and the skipper
 	{"t": [12.2, 16.6], "hour": 0.62, "fov": [50.0, 46.0], "caption": "",
-		"pos": [Vector3(70.0, 2.75, -5.6), Vector3(74.0, 2.7, -5.8), Vector3(77.5, 2.65, -6.0)],
-		"look": [Vector3(86.0, 2.4, -8.0), Vector3(87.5, 2.35, -8.2), Vector3(89.0, 2.3, -8.4)]},
+		"pos": [Vector3(70.0, 4.05, -5.6), Vector3(74.0, 4.0, -5.8), Vector3(77.5, 3.95, -6.0)],
+		"look": [Vector3(86.0, 3.4, -8.0), Vector3(87.5, 3.35, -8.2), Vector3(89.0, 3.3, -8.4)]},
 	# night: up the street between the lit lamps; someone stands at the turn
 	{"t": [16.6, 19.6], "hour": 1.0, "lamps": true, "fov": [56.0, 54.0], "caption": "",
 		"pos": [Vector3(-6, 8.5, -0.8), Vector3(-10.5, 9.8, -0.5), Vector3(-15, 11.4, 0.0)],
