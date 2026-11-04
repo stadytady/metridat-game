@@ -9,6 +9,8 @@ enum Kind { GULL, PIGEON }
 
 const FLIGHT_TIME := 7.0
 const SCARE_DIST := 3.0
+## Scared pigeons sit on a roof this long (seconds) before coming back down.
+const ROOF_WAIT := Vector2(120.0, 180.0)
 
 var kind := Kind.GULL
 ## Gull: centre of its circle (y is the height). Pigeon: the patch it feeds on.
@@ -19,6 +21,11 @@ var speed := 0.25
 ## Pigeon: times it has taken off (the walkthrough checks it).
 var took_off := 0
 var flying := false
+## Pigeon: a spot on a roof to flee to (ZERO: just a loop over the square).
+var roost := Vector3.ZERO
+var on_roof := false
+## Times it has settled on its roof (the walkthrough checks it).
+var roofed := 0
 
 var _t := 0.0
 var _rng := RandomNumberGenerator.new()
@@ -27,6 +34,7 @@ var _from := Vector3.ZERO
 var _land := Vector3.ZERO
 var _flight := 0.0
 var _peck_in := 0.0
+var _roof_wait := 0.0
 
 
 func _ready() -> void:
@@ -146,16 +154,25 @@ func _pigeon(delta: float) -> void:
 			flying = false
 			position = _land
 			_peck_in = _rng.randf_range(0.5, 2.0)
+			# landed on the roof: wait there a couple of minutes, then come back down
+			on_roof = roost != Vector3.ZERO and _land == roost
+			if on_roof:
+				roofed += 1
+				_roof_wait = _rng.randf_range(ROOF_WAIT.x, ROOF_WAIT.y)
+		return
+	if on_roof:
+		_roof_wait -= delta
+		_wings(0.0, 0.3)
+		if _roof_wait <= 0.0:
+			on_roof = false
+			_take_off(_spot())
 		return
 	var cam := get_viewport().get_camera_3d()
 	if cam:
 		var c := cam.global_position
 		if Vector2(c.x - global_position.x, c.z - global_position.z).length() < SCARE_DIST and absf(c.y - global_position.y) < 3.0:
-			flying = true
 			took_off += 1
-			_flight = 0.0
-			_from = position
-			_land = _spot()
+			_take_off(roost if roost != Vector3.ZERO else _spot())
 			return
 	_wings(0.0, 0.3)  # folded against the body
 	_peck_in -= delta
@@ -164,6 +181,13 @@ func _pigeon(delta: float) -> void:
 		_peck_in = _rng.randf_range(0.8, 3.0)
 		rotation.y += _rng.randf_range(-1.0, 1.0)
 	(_parts.body as Node3D).rotation.x = -0.5 if peck and floori(_t * 15.0) % 4 < 2 else 0.0
+
+
+func _take_off(to: Vector3) -> void:
+	flying = true
+	_flight = 0.0
+	_from = position
+	_land = to
 
 
 func _face(d: Vector3) -> void:

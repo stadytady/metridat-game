@@ -45,13 +45,16 @@ const POSES := {
 	# an actor declaiming: one arm thrown out to the seats, a mask in the other hand
 	"declaim": {"head": Vector3(8, 0, 0), "r_shoulder": Vector3(115, 0, -25), "r_elbow": Vector3(10, 0, 0),
 		"l_shoulder": Vector3(40, 0, 12), "l_elbow": Vector3(75, 0, 0), "r_hip": Vector3(-10, 0, 0), "l_hip": Vector3(12, 0, 0)},
+	# at a well, leaning over the curb, both hands on the rope
+	"draw": {"chest": Vector3(-18, 0, 0), "head": Vector3(-10, 0, 0),
+		"l_shoulder": Vector3(75, 0, 10), "r_shoulder": Vector3(75, 0, -10), "l_elbow": Vector3(35, 0, 0), "r_elbow": Vector3(35, 0, 0)},
 	"mender": {"chest": Vector3(-28, 0, 0), "head": Vector3(-22, 0, 0),
 		"l_shoulder": Vector3(20, 0, 10), "r_shoulder": Vector3(20, 0, -10), "l_elbow": Vector3(45, 0, 0), "r_elbow": Vector3(45, 0, 0),
 		"l_hip": Vector3(80, 0, 10), "r_hip": Vector3(80, 0, -10), "l_knee": Vector3(-60, 0, 0), "r_knee": Vector3(-60, 0, 0)},
 }
 
 ## Pelvis height for a pose (seated figures sit on something low).
-const SEAT := {"stand": 0.92, "potter": 0.46, "turner": 0.32, "mender": 0.4, "sleep": 0.12, "baker": 0.5, "carry": 0.92, "declaim": 0.92}
+const SEAT := {"stand": 0.92, "potter": 0.46, "turner": 0.32, "mender": 0.4, "sleep": 0.12, "baker": 0.5, "carry": 0.92, "declaim": 0.92, "draw": 0.92}
 
 
 ## Builds the joints under `root`; returns {joint name: Node3D}.
@@ -105,6 +108,11 @@ static func motion(pose: String, t: float) -> Dictionary:
 				return {"l_elbow": Vector3(pat * 18, 0, 0), "r_shoulder": Vector3(-25, 0, 10), "r_elbow": Vector3(50 - pat * 18, 0, 0)}
 			var reach := sin((k - 0.6) / 0.4 * PI)
 			return {"r_shoulder": Vector3(reach * 25, 0, 0), "r_elbow": Vector3(-reach * 15, 0, 0), "chest": Vector3(-reach * 10, 0, 0)}
+		"draw":
+			# hand over hand on the rope: one arm reaches up while the other pulls down
+			var k := sin(q * 3.2)
+			return {"l_shoulder": Vector3(k * 28, 0, 0), "r_shoulder": Vector3(-k * 28, 0, 0),
+				"l_elbow": Vector3(-k * 20, 0, 0), "r_elbow": Vector3(k * 20, 0, 0), "chest": Vector3(absf(k) * 6, 0, 0)}
 		"carry":
 			# shifting the weight of the jar
 			return {"chest": Vector3(sin(q * 1.6) * 3, sin(q * 0.8) * 4, 0)}

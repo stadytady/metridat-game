@@ -16,6 +16,8 @@ const GULLS := [
 const PIGEONS := Vector3(27.5, Topo.AGORA_H, 1.6)
 const PIGEON_RADIUS := 1.4
 const PIGEON_COUNT := 6
+## Scared, they fly up to the front edge of the stoa roof and sit there in a row.
+const ROOST := Vector3(26.0, Topo.AGORA_H + 5.1, -5.4)
 
 
 func _ready() -> void:
@@ -34,4 +36,5 @@ func _ready() -> void:
 		b.kind = Bird.Kind.PIGEON
 		b.home = PIGEONS
 		b.radius = PIGEON_RADIUS
+		b.roost = ROOST + Vector3(i * 0.6 - 1.5, 0, 0)
 		add_child(b)
