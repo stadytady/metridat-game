@@ -68,6 +68,7 @@ func _ready() -> void:
 	_walls(kit)
 	add_child(kit.build("Dream", &"dirt"))
 	_trees(rng)
+	_olives()
 	_figures()
 	# The mirror stands on the altar, leaning back a little, its face to the
 	# path and the handle down: seen from afar, catching the moon. (Lying flat
@@ -244,6 +245,19 @@ func _trees(rng: RandomNumberGenerator) -> void:
 				k.xform = k.xform * Transform3D(Basis(Vector3.UP, TAU / 3.0), Vector3.ZERO)
 				k.box("bark", Vector3(0.5, y + 0.3, 0), Vector3(1.0, 0.1, 0.1), [])
 			add_child(k.build("DeadTree%d" % i))
+
+
+## Olive bushes by the path, low and grey in the fog. Their own seed, so the
+## dead trees keep their places.
+func _olives() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 77
+	for i in 16:
+		var z := rng.randf_range(2.0, 70.0)
+		var side := -1.0 if i % 2 == 0 else 1.0
+		var x := path_x(z) + side * rng.randf_range(2.8, 6.0)
+		var s := rng.randf_range(0.45, 0.7)
+		place("olive_tree", ORIGIN + Vector3(x, 0, z), rng.randf_range(0, 360), Vector3(s * 1.3, s * 0.8, s * 1.3))
 
 
 ## The figure on the path: a standing person, all dark, who is there until you
