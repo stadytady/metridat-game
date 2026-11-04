@@ -33,14 +33,14 @@ const SHOTS := [
 	{"t": [4.4, 8.2], "hour": 0.1, "fov": [46.0, 42.0], "caption": "",
 		"pos": [Vector3(-97.0, 30.3, -3.8), Vector3(-96.3, 30.15, -1.3), Vector3(-95.4, 30.0, 1.2)],
 		"look": [Vector3(-90.4, 29.3, 0.6), Vector3(-90.2, 29.3, 0.4), Vector3(-89.6, 29.2, 0.6)]},
-	# down the footpath and through the street door to Myrto at her oven
+	# down the footpath, straight through the street door, then round to Myrto at her oven
 	{"t": [8.2, 12.2], "hour": 0.3, "fov": [52.0, 46.0], "caption": "",
-		"pos": [Vector3(26.0, 6.55, 11.8), Vector3(26.0, 6.45, 14.4), Vector3(26.3, 6.35, 16.9)],
-		"look": [Vector3(27.4, 5.9, 19.6), Vector3(28.2, 5.75, 19.1), Vector3(28.9, 5.65, 18.7)]},
-	# sunset: low along the pier to the Swallow, her crew and the skipper
+		"pos": [Vector3(26.0, 6.55, 11.6), Vector3(26.0, 6.45, 15.2), Vector3(27.0, 6.3, 17.4)],
+		"look": [Vector3(26.0, 6.1, 20.5), Vector3(26.6, 6.0, 20.2), Vector3(28.8, 5.6, 18.9)]},
+	# sunset: along the middle of the pier to the Swallow, her crew and the skipper
 	{"t": [12.2, 16.6], "hour": 0.62, "fov": [50.0, 46.0], "caption": "",
-		"pos": [Vector3(70.5, 2.7, -3.0), Vector3(74.5, 2.6, -3.2), Vector3(78.5, 2.5, -3.5)],
-		"look": [Vector3(86.0, 2.4, -7.0), Vector3(87.5, 2.35, -7.3), Vector3(89.0, 2.3, -7.6)]},
+		"pos": [Vector3(70.0, 2.75, -5.6), Vector3(74.0, 2.7, -5.8), Vector3(77.5, 2.65, -6.0)],
+		"look": [Vector3(86.0, 2.4, -8.0), Vector3(87.5, 2.35, -8.2), Vector3(89.0, 2.3, -8.4)]},
 	# night: up the street between the lit lamps; someone stands at the turn
 	{"t": [16.6, 19.6], "hour": 1.0, "lamps": true, "fov": [56.0, 54.0], "caption": "",
 		"pos": [Vector3(-6, 8.5, -0.8), Vector3(-10.5, 9.8, -0.5), Vector3(-15, 11.4, 0.0)],
