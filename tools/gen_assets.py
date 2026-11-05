@@ -866,13 +866,16 @@ def step(rng, idx, kind):
     t = np.arange(n) / SR
     noise = rng.standard_normal(n)
     if kind == "stone":
-        tick = bandpass(noise, 1200, 7000) * np.exp(-t * 130)
-        ring = np.zeros(n)
-        for f, decay, gain in ((1180.0, 42.0, 0.5), (2360.0, 60.0, 0.3), (3470.0, 90.0, 0.16)):
-            ring += gain * np.sin(2 * np.pi * f * t) * np.exp(-t * decay)
-        thump = np.sin(2 * np.pi * rng.uniform(95, 120) * t) * np.exp(-t * 45)
-        x = 0.9 * tick + ring + 0.5 * thump
-        write_wav(f"step_{kind}_{idx}", norm(x * np.minimum(1.0, (0.18 - t) / 0.02), 0.70))
+        # A sole on a slab: the flat slap of the foot, a short bright edge off
+        # the stone, the body of the slab and its one damped ring. Ringing modes
+        # up at 1.2-3.4 kHz read as a click rather than a step, so the ring sits
+        # low and quiet, and the edge is a whisper on top of the slap.
+        slap = bandpass(noise, 350, 2900) * np.exp(-t * 58)
+        edge = bandpass(noise, 2500, 6000) * np.exp(-t * 200)
+        body = np.sin(2 * np.pi * rng.uniform(110, 160) * t) * np.exp(-t * 60)
+        slab = np.sin(2 * np.pi * 268.0 * t) * np.exp(-t * 34)
+        x = slap + 0.12 * edge + 0.55 * body + 0.15 * slab
+        write_wav(f"step_{kind}_{idx}", norm(x * np.minimum(1.0, (0.18 - t) / 0.02), 0.62))
     else:
         # the pitch varies by index rather than by draw: the generator's shared
         # stream has to stay where the old steps left it
