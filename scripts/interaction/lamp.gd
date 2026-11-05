@@ -8,10 +8,15 @@ extends StaticBody3D
 
 @export_enum("lampstand", "torch_post") var kind := "lampstand"
 
+## Kept in the quiet part of the mix: a lamp is a whisper at arm's length.
+const BED_DB := -19.0
+const IGNITE_DB := -11.0
+
 var lit := false
 var _light: OmniLight3D
 var _flame: GPUParticles3D
 var _sound: AudioStreamPlayer3D
+var _ignite: AudioStreamPlayer3D
 
 
 func _ready() -> void:
@@ -42,11 +47,19 @@ func _ready() -> void:
 	add_child(_flame)
 	_sound = AudioStreamPlayer3D.new()
 	_sound.stream = preload("res://assets/audio/fire.wav")
-	_sound.volume_db = -16.0
+	_sound.volume_db = BED_DB
 	_sound.unit_size = 1.5
 	_sound.max_distance = 12.0
 	_sound.position.y = y
 	add_child(_sound)
+	# The catch of the flame itself: one short breath, then the bed takes over.
+	_ignite = AudioStreamPlayer3D.new()
+	_ignite.stream = preload("res://assets/audio/lamp_ignite.wav")
+	_ignite.volume_db = IGNITE_DB
+	_ignite.unit_size = 1.2
+	_ignite.max_distance = 10.0
+	_ignite.position.y = y
+	add_child(_ignite)
 	Game.lamps.append(self)
 
 
@@ -69,8 +82,20 @@ func interact() -> void:
 	_light.visible = true
 	_flame.emitting = true
 	_flame.visible = true
+	_ignite.play()
+	_sound.pitch_scale = randf_range(0.95, 1.06)
 	_sound.play(randf() * 4.0)
 	Game.lamp_lit.emit(Game.lamps_lit(), Game.lamps.size())
+
+
+## True while the burning bed is playing; the walkthrough listens for silence.
+func looping() -> bool:
+	return _sound.playing
+
+
+## True for the first moment after lighting, while the catch is still ringing.
+func just_caught() -> bool:
+	return _ignite.playing
 
 
 static func _make_flame(size: float) -> GPUParticles3D:

@@ -44,6 +44,15 @@ func spawn_inspectable(id: String, pos: Vector3, yaw_deg: float = 0.0) -> Node3D
 	return n
 
 
+## A deck laid over a hull whose own floor is its bottom (the ship model): the
+## boat can ride low in the water and still be dry inside. `deck_y` and `size` are
+## in the model's units, so a scaled hull gets a scaled deck.
+func laid_deck(ship: Node3D, deck_y: float, size: Vector3, k: float = 1.0) -> void:
+	var kit := MeshKit.new()
+	kit.box("hull", Vector3(0, deck_y * k, 0), size * k, [])
+	ship.add_child(kit.build("Deck"))
+
+
 static func min_terrain(center: Vector2, half: Vector2) -> float:
 	var m := INF
 	for sx in [-1.0, -0.5, 0.0, 0.5, 1.0]:

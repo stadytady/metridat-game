@@ -22,6 +22,19 @@ func test_afternoon_at_sea_night_at_anchor() -> void:
 			prev = d
 
 
+## Anchored hulls sit in the sea with their laid decks above it, like the moored one.
+func test_decks_stay_above_the_water() -> void:
+	for s: Array in S.SHIPS:
+		var a: Vector3 = s[3]
+		var k := float(s[2])
+		var water := Topo.SEA_LEVEL + Sea.height_at(a.x, a.z)
+		var heave := Sea.float_pose(a, 0.0, 7.0 * k, 2.2 * k).x
+		var deck := (S.WATERLINE + S.DECK_Y) * k + heave
+		var keel := (S.WATERLINE + S.HULL_BOTTOM) * k + heave
+		check(deck > water + 0.25 * k, "anchored ship deck under water: %.2f vs %.2f" % [deck, water])
+		check(keel < water - 0.25 * k, "anchored ship floats on top: keel %.2f vs %.2f" % [keel, water])
+
+
 func test_anchorages_in_deep_water_and_apart() -> void:
 	for i in S.SHIPS.size():
 		var a: Vector3 = S.SHIPS[i][3]

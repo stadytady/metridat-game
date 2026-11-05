@@ -37,6 +37,24 @@ func test_motion_is_stepped() -> void:
 		check(moved, "%s: never moves in 3 s" % pose)
 
 
+func test_walk_stride_is_symmetric_and_loops() -> void:
+	var start := Figure.step_motion(0.0)
+	var back := Figure.step_motion(1.0)
+	for joint: String in start:
+		check(is_equal_approx(start[joint].x, back[joint].x), "%s does not come back after one stride" % joint)
+	var mid := Figure.step_motion(0.25)
+	check(absf(mid["l_hip"].x) > 10.0, "no stride at a quarter of the cycle")
+	check(is_equal_approx(mid["l_hip"].x, -mid["r_hip"].x), "both legs swing the same way")
+	check(is_equal_approx(mid["l_shoulder"].x, -mid["r_shoulder"].x), "both arms swing the same way")
+	check(absf(mid["l_hip"].x) < 45.0, "stride of %.0f deg is a split" % absf(mid["l_hip"].x))
+	var both_bent := 0
+	for i in 20:
+		var m := Figure.step_motion(i / 20.0)
+		if m["l_knee"].x < -0.5 and m["r_knee"].x < -0.5:
+			both_bent += 1
+	check(both_bent == 0, "%d frames with both knees bent" % both_bent)
+
+
 func test_shrouded_figure_hides_the_body() -> void:
 	var root := Node3D.new()
 	var joints := Figure.shrouded(root)

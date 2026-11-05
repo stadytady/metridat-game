@@ -14,8 +14,12 @@ const SHIPS := [
 	[Vector3(640, 0, 60), -15.0, 1.2, Vector3(156, 0, -12)],
 ]
 
-## The ship model has its keel at y = 0; sink it to its waterline.
-const WATERLINE := -1.0
+## Ride low in the water like the moored ship, with a deck laid over the model's
+## own floor so the boat stays dry inside.
+const WATERLINE := 0.0
+const DECK_Y := 0.9
+## The model's keel, from its mesh bounds: the test keeps it under the sea.
+const HULL_BOTTOM := -0.67
 ## Under way from this hour, at anchor by that one.
 const SAIL_FROM := 0.12
 const ANCHOR_BY := 0.85
@@ -50,6 +54,7 @@ func _ready() -> void:
 	_atm = get_parent().get_node_or_null("Atmosphere")
 	for s: Array in SHIPS:
 		var n := place("ship", s[0], s[1], Vector3.ONE * float(s[2]))
+		laid_deck(n, DECK_Y, Vector3(14.6, 0.14, 8.0), float(s[2]))
 		for g: GeometryInstance3D in n.find_children("*", "GeometryInstance3D", true, false):
 			g.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		_ships.append(n)

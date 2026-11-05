@@ -657,6 +657,12 @@ MATERIALS = {
     "net": ("psx_cutout", "net", "#ffffff", (1.5, 1.5)),
     "fish": ("psx_lit", "fish", "#ffffff", (1.0, 1.0)),
     "water": ("psx_water", "water", "#ffffff", (1.0, 1.0)),
+    # Dyed cloth for the market: flat colours on the white texture, so striped
+    # awnings read at 640x360 without spending a texture out of the PS1 budget.
+    "awning_red": ("psx_lit", "white", "#a8412f", (1.0, 1.0)),
+    "awning_blue": ("psx_lit", "white", "#31527d", (1.0, 1.0)),
+    "awning_cream": ("psx_lit", "white", "#d9c9a6", (1.0, 1.0)),
+    "ribbon": ("psx_lit", "white", "#c66a34", (1.0, 1.0)),
 }
 
 
@@ -682,7 +688,7 @@ def materials():
 SR = 22050
 
 
-LOOPS = {"wind", "waves", "fire", "dream_drone"}
+LOOPS = {"wind", "waves", "fire", "dream_drone", "market", "wheel"}
 
 
 def write_wav(name: str, x: np.ndarray) -> None:
@@ -863,6 +869,94 @@ def fire(rng):
     write_wav("fire", norm(roar + bandpass(crackle, 1000, 7000), 0.6))
 
 
+def market(rng):
+    """The murmur of a market: voices too far off to make out, as one bed.
+    Every gate closes a whole number of cycles over the loop, so the join is
+    inaudible."""
+    dur = 12.0
+    n = SR * int(dur)
+    t = np.arange(n) / SR
+    voices = np.zeros(n)
+    for i in range(8):
+        # each voice is a narrow band of noise, opened and closed by a slow gate
+        f = rng.uniform(180, 650) if i % 2 == 0 else rng.uniform(900, 2300)
+        band = bandpass(rng.standard_normal(n), f * 0.8, f * 1.25)
+        cycles = int(rng.integers(2, 9))
+        gate = 0.5 + 0.5 * np.sin(2 * np.pi * cycles * t / dur + rng.uniform(0, 2 * np.pi))
+        voices += band * (gate ** 2) * rng.uniform(0.35, 1.0)
+    rumble = lowpass(rng.standard_normal(n), 200) * 0.5
+    write_wav("market", norm(voices * 0.6 + rumble, 0.4))
+
+
+def market_cry(rng):
+    """One shout across the square: a syllable with a formant, then gone."""
+    n = int(SR * 0.7)
+    t = np.arange(n) / SR
+    f0 = rng.uniform(150, 210)
+    sweep = f0 * (1.0 + 0.35 * np.minimum(t / 0.22, 1.0) - 0.25 * np.maximum(0.0, t - 0.3))
+    phase = 2 * np.pi * np.cumsum(sweep) / SR
+    voice = np.sin(phase) + 0.5 * np.sin(2 * phase) + 0.3 * np.sin(3 * phase)
+    env = np.exp(-t * 3.4) * (1 - np.exp(-t * 45))
+    write_wav("market_cry", norm(bandpass(voice * env, 600, 2400), 0.4))
+
+
+def wheel(rng):
+    """The potter's wheel: a soft thump each half turn and wet clay slapped on."""
+    dur = 2.4
+    n = int(SR * dur)
+    out = np.zeros(n)
+    ln = int(SR * 0.22)
+    tt = np.arange(ln) / SR
+    for k in range(2):
+        thump = np.sin(2 * np.pi * 72 * tt) * np.exp(-tt * 18) * 0.55
+        slap = bandpass(rng.standard_normal(ln), 300, 1500) * np.exp(-tt * 30) * 0.3
+        i0 = int(k * dur / 2.0 * SR)
+        out[i0:i0 + ln] += thump + slap
+    write_wav("wheel", norm(out, 0.35))
+
+
+def sandals(rng):
+    """A sandal coming down on stone."""
+    n = int(SR * 0.16)
+    t = np.arange(n) / SR
+    x = bandpass(rng.standard_normal(n), 400, 3000) * np.exp(-t * 55)
+    x += 0.4 * np.sin(2 * np.pi * rng.uniform(90, 130) * t) * np.exp(-t * 70)
+    write_wav("sandals", norm(x, 0.4))
+
+
+def achievement(rng):
+    """A soft two-note chime for an unlocked achievement: G5 then D6, with the
+    bell's overtones and a short tail."""
+    n = int(SR * 1.2)
+    out = np.zeros(n)
+
+    def bell(freq, at, gain):
+        ln = int(SR * 0.95)
+        tt = np.arange(ln) / SR
+        env = np.exp(-tt * 5.5) * (1 - np.exp(-tt * 90))
+        tone = (np.sin(2 * np.pi * freq * tt) + 0.4 * np.sin(2 * np.pi * freq * 2.0 * tt)
+                + 0.18 * np.sin(2 * np.pi * freq * 3.0 * tt))
+        i0 = int(at * SR)
+        out[i0:i0 + ln] += tone * env * gain
+
+    bell(784.0, 0.0, 0.5)
+    bell(1174.7, 0.16, 0.45)
+    write_wav("achievement", norm(out, 0.5))
+
+
+def lamp_ignite(rng):
+    """A lamp catching: one short breath of flame and a few crackles."""
+    n = int(SR * 0.7)
+    t = np.arange(n) / SR
+    whoosh = bandpass(rng.standard_normal(n), 200, 2500) * np.exp(-t * 6.0) * (1 - np.exp(-t * 90))
+    crackle = np.zeros(n)
+    for _ in range(9):
+        p = int(rng.integers(0, n - 300))
+        ln = int(rng.integers(30, 160))
+        crackle[p:p + ln] += rng.standard_normal(ln) * np.exp(-np.arange(ln) / (ln / 4)) * rng.uniform(0.2, 0.7)
+    write_wav("lamp_ignite", norm(whoosh * 0.8 + bandpass(crackle, 900, 6000), 0.5))
+
+
 def pluck(freq: float, dur: float, rng, decay: float = 0.996) -> np.ndarray:
     """Karplus-Strong string: a lyre-like pluck."""
     n = int(SR * dur)
@@ -966,6 +1060,12 @@ def main() -> None:
     dog_howl(np.random.default_rng(516))
     worn(np.random.default_rng(517))
     fur(np.random.default_rng(518))
+    lamp_ignite(np.random.default_rng(519))
+    market(np.random.default_rng(520))
+    market_cry(np.random.default_rng(521))
+    wheel(np.random.default_rng(522))
+    sandals(np.random.default_rng(523))
+    achievement(np.random.default_rng(524))
     print(f"textures: {len(TEXTURES)}, materials: {len(MATERIALS)}, audio: {len(list(AUD.glob('*.wav')))}")
 
 

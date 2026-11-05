@@ -38,3 +38,15 @@ func test_ship_clear_of_the_deck() -> void:
 	var s := HB.ship_pos()
 	check(s.z + 2.45 < Topo.PIER_Z - Topo.PIER_HALF, "the hull rides over the planks")
 	check(s.x + 8.0 <= Topo.pier_x1() + 0.5 and s.x - 8.0 > Topo.waterline_x(Topo.PIER_Z), "the ship is not alongside the pier in the water")
+
+
+## Two things at once: the laid deck is dry and the hull is really in the sea.
+## The model's own floor sits at its bottom, so the deck is what DECK_Y lays.
+func test_ship_sits_in_the_water_with_a_dry_deck() -> void:
+	var p := HB.ship_pos()
+	var heave := Sea.float_pose(p, 0.0, 7.0, 2.2).x
+	var water := Topo.SEA_LEVEL + Sea.height_at(p.x, p.z)
+	var deck := p.y + HB.DECK_Y + heave
+	var keel := p.y + HB.HULL_BOTTOM + heave
+	check(deck > water + 0.25, "the sea runs over the deck: deck %.2f, water %.2f" % [deck, water])
+	check(keel < water - 0.25, "the hull floats on top of the sea: keel %.2f, water %.2f" % [keel, water])
