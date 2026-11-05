@@ -316,6 +316,7 @@ func _walkthrough() -> void:
 	if items.size() < 5:
 		_fail.append("fewer than 5 inspectables")
 	await _check_title()
+	await _check_prologue(player)
 	await _check_journal(Game.total())
 	var min_y := INF
 	for step in _route():
@@ -629,6 +630,45 @@ func _check_title() -> void:
 		_fail.append("title screen did not fade out")
 	title.queue_free()
 	print("title: start ok")
+
+
+## The evening before: off the Swallow onto the pier at dusk, a talk with
+## Damon that counts for nothing, then dark, MORNING, the hill at the start hour.
+func _check_prologue(player: CharacterBody3D) -> void:
+	var p := Prologue.new()
+	p.name = "Prologue"
+	_main().add_child(p)
+	p.begin()
+	await get_tree().create_timer(1.0).timeout
+	var atm: Node = _main().world.get_node("Atmosphere")
+	if not Game.prologue or not is_equal_approx(atm.t, DayCycle.PROLOGUE):
+		_fail.append("prologue: not dusk (prologue %s, hour %.2f)" % [Game.prologue, atm.t])
+	if not Topo.on_pier(player.global_position.x, player.global_position.z, 0.0):
+		_fail.append("prologue: not on the pier but at %s" % player.global_position)
+	var panel: Node = _main().get_node("DialoguePanel")
+	if not panel.is_open() or panel._name.text != tr("NPC_SAILOR_NAME"):
+		_fail.append("prologue: Damon does not speak")
+		return
+	if panel._line.text != tr("LOC_PRO_1"):
+		_fail.append("prologue: the talk does not begin with the arrival: %s" % panel._line.text)
+	var shown := 0
+	while panel.is_open() and shown < 12:
+		shown += 1
+		panel.advance()
+		await _frames(2)
+	if shown < 3:
+		_fail.append("prologue: only %d lines" % shown)
+	if Game.talked.get(Prologue.NPC_ID, false):
+		_fail.append("prologue: the arrival counted as a talk with Damon")
+	await p.finished
+	await _frames(3)
+	if Game.prologue or not is_equal_approx(atm.t, Game.time_target()) or Game.time_target() > 0.01:
+		_fail.append("prologue: no morning (prologue %s, hour %.2f)" % [Game.prologue, atm.t])
+	if player.global_position.distance_to(Topo.spawn_point()) > 1.0:
+		_fail.append("prologue: not on the hill in the morning but at %s" % player.global_position)
+	if Game.ui_blocking:
+		_fail.append("prologue: the game is still held after the morning")
+	print("prologue: dusk on the pier, %d lines with Damon, morning on the hill" % shown)
 
 
 func _open_title() -> CanvasLayer:

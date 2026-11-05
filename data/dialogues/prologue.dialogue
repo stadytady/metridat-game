@@ -1,0 +1,16 @@
+# The prologue: the dreamer steps off the Swallow at dusk the day before the
+# game, and Damon sends them up the hill for the morning. Text is a key.
+# Indent with tabs: DM's INDENT_REGEX is ^\t+.
+
+~ start
+Damon: LOC_PRO_1
+- LOC_PRO_CHOICE_DREAM
+	Damon: LOC_PRO_DREAM_1
+	Damon: LOC_PRO_DREAM_2
+- LOC_PRO_CHOICE_CITY
+	Damon: LOC_PRO_CITY_1
+	Damon: LOC_PRO_CITY_2
+- LOC_PRO_CHOICE_NIGHT
+	Damon: LOC_PRO_NIGHT_1
+Damon: LOC_PRO_END
+=> END
