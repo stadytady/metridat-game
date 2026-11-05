@@ -26,6 +26,10 @@ func _ready() -> void:
 	var goals := GoalsPanel.new()
 	goals.name = "GoalsPanel"
 	add_child(goals)
+	# Developer menu on the tilde key: the hour, and a jump to any viewpoint.
+	var admin := AdminPanel.new()
+	admin.name = "AdminPanel"
+	add_child(admin)
 	$PauseMenu.closed.connect(func() -> void: capture_mouse(true))
 	# Panels with a free cursor (info, journal) hand the mouse back on close.
 	# On the web, pointer lock needs a click, which the HUD asks for.
