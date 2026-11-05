@@ -12,6 +12,8 @@ var _target: Node
 var _lamps: Label
 var _dusk_shown := false
 var _toast_key := ""
+var _toast_prefix := ""
+var popup: AchievementPopup
 
 
 func _ready() -> void:
@@ -69,6 +71,19 @@ func _ready() -> void:
 	Game.discovered.connect(_on_discovered)
 	Game.lamp_lit.connect(_on_lamp_lit)
 	Game.location_entered.connect(func(title: String) -> void: show_toast(title))
+	# Achievements get the Steam-style card, not the plain toast. It needs a canvas
+	# layer of its own: the info, dialogue and journal panels are canvas layers too,
+	# so a card drawn inside the HUD would sit *behind* them and never be seen while
+	# a find is open.
+	var overlay := CanvasLayer.new()
+	overlay.name = "Overlay"
+	overlay.layer = 6
+	add_child(overlay)
+	popup = AchievementPopup.new()
+	popup.name = "AchievementPopup"
+	overlay.add_child(popup)
+	popup.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	Achievements.unlocked_signal.connect(func(id: String) -> void: popup.push(id))
 	_update_counter.call_deferred()
 
 
@@ -77,7 +92,7 @@ func _notification(what: int) -> void:
 		_update_counter()
 		_on_target(_target)
 		if _toast_key != "":
-			_toast.text = tr(_toast_key)
+			_toast.text = _toast_text()
 
 
 func _process(_delta: float) -> void:
@@ -132,16 +147,24 @@ func _on_lamp_lit(lit: int, total: int) -> void:
 		show_toast("UI_ALL_LIT")
 
 
-## `key` is a translation key, so a language switch can re-render it.
-func show_toast(key: String) -> void:
+## `key` is a translation key, so a language switch can re-render it. With a
+## `prefix_key` the toast wraps it, as in "Achievement: the first find".
+func show_toast(key: String, prefix_key: String = "") -> void:
 	_toast_key = key
-	_toast.text = tr(key)
+	_toast_prefix = prefix_key
+	_toast.text = _toast_text()
 	if _toast_tween:
 		_toast_tween.kill()
 	_toast_tween = create_tween()
 	_toast_tween.tween_property(_toast, "modulate:a", 1.0, 0.4)
 	_toast_tween.tween_interval(3.5)
 	_toast_tween.tween_property(_toast, "modulate:a", 0.0, 1.2)
+
+
+func _toast_text() -> String:
+	if _toast_prefix != "":
+		return tr(_toast_prefix) % tr(_toast_key)
+	return tr(_toast_key)
 
 
 func set_visible_ui(on: bool) -> void:

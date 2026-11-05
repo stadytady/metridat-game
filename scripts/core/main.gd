@@ -22,6 +22,10 @@ func _ready() -> void:
 	_fit()
 	_apply_settings()
 	$HUD.bind_interactor(player().interactor)
+	# The way-book on Tab: quests and achievements. It sits above the other panels.
+	var goals := GoalsPanel.new()
+	goals.name = "GoalsPanel"
+	add_child(goals)
 	$PauseMenu.closed.connect(func() -> void: capture_mouse(true))
 	# Panels with a free cursor (info, journal) hand the mouse back on close.
 	# On the web, pointer lock needs a click, which the HUD asks for.

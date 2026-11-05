@@ -27,6 +27,8 @@ signal lamp_lit(lit: int, total: int)
 signal dialogue_requested(npc: Node)
 ## npc_id -> true once the whole conversation was heard.
 var talked := {}
+## How many times each Npc has been talked to: the second visit has its own line.
+var talks := {}
 ## True from lying down in the abaton until waking: the hour is DayCycle.DREAM.
 var dreaming := false
 signal dream_requested
@@ -65,6 +67,7 @@ func _setup_input() -> void:
 		&"interact": [KEY_E],
 		&"pause": [KEY_ESCAPE],
 		&"journal": [KEY_J],
+		&"goals": [KEY_TAB],
 		&"perf_overlay": [KEY_F3],
 	}
 	for action: StringName in keys:
