@@ -19,6 +19,9 @@ const HULL_BOTTOM := -0.67
 const LANTERN_FROM := 0.8
 
 var _ship: Node3D
+var _gangway_node: Node3D
+## While the prologue sails her in, she is out at sea: [position, yaw in radians].
+var _under_way: Array = []
 var _lantern: OmniLight3D
 var _flame: MeshInstance3D
 var _atm: Node
@@ -35,6 +38,7 @@ static func skipper_pos() -> Vector3:
 
 
 func _ready() -> void:
+	add_to_group(&"harbour")
 	_atm = get_parent().get_node_or_null("Atmosphere")
 	var kit := MeshKit.new()
 	_pier(kit)
@@ -116,7 +120,8 @@ func _gangway() -> void:
 	for i in 4:
 		kit.box("bark", Vector3(0, 0.04, -a.distance_to(b) / 2.0 + 0.3 + i * 0.45), Vector3(0.55, 0.03, 0.05), [])  # cleats
 	kit.xform = Transform3D.IDENTITY
-	add_child(kit.build("Gangway"))
+	_gangway_node = kit.build("Gangway")
+	add_child(_gangway_node)
 
 
 func _crew() -> void:
@@ -183,11 +188,36 @@ func _end_lantern() -> void:
 	_lantern.add_child(_flame)
 
 
+## The Swallow out at sea, for the prologue's voyage in: the same ship that lies
+## at the pier, so there are never two of her. The gangway waits ashore.
+func sail(pos: Vector3, yaw: float) -> void:
+	_under_way = [pos, yaw]
+	_gangway_node.visible = false
+
+
+func moor() -> void:
+	_under_way = []
+	_ship.position = ship_pos()
+	_gangway_node.visible = true
+
+
+func ship() -> Node3D:
+	return _ship
+
+
 func _process(delta: float) -> void:
 	_t += delta
-	# moored, she still rides the swell: heave in full, her lines check the rolling
-	var f := Sea.float_pose(ship_pos(), 0.0, 7.0, 2.2)
-	_ship.position.y = WATERLINE + f.x
-	_ship.rotation = Vector3(f.y * 0.5, 0.0, f.z * 0.5)
+	if not _under_way.is_empty():
+		# under sail she rolls freely with the sea
+		var p: Vector3 = _under_way[0]
+		var yaw: float = _under_way[1]
+		var u := Sea.float_pose(p, yaw, 7.0, 2.2)
+		_ship.position = Vector3(p.x, WATERLINE + u.x, p.z)
+		_ship.rotation = Vector3(u.y, yaw, u.z)
+	else:
+		# moored, she still rides the swell: heave in full, her lines check the rolling
+		var f := Sea.float_pose(ship_pos(), 0.0, 7.0, 2.2)
+		_ship.position.y = WATERLINE + f.x
+		_ship.rotation = Vector3(f.y * 0.5, 0.0, f.z * 0.5)
 	var hour: float = _atm.t if _atm else 0.0
 	_lantern.visible = hour >= LANTERN_FROM

@@ -77,8 +77,29 @@ func _shots() -> void:
 		await _find_shots()
 	if _only.is_empty() or "end" in _only:
 		await _end_shot()
+	# the prologue's voyage in; only on request, it changes the hour and the game state
+	if "voyage" in _only:
+		await _voyage_shots()
 	_report_perf()
 	get_tree().quit()
+
+
+## The voyage in at a few moments of it, and the cut to the pier.
+func _voyage_shots() -> void:
+	var p := Prologue.new()
+	p.name = "Prologue"
+	_main().add_child(p)
+	p.begin()
+	await _frames(30)
+	for t: float in [2.5, 8.0, 13.5, 16.0, 20.0, 23.0]:
+		p._voyage_t = t
+		p._follow()
+		await _frames(8)
+		_save("voyage_%02d" % int(t))
+	p.skip()
+	await p.landed
+	await _frames(8)
+	_save("voyage_pier")
 
 
 ## Prompt, info panel and pause menu over the agora.
@@ -647,6 +668,32 @@ func _check_prologue(player: CharacterBody3D) -> void:
 	p.name = "Prologue"
 	_main().add_child(p)
 	p.begin()
+	# the voyage in: the Swallow out at sea under her own camera, the legend up
+	await get_tree().create_timer(2.0).timeout
+	var harbour: Node = get_tree().get_first_node_in_group(&"harbour")
+	var ship: Node3D = harbour.ship()
+	var moored: Vector3 = harbour.ship_pos()
+	if not p.voyage_running():
+		_fail.append("prologue: no voyage")
+	elif player.get_viewport().get_camera_3d() == player.camera:
+		_fail.append("prologue: the voyage is seen through the player's eyes")
+	elif Vector2(ship.global_position.x - moored.x, ship.global_position.z - moored.z).length() < 120.0:
+		_fail.append("prologue: the Swallow is not out at sea but at %s" % ship.global_position)
+	elif p._legend.text != tr("UI_LEGEND_1") or p._legend.modulate.a < 0.5:
+		_fail.append("prologue: the legend does not run (%s)" % p._legend.text)
+	elif not Game.ui_blocking:
+		_fail.append("prologue: the world listens to keys during the voyage")
+	var sailed := ship.global_position
+	await get_tree().create_timer(1.0).timeout
+	if ship.global_position.distance_to(sailed) < 2.0:
+		_fail.append("prologue: the Swallow does not move")
+	p.skip()  # as a key does
+	await p.landed
+	if p.voyage_running() or player.get_viewport().get_camera_3d() != player.camera:
+		_fail.append("prologue: the skip does not end the voyage")
+	if Vector2(ship.global_position.x - moored.x, ship.global_position.z - moored.z).length() > 0.1:
+		_fail.append("prologue: the Swallow is not back at the pier but at %s" % ship.global_position)
+	print("prologue: voyage in under the legend, %.0f m from the pier when skipped" % sailed.distance_to(moored))
 	await get_tree().create_timer(1.0).timeout
 	var atm: Node = _main().world.get_node("Atmosphere")
 	if not Game.prologue or not is_equal_approx(atm.t, DayCycle.PROLOGUE):
