@@ -25,6 +25,9 @@ const STEPS := {
 
 ## Footstep sounds started (tests check the audio wiring with it).
 var steps_played := 0
+## Of those, how many rang off the paving and how many fell on the bare ground.
+var stone_steps := 0
+var dirt_steps := 0
 ## Test hook: when set, replaces keyboard movement (x = strafe, y = back).
 var bot_move := Vector2.ZERO
 var bot_enabled := false
@@ -145,14 +148,23 @@ func respawn() -> void:
 	velocity = Vector3.ZERO
 
 
+## What the sandal lands on comes from the collider's `surface` meta. Paving laid
+## over the terrain, a deck over the sand and a floor above its socle all give two
+## floor contacts at once; the higher one is the one underfoot, so it decides.
 func _track_surface() -> void:
+	var best := -INF
 	for i in get_slide_collision_count():
 		var c := get_slide_collision(i)
-		if c.get_normal().y > 0.6:
-			var col := c.get_collider()
-			if col and col.has_meta(&"surface"):
-				_surface = col.get_meta(&"surface")
-			return
+		if c.get_normal().y <= 0.6:
+			continue
+		var col := c.get_collider()
+		if col == null:
+			continue
+		var at := c.get_position().y
+		if at <= best:
+			continue
+		best = at
+		_surface = col.get_meta(&"surface", &"dirt")
 
 
 func _bob_and_steps(delta: float, sprint: bool) -> void:
@@ -164,11 +176,18 @@ func _bob_and_steps(delta: float, sprint: bool) -> void:
 		var s := stride * (1.25 if sprint else 1.0)
 		if _step_dist >= s:
 			_step_dist = 0.0
-			var set_: Array = STEPS.get(_surface, STEPS[&"dirt"])
+			var kind: StringName = _surface if STEPS.has(_surface) else &"dirt"
+			var set_: Array = STEPS[kind]
 			footsteps.stream = set_[randi() % set_.size()]
 			footsteps.pitch_scale = randf_range(0.9, 1.1)
+			# paving rings, the ground takes the ring away
+			footsteps.volume_db = -7.0 if kind == &"stone" else -10.0
 			footsteps.play()
 			steps_played += 1
+			if kind == &"stone":
+				stone_steps += 1
+			else:
+				dirt_steps += 1
 	var amp := bob_amount * clampf(hspeed / walk_speed, 0.0, 1.6) if moving else 0.0
 	var target_y := _cam_base_y + sin(_bob * 2.0) * amp
 	camera.position.y = lerpf(camera.position.y, target_y, 1.0 - exp(-14.0 * delta))

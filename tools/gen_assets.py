@@ -700,7 +700,7 @@ def materials():
 SR = 22050
 
 
-LOOPS = {"wind", "waves", "fire", "dream_drone", "market", "wheel"}
+LOOPS = {"wind", "waves", "fire", "dream_drone", "market", "wheel", "cicada"}
 
 
 def write_wav(name: str, x: np.ndarray) -> None:
@@ -856,17 +856,31 @@ def dog_howl(rng):
 
 
 def step(rng, idx, kind):
+    """A footfall, and the two grounds must not be mistakable for one another.
+
+    Paving rings: a bright tick, then the slab's own short ring, and a thump
+    underneath it. Earth takes the tick away: a low thud with a scatter of grit,
+    softer and a little longer. A sandal on stone is the loudest thing in the
+    two sets; on the dry ground it is the quietest."""
     n = int(SR * 0.18)
     t = np.arange(n) / SR
     noise = rng.standard_normal(n)
     if kind == "stone":
-        x = bandpass(noise, 300, 3500) * np.exp(-t * 45)
-        x += 0.5 * np.sin(2 * np.pi * rng.uniform(110, 160) * t) * np.exp(-t * 60)
+        tick = bandpass(noise, 1200, 7000) * np.exp(-t * 130)
+        ring = np.zeros(n)
+        for f, decay, gain in ((1180.0, 42.0, 0.5), (2360.0, 60.0, 0.3), (3470.0, 90.0, 0.16)):
+            ring += gain * np.sin(2 * np.pi * f * t) * np.exp(-t * decay)
+        thump = np.sin(2 * np.pi * rng.uniform(95, 120) * t) * np.exp(-t * 45)
+        x = 0.9 * tick + ring + 0.5 * thump
+        write_wav(f"step_{kind}_{idx}", norm(x * np.minimum(1.0, (0.18 - t) / 0.02), 0.70))
     else:
-        x = lowpass(noise, 900) * np.exp(-t * 30)
-        grit = (rng.random(n) > 0.985) * rng.standard_normal(n) * np.exp(-t * 20)
-        x += 0.6 * bandpass(grit, 1500, 6000)
-    write_wav(f"step_{kind}_{idx}", norm(x, 0.55))
+        # the pitch varies by index rather than by draw: the generator's shared
+        # stream has to stay where the old steps left it
+        thump = np.sin(2 * np.pi * (62.0, 74.0, 68.0, 82.0)[idx % 4] * t) * np.exp(-t * 26)
+        body = lowpass(noise, 380) * np.exp(-t * 22)
+        grit = (rng.random(n) > 0.994) * rng.standard_normal(n) * np.exp(-t * 9)
+        x = 0.85 * thump + 0.8 * body + 0.35 * bandpass(grit, 900, 4000)
+        write_wav(f"step_{kind}_{idx}", norm(x * np.minimum(1.0, (0.18 - t) / 0.04), 0.30))
 
 
 def fire(rng):
@@ -898,6 +912,26 @@ def market(rng):
         voices += band * (gate ** 2) * rng.uniform(0.35, 1.0)
     rumble = lowpass(rng.standard_normal(n), 200) * 0.5
     write_wav("market", norm(voices * 0.6 + rumble, 0.4))
+
+
+def cicada(rng):
+    """Cicadas in the dry grass on the hill: three of them, each a shrill
+    carrier chopped by its own pulse rate, swelling and fading as the afternoon
+    wears on. Every frequency closes a whole number of cycles over the loop and
+    the noise is filtered circularly, so the bed loops without a seam."""
+    dur = 12.0
+    n = int(SR * dur)
+    t = np.arange(n) / SR
+    out = np.zeros(n)
+    for f, rate, gain in ((4300.0, 88.0, 1.0), (5150.0, 71.0, 0.45), (3720.0, 131.0, 0.3)):
+        cycles = round(f * dur)
+        pulse = 0.5 + 0.5 * np.sin(2 * np.pi * round(rate * dur) * t / dur + rng.uniform(0, 2 * np.pi))
+        swell = 0.55 + 0.45 * np.sin(2 * np.pi * round(rng.uniform(2.0, 4.0) * dur) * t / dur
+                                       + rng.uniform(0, 2 * np.pi))
+        body = np.sin(2 * np.pi * cycles / dur * t) + 0.35 * np.sin(2 * np.pi * 2 * cycles / dur * t)
+        out += gain * body * pulse ** 8 * swell
+    air = bandpass(rng.standard_normal(n), 2500, 8000) * 0.1
+    write_wav("cicada", norm(bandpass(out + air, 2200, 8000), 0.45))
 
 
 def market_cry(rng):
@@ -1167,6 +1201,7 @@ def main() -> None:
     sheep(np.random.default_rng(525))
     door_creak(np.random.default_rng(526))
     faces(np.random.default_rng(527))
+    cicada(np.random.default_rng(537))
     print(f"textures: {len(TEXTURES)}, materials: {len(MATERIALS)}, audio: {len(list(AUD.glob('*.wav')))}")
 
 
