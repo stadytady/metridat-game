@@ -18,7 +18,7 @@ func test_every_letter_of_the_name_is_cut() -> void:
 		for s: Array in strokes:
 			check(s.size() >= 2, "%s has a stroke of %d points" % [ch, s.size()])
 			for p: Vector2 in s:
-				check(p.x >= -0.01 and p.x <= G.WIDE + 0.01, "%s leaves its box at %s" % [ch, p])
+				check(p.x >= -0.01 and p.x <= G.BOX + 0.01, "%s leaves its box at %s" % [ch, p])
 				check(p.y >= -0.01 and p.y <= 1.01, "%s leaves its box at %s" % [ch, p])
 
 

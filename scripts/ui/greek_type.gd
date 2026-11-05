@@ -2,10 +2,14 @@ class_name GreekType
 extends RefCounted
 ## A Greek display face drawn as strokes, in the manner of the carved letters the
 ## city would have cut: thin even lines, sharp corners, wide open letterforms.
-## Every glyph is a list of polylines in a unit box — x from 0 to WIDE, y from 0
-## (cap line) to 1 (baseline) — so the letters scale to any height and stay crisp.
+## Every glyph is a list of polylines in a box `BOX` wide, y from 0 (cap line) to
+## 1 (baseline); `WIDE` is the width the box is stretched to when drawn, so the
+## face can be made broader without touching the glyph data.
 
-const WIDE := 0.62
+## Coordinate space the glyphs are drawn in.
+const BOX := 0.62
+## Advance width of one letter, as a fraction of the cap height.
+const WIDE := 0.78
 
 ## Glyphs used by the inscriptions in the game. A letter listed here with no
 ## strokes is a bug the test catches, not something to paper over.
@@ -20,7 +24,7 @@ const GLYPHS := {
 	"Θ": [[Vector2(0.18, 0), Vector2(0.44, 0), Vector2(0.62, 0.18), Vector2(0.62, 0.82), Vector2(0.44, 1),
 			Vector2(0.18, 1), Vector2(0, 0.82), Vector2(0, 0.18), Vector2(0.18, 0)],
 		[Vector2(0, 0.5), Vector2(0.62, 0.5)]],
-	"Ι": [[Vector2(0.31, 0), Vector2(0.31, 1)]],
+	"Ι": [[Vector2(0.2, 0), Vector2(0.42, 0)], [Vector2(0.31, 0), Vector2(0.31, 1)], [Vector2(0.2, 1), Vector2(0.42, 1)]],
 	"Κ": [[Vector2(0, 0), Vector2(0, 1)], [Vector2(0.6, 0), Vector2(0.02, 0.52)], [Vector2(0.2, 0.34), Vector2(0.6, 1)]],
 	"Λ": [[Vector2(0, 1), Vector2(0.31, 0), Vector2(0.62, 1)]],
 	"Μ": [[Vector2(0, 1), Vector2(0, 0), Vector2(0.31, 0.62), Vector2(0.62, 0), Vector2(0.62, 1)]],
@@ -74,7 +78,7 @@ static func draw(ci: CanvasItem, word: String, at: Vector2, height: float, gap: 
 		for s: Array in strokes:
 			var pts := PackedVector2Array()
 			for p: Vector2 in s:
-				pts.append(Vector2(x + p.x * height, at.y + p.y * height))
+				pts.append(Vector2(x + p.x / BOX * WIDE * height, at.y + p.y * height))
 			if pts.size() < 2:
 				continue
 			if shadow > 0.0:

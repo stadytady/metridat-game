@@ -5,7 +5,7 @@ extends CanvasLayer
 var _prompt: Label
 var _counter: Label
 var _toast: Label
-var _hint: Label
+var _hint: KeysBar
 var _toast_tween: Tween
 var _perf: Label
 var _target: Node
@@ -58,14 +58,15 @@ func _ready() -> void:
 	root.add_child(_perf)
 
 
-	_hint = UiStyle.label("UI_HINT", 22, UiStyle.MUTED)
+	# The controls legend: key caps in one quiet strip along the bottom.
+	_hint = KeysBar.new()
+	_hint.name = "KeysBar"
 	_hint.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_hint.position += Vector2(-700, -70)
-	_hint.size = Vector2(1400, 40)
+	_hint.position += Vector2(-760, -58)
+	_hint.size = Vector2(1520, 40)
 	root.add_child(_hint)
 	var t := create_tween()
-	t.tween_interval(10.0)
+	t.tween_interval(14.0)
 	t.tween_property(_hint, "modulate:a", 0.0, 2.0)
 
 	Game.discovered.connect(_on_discovered)

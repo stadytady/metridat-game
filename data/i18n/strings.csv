@@ -182,3 +182,11 @@ UI_QUEST_TALKS,Conversations,Разговоры
 UI_QUEST_SLEEP,Night in the abaton,Ночь в абатоне
 UI_QUEST_NOTE,"The evening comes with the finds: the more you look at, the closer the night.","Вечер приходит с находками: чем больше осмотришь, тем ближе ночь."
 UI_GOALS_EARNED,Earned,Получено
+UI_ACTION_WALK,Walk,Ходьба
+UI_ACTION_RUN,Run,Бег
+UI_ACTION_JUMP,Jump,Прыжок
+UI_ACTION_LOOK,Look,Обзор
+UI_ACTION_USE,"Inspect, talk","Осмотр, разговор"
+UI_ACTION_JOURNAL,Journal,Журнал
+UI_ACTION_GOALS,The way,Путь
+UI_ACTION_PAUSE,Pause,Пауза
