@@ -203,3 +203,8 @@ UI_ADMIN_NIGHT,Night,Ночь
 UI_ADMIN_LATE,Deep night,Глубокая ночь
 UI_ADMIN_DREAM,Dream hour,Час сна
 UI_ADMIN_KEYS,"TAB/`~ close    up/down move    E apply    left/right page","`~ закрыть    вверх/вниз выбор    E применить    влево/вправо раздел"
+UI_ADMIN_SCENE,Scene,Сцена
+UI_ADMIN_SLEEP_AT,Lie down in the abaton,Лечь в абатоне
+UI_ADMIN_WAKE,Wake up,Проснуться
+UI_ADMIN_LAMPS,Light every lamp,Зажечь все светильники
+UI_ADMIN_ENTER_DREAM,Enter the dream,Войти в сон

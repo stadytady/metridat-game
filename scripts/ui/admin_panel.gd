@@ -10,6 +10,14 @@ const WORLD := preload("res://scripts/world/world.gd")
 
 const PAGE_TIME := 0
 const PAGE_PLACES := 1
+const PAGE_SCENE := 2
+## Actions that move the story rather than the camera: [id, translation key].
+const ACTIONS := [
+	["sleep", "UI_ADMIN_SLEEP_AT"],
+	["dream", "UI_ADMIN_ENTER_DREAM"],
+	["wake", "UI_ADMIN_WAKE"],
+	["lamps", "UI_ADMIN_LAMPS"],
+]
 ## The clock: -1 hands the hour back to the finds, the rest are fixed hours.
 const TIME_STEPS := [-1.0, 0.25, 0.5, 0.72, 0.78, 0.9, 1.0, 1.25]
 const TIME_KEYS := [
@@ -24,8 +32,8 @@ var _tabs: Array[Label] = []
 var _body: VBoxContainer
 var _hints: Label
 var _page := PAGE_TIME
-var _sel := [0, 0]
-var _scroll := [0, 0]
+var _sel := [0, 0, 0]
+var _scroll := [0, 0, 0]
 var _places: PackedStringArray = []
 ## Viewpoint names that already have a place name in the string table.
 const PLACE_KEYS := {
@@ -59,8 +67,8 @@ func _ready() -> void:
 	var tabs := HBoxContainer.new()
 	tabs.add_theme_constant_override("separation", 18)
 	col.add_child(tabs)
-	for i in 2:
-		var l := UiStyle.label(tr("UI_ADMIN_TIME" if i == PAGE_TIME else "UI_ADMIN_PLACES"), 19, UiStyle.MUTED)
+	for i in 3:
+		var l := UiStyle.label(tr(_tab_key(i)), 19, UiStyle.MUTED)
 		tabs.add_child(l)
 		_tabs.append(l)
 	col.add_child(_rule())
@@ -73,6 +81,16 @@ func _ready() -> void:
 	_refresh()
 
 
+func _tab_key(page: int) -> String:
+	match page:
+		PAGE_TIME:
+			return "UI_ADMIN_TIME"
+		PAGE_PLACES:
+			return "UI_ADMIN_PLACES"
+		_:
+			return "UI_ADMIN_SCENE"
+
+
 func _rule() -> Control:
 	var line := ColorRect.new()
 	line.color = Color(0.55, 0.4, 0.2, 0.7)
@@ -83,11 +101,13 @@ func _rule() -> Control:
 func open() -> void:
 	visible = true
 	_refresh()
+	Game.ui_blocking = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 
 func close() -> void:
 	visible = false
+	Game.ui_blocking = false
 	Game.mark_ui_closed()
 
 
@@ -105,15 +125,15 @@ func _input(event: InputEvent) -> void:
 		return
 	if not visible:
 		return
-	if event.is_action_pressed(&"move_up"):
+	if event.is_action_pressed(&"move_forward"):
 		_move(-1)
-	elif event.is_action_pressed(&"move_down"):
+	elif event.is_action_pressed(&"move_back"):
 		_move(1)
 	elif event.is_action_pressed(&"move_left"):
-		_page = PAGE_TIME
+		_page = maxi(_page - 1, PAGE_TIME)
 		_refresh()
 	elif event.is_action_pressed(&"move_right"):
-		_page = PAGE_PLACES
+		_page = mini(_page + 1, PAGE_SCENE)
 		_refresh()
 	elif event.is_action_pressed(&"interact"):
 		_apply()
@@ -134,7 +154,13 @@ func _move(step: int) -> void:
 
 
 func _count() -> int:
-	return TIME_STEPS.size() if _page == PAGE_TIME else _places.size()
+	match _page:
+		PAGE_TIME:
+			return TIME_STEPS.size()
+		PAGE_PLACES:
+			return _places.size()
+		_:
+			return ACTIONS.size()
 
 
 func _apply() -> void:
@@ -142,12 +168,45 @@ func _apply() -> void:
 		Game.time_override = TIME_STEPS[_sel[_page]]
 		_refresh()
 		return
+	if _page == PAGE_SCENE:
+		_run(ACTIONS[_sel[_page]][0])
+		return
 	var place := _places[_sel[_page]]
 	var vp: Array = WORLD.viewpoints()[place]
 	var player: Node3D = get_parent().player()
 	player.global_position = (vp[0] as Vector3) - Vector3(0, 1.6, 0)
 	player.look_at_point(vp[1] as Vector3)
 	travelled.emit(place)
+
+
+## Story leaps: the dream and back, and the lamps it needs.
+func _run(action: String) -> void:
+	var main := get_parent()
+	match action:
+		"lamps":
+			for lamp: Lamp in Game.lamps:
+				if not lamp.lit:
+					lamp.interact()
+		"sleep":
+			var spot: Node3D = main.world.find_child("SleepSpot", true, false)
+			if spot == null:
+				push_warning("admin: no sleeping place in the abaton")
+				return
+			main.player().global_position = spot.global_position + Vector3(0, 0.1, 0)
+			for lamp: Lamp in Game.lamps:
+				if not lamp.lit:
+					lamp.interact()
+			close()
+			Game.dream_requested.emit()
+		"dream":
+			close()
+			Game.dream_requested.emit()
+		"wake":
+			var dream: Node = main.world.get_node_or_null("Dream")
+			if dream == null or not Game.dreaming:
+				return
+			close()
+			dream.wake()
 
 
 ## What a climb through the list shows: the page's rows from the scroll position.
@@ -175,6 +234,8 @@ func _row(i: int, selected: bool) -> Control:
 	if _page == PAGE_TIME:
 		name = tr(TIME_KEYS[i])
 		value = tr("UI_ADMIN_NORMAL_VALUE") if TIME_STEPS[i] < 0.0 else "%0.2f" % TIME_STEPS[i]
+	elif _page == PAGE_SCENE:
+		name = tr(ACTIONS[i][1])
 	else:
 		var place: String = _places[i]
 		var key: String = PLACE_KEYS.get(place, "")
@@ -196,6 +257,6 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_TRANSLATION_CHANGED and _body:
 		_title.text = tr("UI_ADMIN_TITLE")
 		_hints.text = tr("UI_ADMIN_KEYS")
-		_tabs[0].text = tr("UI_ADMIN_TIME")
-		_tabs[1].text = tr("UI_ADMIN_PLACES")
+		for i in _tabs.size():
+			_tabs[i].text = tr(_tab_key(i))
 		_refresh()
