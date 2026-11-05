@@ -1,4 +1,10 @@
 ; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
 
 config_version=5
 
@@ -29,7 +35,10 @@ window/size/window_width_override=1600
 window/size/window_height_override=900
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
-window/vsync/vsync_mode=1
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/dialogue_manager/plugin.cfg", "res://addons/dev_tools/plugin.cfg")
 
 [gui]
 
@@ -40,24 +49,19 @@ theme/default_font_subpixel_positioning=0
 [internationalization]
 
 locale/translations=PackedStringArray("res://data/i18n/strings.en.translation", "res://data/i18n/strings.ru.translation")
-locale/fallback="en"
+locale/translations_pot_files=PackedStringArray("res://data/dialogues/prologue.dialogue", "res://data/dialogues/fedr.dialogue", "res://data/dialogues/baker.dialogue", "res://data/dialogues/sailor.dialogue", "res://data/dialogues/fisher.dialogue", "res://data/dialogues/potter.dialogue")
 
 [physics]
 
 3d/physics_engine="Jolt Physics"
-common/physics_ticks_per_second=60
 
 [rendering]
 
-renderer/rendering_method="forward_plus"
-renderer/rendering_method.web="gl_compatibility"
 textures/canvas_textures/default_texture_filter=0
-textures/default_filters/anisotropic_filtering_level=0
-anti_aliasing/quality/msaa_3d=0
-anti_aliasing/quality/screen_space_aa=0
 lights_and_shadows/directional_shadow/size=2048
 lights_and_shadows/directional_shadow/soft_shadow_filter_quality=0
 lights_and_shadows/positional_shadow/soft_shadow_filter_quality=0
+textures/default_filters/anisotropic_filtering_level=0
 environment/defaults/default_clear_color=Color(0.85, 0.65, 0.45, 1)
 
 [shader_globals]
@@ -82,7 +86,3 @@ psx_fog_color={
 "type": "color",
 "value": Color(0.851, 0.655, 0.455, 1)
 }
-
-[editor_plugins]
-
-enabled=PackedStringArray("res://addons/dialogue_manager/plugin.cfg", "res://addons/dev_tools/plugin.cfg")
