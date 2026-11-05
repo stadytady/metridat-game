@@ -97,14 +97,15 @@ static func cottage(kit: MeshKit, xf: Transform3D, w: float, d: float, h: float,
 	kit.xform = xf
 	kit.color = Color.WHITE
 	# plinth, then a level floor for the room to stand on
-	kit.solid_box("limestone", Vector3(0, (socle - drop) / 2.0, -d / 2.0), Vector3(w, socle + drop, d), ["bottom", "top"])
-	kit.solid_box("earth", Vector3(0, socle - 0.1, -d / 2.0), Vector3(w - 2.0 * t, 0.2, d - 2.0 * t),
-			["bottom", "top"], {"top": "earth"})
+	kit.solid_box("limestone", Vector3(0, (socle - drop) / 2.0, -d / 2.0), Vector3(w, socle + drop, d), ["bottom"])
+	# the floor keeps its top face: skipping it leaves a hole you can see the sea through
+	kit.solid_box("plaster", Vector3(0, socle - 0.1, -d / 2.0), Vector3(w - 2.0 * t, 0.2, d - 2.0 * t),
+			["bottom"], {"top": "earth"})
 	# front wall with the doorway, and the lintel over it
 	for seg: Vector2 in cottage_front_segments(w):
 		kit.solid_box("plaster", Vector3((seg.x + seg.y) * 0.5, mid, -t * 0.5),
 				Vector3(seg.y - seg.x, wall_h, t), ["bottom", "top"])
-	var over := wall_h - COTTAGE_DOOR_H + socle
+	var over := wall_h - COTTAGE_DOOR_H  # the strip of wall above the door
 	if over > 0.1:
 		kit.solid_box("plaster", Vector3(0, socle + COTTAGE_DOOR_H + over * 0.5, -t * 0.5),
 				Vector3(COTTAGE_DOOR, over, t), ["bottom", "top"])
@@ -138,7 +139,8 @@ static func cottage(kit: MeshKit, xf: Transform3D, w: float, d: float, h: float,
 	kit.box("wood", Vector3(-w * 0.5 + t + 0.3, socle + 0.9, -d * 0.35), Vector3(0.35, 0.08, 0.9), ["bottom"], {})
 	kit.box("clay", Vector3(-w * 0.5 + t + 0.3, socle + 1.0, -d * 0.35), Vector3(0.18, 0.12, 0.18), ["bottom"], {})
 	kit.xform = Transform3D.IDENTITY
-	return {"lamp": Vector3(w * 0.5 + 0.35, socle + 1.85, 0.06), "door": Vector3(0, socle, 0.0)}
+	# the bracket hangs on the front wall beside the doorway, not past the corner
+	return {"lamp": Vector3(COTTAGE_DOOR * 0.5 + 0.75, socle + 1.95, 0.02), "door": Vector3(0, socle, 0.0)}
 
 
 ## Where a window's lamp is in its flicker (psx_lamp reads it from the vertex
