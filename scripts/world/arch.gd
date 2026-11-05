@@ -431,3 +431,73 @@ static func stele(kit: MeshKit, xf: Transform3D) -> void:
 	kit.xform = xf
 	kit.add_collider(Vector3(0, 1.0, 0), Vector3(0.8, 2.0, 0.3))
 	kit.xform = Transform3D.IDENTITY
+
+
+## A mantle figure on its plinth, facing +z. Greek cities stood these around their
+## squares and temples: most honorific statues were bronze, the marble ones were
+## the costly exception (the Panticapaeum goddess was marble, more than 2.5 m).
+## opts: h (figure height, m), mat ("bronze"/"column"), helmet (Corinthian, bool),
+## plinth (base height, m), arm ("down"/"up"/"spear").
+## Returns the total height of plinth and figure, for tests and layout.
+##
+## Proportions are the whole job here: a head narrower than a tenth of the height
+## and a straight column of a body read as a post, not as a person, at any
+## distance the player sees them.
+static func statue(kit: MeshKit, xf: Transform3D, opts: Dictionary = {}) -> float:
+	var h: float = opts.get("h", 1.7)
+	var mat: String = opts.get("mat", "bronze")
+	var plinth: float = opts.get("plinth", 0.38)
+	var y := plinth
+	kit.xform = xf
+	# plinth: a foot block under a cap, cut in two mouldings, wider than the skirt
+	kit.solid_box("limestone", Vector3(0, plinth * 0.22, 0), Vector3(h * 0.46, plinth * 0.44, h * 0.46), ["bottom"])
+	kit.solid_box("limestone", Vector3(0, plinth * 0.72, 0), Vector3(h * 0.38, plinth * 0.56, h * 0.38), ["bottom"])
+	# the fall of the mantle: a flared skirt from the feet to the waist
+	kit.lathe(mat, PackedVector2Array([
+		Vector2(h * 0.20, y), Vector2(h * 0.195, y + h * 0.04),
+		Vector2(h * 0.155, y + h * 0.34), Vector2(h * 0.125, y + h * 0.62)]),
+		10, Vector3.ZERO, 1.0, true, mat)
+	# chest, then shoulders wider than the waist: the first thing the eye reads
+	kit.box(mat, Vector3(0, y + h * 0.71, 0), Vector3(h * 0.26, h * 0.19, h * 0.19), ["bottom"])
+	kit.box(mat, Vector3(0, y + h * 0.815, 0), Vector3(h * 0.34, h * 0.07, h * 0.21), ["bottom"])
+	# arms: one hangs, the other answers the option
+	var arm := String(opts.get("arm", "down"))
+	for sx: float in [-1.0, 1.0]:
+		if sx > 0.0 and arm == "up":
+			kit.box(mat, Vector3(h * 0.16, y + h * 0.88, 0), Vector3(h * 0.10, h * 0.30, h * 0.13), ["bottom"])
+		elif sx > 0.0 and arm == "spear":
+			kit.box(mat, Vector3(h * 0.16, y + h * 0.71, h * 0.03), Vector3(h * 0.10, h * 0.34, h * 0.12), ["bottom"])
+		else:
+			kit.box(mat, Vector3(h * 0.16 * sx, y + h * 0.68, 0), Vector3(h * 0.10, h * 0.36, h * 0.13), ["bottom"])
+	# neck, head, hair: the head is a seventh of the figure, not a tenth
+	kit.box(mat, Vector3(0, y + h * 0.865, 0), Vector3(h * 0.07, h * 0.04, h * 0.07), ["bottom"])
+	kit.box(mat, Vector3(0, y + h * 0.935, h * 0.005), Vector3(h * 0.125, h * 0.13, h * 0.13), ["bottom"])
+	kit.box(mat, Vector3(0, y + h * 0.995, -h * 0.01), Vector3(h * 0.145, h * 0.06, h * 0.145), ["bottom"])
+	if bool(opts.get("helmet", false)):
+		# Corinthian helmet: dome over the brow, cheek pieces, crest front to back
+		kit.box(mat, Vector3(0, y + h * 1.03, 0), Vector3(h * 0.15, h * 0.05, h * 0.16), ["bottom"])
+		for sx: float in [-1.0, 1.0]:
+			kit.box(mat, Vector3(h * 0.06 * sx, y + h * 0.965, h * 0.02), Vector3(h * 0.03, h * 0.10, h * 0.10), ["bottom"])
+		kit.box(mat, Vector3(0, y + h * 1.075, -h * 0.01), Vector3(h * 0.03, h * 0.05, h * 0.20), ["bottom"])
+	if arm == "spear":
+		kit.box("wood", Vector3(h * 0.21, y + h * 0.72, h * 0.03), Vector3(0.03, h * 1.0, 0.03), [])
+	kit.xform = xf
+	kit.add_collider(Vector3(0, (plinth + h) * 0.5, 0), Vector3(h * 0.42, plinth + h, h * 0.34))
+	kit.xform = Transform3D.IDENTITY
+	return plinth + h * 1.10
+
+
+## Herm: a square pillar with a bearded head and stubs of shoulders, the oldest
+## piece of Greek garden furniture there is. Faces +z, returns its height.
+static func herm(kit: MeshKit, xf: Transform3D, h: float = 1.5) -> float:
+	var w := h * 0.22
+	kit.xform = xf
+	kit.solid_box("limestone", Vector3(0, h * 0.05, 0), Vector3(w * 1.8, h * 0.1, w * 1.8), ["bottom"])
+	kit.solid_box("column", Vector3(0, h * 0.5, 0), Vector3(w, h * 0.8, w), ["bottom"])
+	kit.box("column", Vector3(0, h * 0.92, 0), Vector3(w * 1.5, h * 0.05, w * 1.1), ["bottom"])   # shoulders
+	kit.box("column", Vector3(0, h * 1.03, 0), Vector3(w * 0.85, h * 0.16, w * 0.85), ["bottom"])  # head
+	kit.box("column", Vector3(0, h * 0.96, w * 0.3), Vector3(w * 0.9, h * 0.12, w * 0.4), ["bottom"])  # beard
+	kit.xform = xf
+	kit.add_collider(Vector3(0, h * 0.5, 0), Vector3(w * 1.4, h, w * 1.4))
+	kit.xform = Transform3D.IDENTITY
+	return h * 1.11

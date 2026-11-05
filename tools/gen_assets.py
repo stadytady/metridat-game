@@ -618,6 +618,9 @@ MATERIALS = {
     "clay": ("psx_lit", "clay", "#ffffff", (1.0, 1.0)),
     "redfigure": ("psx_lit", "redfigure", "#ffffff", (1.0, 1.0)),
     "bronze": ("psx_lit", "bronze", "#ffffff", (1.0, 1.0)),
+    # Weathered bronze for statues: the same texture, tinted down and tiled fine,
+    # so the patina reads as mottling and not as teal blotches a hand wide.
+    "bronze_old": ("psx_lit", "bronze", "#6f6a52", (0.45, 0.45)),
     "gold": ("psx_lit", "coin", "#ffffff", (1.0, 1.0)),
     "cloth": ("psx_lit", "cloth", "#ffffff", (0.5, 0.5)),
     "sail": ("psx_sail", "cloth", "#c8b8a0", (0.3, 0.3)),
