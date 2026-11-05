@@ -33,6 +33,13 @@ const HILL_PLATFORM_TOP := 28.1
 const AGORA_CENTER := Vector2(22, 0)
 const AGORA_HALF := Vector2(13, 11)
 const AGORA_H := 5.0
+## The forecourt: where the street widens into a square before the agora, from
+## the last houses (x 3) to the agora's west edge, as wide as the agora. Its
+## pavement keeps the street's own height at each x, so it meets the street and
+## the agora (street_height(9) = AGORA_H) with no step. South of the street
+## the mule's yard takes the ground, on its own earth and grass. Rect2: (x, z)
+## and size.
+const FORECOURTS: Array[Rect2] = [Rect2(3.0, -11.0, 6.0, 11.0)]
 
 const SANCT_CENTER := Vector2(46, -27)
 const SANCT_HALF := Vector2(8, 7)
@@ -110,6 +117,18 @@ static func natural(x: float, z: float) -> float:
 	return h
 
 
+static func in_forecourt(x: float, z: float, margin: float = 0.0) -> bool:
+	for r: Rect2 in FORECOURTS:
+		if x >= r.position.x - margin and x <= r.end.x + margin and z >= r.position.y - margin and z <= r.end.y + margin:
+			return true
+	return false
+
+
+## The forecourt's pavement height: the street's, so the two are one surface.
+static func forecourt_height(x: float) -> float:
+	return street_height(clampf(x, FORECOURTS[0].position.x, FORECOURTS[0].end.x))
+
+
 static func _rect_weight(x: float, z: float, c: Vector2, half: Vector2, falloff: float) -> float:
 	var dx := maxf(absf(x - c.x) - half.x, 0.0)
 	var dz := maxf(absf(z - c.y) - half.y, 0.0)
@@ -145,6 +164,8 @@ static func terrain(x: float, z: float) -> float:
 	h = lerpf(h, HILL_H - 0.3, _rect_weight(x, z, HILL_CENTER, HILL_HALF, 7.0))
 	h = _apply_path(h, x, z, STREET, STREET_HALF + 1.5, 4.0, 0.25)
 	h = lerpf(h, AGORA_H - 0.25, _rect_weight(x, z, AGORA_CENTER, AGORA_HALF, 6.0))
+	for r: Rect2 in FORECOURTS:
+		h = minf(h, lerpf(h, forecourt_height(x) - 0.25, _rect_weight(x, z, r.get_center(), r.size / 2.0, 3.0)))
 	h = lerpf(h, HOUSE_H - 0.25, _rect_weight(x, z, HOUSE_CENTER, HOUSE_HALF, 4.0))
 	h = _apply_path(h, x, z, LANE, LANE_HALF + 1.0, 2.0, 0.25)
 	h = _apply_path(h, x, z, SANCT_STAIR, SANCT_STAIR_HALF + 1.0, 2.0, 0.25)
@@ -201,6 +222,8 @@ static func in_rect(x: float, z: float, c: Vector2, half: Vector2, margin: float
 static func surface(x: float, z: float) -> float:
 	if in_rect(x, z, AGORA_CENTER, AGORA_HALF):
 		return AGORA_H
+	if in_forecourt(x, z):
+		return forecourt_height(x)
 	if in_rect(x, z, SANCT_CENTER, SANCT_HALF):
 		return SANCT_H
 	if in_house(x, z, 0.0):
@@ -265,6 +288,8 @@ static func on_pier(x: float, z: float, margin: float) -> bool:
 ## Areas the backdrop city must keep clear of.
 static func is_reserved(x: float, z: float, margin: float) -> bool:
 	if in_rect(x, z, AGORA_CENTER, AGORA_HALF, margin):
+		return true
+	if in_forecourt(x, z, margin):
 		return true
 	if in_rect(x, z, SANCT_CENTER, SANCT_HALF, margin):
 		return true
