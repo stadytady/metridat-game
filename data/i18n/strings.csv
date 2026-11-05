@@ -220,3 +220,8 @@ LOC_PRO_CHOICE_NIGHT,Where do I sleep tonight?,Где мне переночев�
 LOC_PRO_NIGHT_1,"Sleep at the stern, it's out of the wind under the sail. In the morning climb the hill: everyone new here starts there.","Ночуй на корме, под парусом не дует. А утром поднимись на холм: оттуда начинают все, кто тут впервые."
 LOC_PRO_END,"Go on, then. And don't linger by the water after dark.","Ну, ступай. И не задерживайся у воды, когда стемнеет."
 UI_PROLOGUE_MORNING,Morning,Утро
+UI_LEGEND_1,"They say a cow once swam this strait: Io, driven by Hera's gadfly. So the Greeks named it the Cow's Ford, the Bosporus.","Говорят, когда-то этот пролив переплыла корова — Ио, гонимая оводом Геры. Оттого греки и назвали его Коровьим бродом, Боспором."
+UI_LEGEND_2,"On its western shore, on a hill above the water, settlers from Miletus built a city and called it Panticapaeum.","На его западном берегу, на горе над водой, переселенцы из Милета поставили город и назвали его Пантикапеем."
+UI_LEGEND_3,"Grain, fish and the gold of the steppe go out from here across the sea. All summer the ships come in.","Отсюда за море уходят хлеб, рыба и степное золото. Всё лето сюда идут корабли."
+UI_LEGEND_4,And sometimes they bring someone who dreamed of this city before ever seeing it.,"А иногда привозят того, кому этот город снился раньше, чем он его увидел."
+UI_VOYAGE_SKIP,E — skip,E — пропустить

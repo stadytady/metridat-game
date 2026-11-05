@@ -46,3 +46,55 @@ func test_prologue_lines_are_translated() -> void:
 			TranslationServer.set_locale(lang)
 			check(tr(k) != k, "%s has no %s text" % [k, lang])
 	TranslationServer.set_locale("en")
+
+
+## The voyage in: she starts far out on the strait and ends off the pier,
+## closing all the way, and never sails through a ship riding at anchor.
+func test_the_voyage_comes_in_from_far_out() -> void:
+	var moored: Vector3 = load("res://scripts/world/harbour.gd").ship_pos()
+	var start := Prologue.course_at(0.0)
+	var end := Prologue.course_at(1.0)
+	check(start.distance_to(moored) > 150.0, "she starts only %.0f m out" % start.distance_to(moored))
+	check(end.distance_to(moored) < 45.0, "she ends %.0f m off the pier" % end.distance_to(moored))
+	var last := INF
+	for i in 41:
+		var d := Prologue.course_at(i / 40.0).distance_to(moored)
+		check(d < last + 0.01, "she turns away from the pier at %d/40" % i)
+		last = d
+	# heading follows the course: the bow points where she goes next
+	for i in 10:
+		var k := i / 10.0
+		var yaw := Prologue.heading_at(k)
+		var fwd := Vector3(cos(yaw), 0, -sin(yaw))
+		var step := Prologue.course_at(k + 0.05) - Prologue.course_at(k)
+		check(fwd.dot(step.normalized()) > 0.95, "she sails sideways at %.1f" % k)
+
+
+func test_the_voyage_keeps_clear_of_the_anchored_ships() -> void:
+	var ships: Script = load("res://scripts/world/ships.gd")
+	for s: Array in ships.SHIPS:
+		var at: Vector3 = ships.position_at(s[0], s[3], DayCycle.PROLOGUE)
+		var clear := INF
+		for i in 101:
+			clear = minf(clear, Prologue.course_at(i / 100.0).distance_to(at))
+		# two hulls of 16 m and some water between
+		check(clear > 18.0 * float(s[2]), "she passes %.1f m from the ship at %s" % [clear, at])
+
+
+## The legend runs in order inside the voyage, lines do not overlap, each is
+## up long enough to read, and each is translated.
+func test_the_legend_fits_the_voyage() -> void:
+	var prev := 0.0
+	for l: Array in Prologue.LEGEND:
+		var a: float = l[1]
+		var b: float = l[2]
+		check(a >= prev, "%s starts before the last line ends" % l[0])
+		check(b - a >= 4.5, "%s is up only %.1f s" % [l[0], b - a])
+		check(b <= Prologue.VOYAGE, "%s runs past the voyage" % l[0])
+		check(Prologue.legend_at((a + b) / 2.0) == l[0], "%s is not up in its own time" % l[0])
+		prev = b
+		for lang in ["en", "ru"]:
+			TranslationServer.set_locale(lang)
+			check(tr(l[0]) != l[0], "%s has no %s text" % [l[0], lang])
+	TranslationServer.set_locale("en")
+	check(Prologue.legend_at(Prologue.VOYAGE + 1.0).is_empty(), "the legend outlives the voyage")
