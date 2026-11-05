@@ -6,7 +6,7 @@ extends Node
 ## Afternoon to night, as the game goes, in eight long, slow shots: a crane
 ## over the terraced city to the strait, the actor rehearsing in the summit theatre, through Myrto's door to
 ## her oven, along the pier to the moored ship at sunset, the lit street at
-## night, Hecate's temple, the dream's misty path, and the hill at night. Each
+## night, Hecate's temple, the dream's stair down into the mound, and the hill at night. Each
 ## shot sets its own hour (the atmosphere snaps to it) and, after dusk, the
 ## lamps are lit. Camera moves are Catmull-Rom splines through three points,
 ## short and gently eased at both ends, with a faint handheld drift; cuts are
@@ -55,10 +55,11 @@ const SHOTS := [
 	{"t": [19.6, 22.2], "hour": 1.0, "lamps": true, "fov": [50.0, 40.0], "caption": "",
 		"pos": [Vector3(46.0, 11.3, -17.8), Vector3(46.0, 11.15, -18.9), Vector3(46.0, 11.0, -19.9)],
 		"look": [Vector3(46.0, 9.8, -27.5), Vector3(46.0, 9.85, -29.0), Vector3(46.0, 9.9, -31.0)]},
-	# the dream: the stony path in the fog, someone standing ahead
-	{"t": [22.2, 25.4], "hour": 1.25, "lamps": true, "fov": [52.0, 48.0], "caption": "",
-		"pos": [Vector3(0.2, 61.55, 2601.0), Vector3(0.6, 61.5, 2604.5), Vector3(1.0, 61.45, 2608.0)],
-		"look": [Vector3(3.8, 61.5, 2622.0), Vector3(3.8, 61.45, 2622.0), Vector3(3.8, 61.4, 2622.0)]},
+	# the dream: down the mound's stair under the stepped vault, towards the
+	# lamp in the chamber where someone sleeps
+	{"t": [22.2, 25.4], "hour": 1.25, "lamps": true, "fov": [58.0, 54.0], "caption": "",
+		"pos": [Vector3(0.0, 61.55, 2681.3), Vector3(0.0, 59.7, 2685.2), Vector3(0.0, 57.9, 2688.8)],
+		"look": [Vector3(0.0, 56.9, 2695.0), Vector3(0.0, 56.6, 2696.0), Vector3(0.0, 56.4, 2697.0)]},
 	# night on the hill: between the columns, the city and the strait below
 	{"t": [25.4, 31.0], "hour": 1.0, "lamps": true, "fov": [56.0, 60.0], "caption": "",
 		"pos": [Vector3(-89, 30.0, 0.4), Vector3(-86.5, 30.15, 0.2), Vector3(-83.5, 30.4, 0.0)],
@@ -98,6 +99,11 @@ func _ready() -> void:
 	player.set_physics_process(false)
 	for n in get_tree().get_nodes_in_group(&"inspectable"):
 		n.get_node("Marker").visible = false
+	# nor the talk bubbles over the people: a film, not a game screen
+	for n: Npc in get_tree().get_nodes_in_group(&"npc"):
+		if n.marker:
+			n.marker.queue_free()
+			n.marker = null
 	_cam = Camera3D.new()
 	_cam.name = "TrailerCamera"
 	_cam.far = 4000.0
