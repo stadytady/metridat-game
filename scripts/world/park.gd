@@ -4,9 +4,10 @@ extends District
 ## the whole slope is laid out as a grove: a long stone walk on each side, two
 ## cross walks, olive rows between them, figures on their plinths along the walks
 ## and benches facing them. It runs from the terrace parapet out to the brow over
-## the roofs, some 25 m each way.
+## the roofs, some 25 m each way, and back over the flat top of the hill to an
+## outer walk that closes the loop: a grove about 25 x 30 m on either side.
 ##
-## The grove is one mesh: fifty trees as separate nodes would cost more draw calls
+## The grove is one mesh: a hundred-odd trees as separate nodes would cost more draw calls
 ## than the whole city, so `Props.olive_tree` takes a transform and writes into a
 ## shared kit.
 
@@ -18,105 +19,170 @@ const WALK_TO := -71.0
 ## Where the walk comes out of the terrace parapet (a gate is cut for it there).
 const GATE_X := -86.0
 const TERRACE_EDGE := 7.7
-## Short cross walks: x, half width, and the |z| they span.
+## Cross walks: x, half width, and the |z| they span - from the inner rows out
+## to the outer walk, so the walks close into a loop.
 const CROSS_X := [-92.0, -78.0]
 const CROSS_HALF := 1.0
 const CROSS_FROM := 12.4
-const CROSS_TO := 24.6
-## Olive rows, |z| offsets from the street axis. The two inner rows flank the
-## long walk, the two outer ones close the grove.
-const ROWS := [11.0, 13.6, 16.2, 21.8, 24.4, 27.0]
-const TREE_STEP := 4.2
-## Figures: [x, |z|, kind]; each faces the walk from its outer side. They lean on
-## one real find - the marble goddess from Panticapaeum's palace well, more than
-## 2.5 m in the museum's description (see the README).
+const CROSS_TO := 30.4
+## The outer walk: |z|, joining the far ends of the cross walks.
+const OUTER_Z := 30.4
+## Olive rows, |z| offsets from the street axis: three inside the long walk,
+## three between it and the outer walk, three beyond. The flat top of the hill
+## runs out to |z| 48, so the grove has room.
+const ROWS := [11.0, 13.6, 16.2, 21.8, 24.4, 27.0, 33.8, 36.4, 39.0]
+const TREE_STEP := 3.6
+## How much room an olive leaves, from a walk's edge or a thing's centre: its
+## crown may shade the walk a little, never stand in it.
+const TREE_CLEAR := 1.0
+const FIGURE_CLEAR := 2.4
+const BENCH_CLEAR := 1.9
+## Figures: [x, |z|, kind, yaw on the north side in degrees]. Figures face +z
+## (Arch.statue/herm); 180 turns them to the long walk, 90 down it to the east.
+## The south side mirrors them (yaw 180 - a). They lean on one real find - the
+## marble goddess from Panticapaeum's palace well, more than 2.5 m in the
+## museum's description (see the README) - and she closes the long walk at its
+## west end, looking down it to the sea.
 const FIGURES := [
-	[-94.8, 21.8, "herm"],
-	[-88.0, 21.6, "youth"],
-	[-82.0, 21.8, "youth"],
-	[-73.0, 16.4, "goddess"],
+	[-98.4, 19.0, "goddess", 90.0],
+	[-89.6, 21.8, "youth", 180.0],
+	[-81.6, 21.8, "youth", 180.0],
+	[-92.0, 33.2, "herm", 180.0],
+	[-78.0, 33.2, "herm", 180.0],
 ]
-## Benches: [x, |z|], facing the walk.
+## Benches: [x, |z|], each across the walk from a figure, under no tree.
 const BENCHES := [
-	[-90.0, 17.0],
-	[-80.0, 17.0],
+	[-89.6, 16.8],
+	[-81.6, 16.8],
+	[-85.0, 28.0],
 ]
+## Cypresses: [x, |z|]. Two pairs flank the walk down from the terrace gate and
+## two stand behind the goddess: the dark verticals over the round olives.
+const CYPRESSES := [
+	[-88.4, 12.8], [-83.6, 12.8], [-88.4, 15.6], [-83.6, 15.6],
+	[-98.6, 16.6], [-98.6, 21.4],
+]
+
+
+static func _line(side: float, a: Vector2, b: Vector2, step: float) -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	var n := maxi(1, ceili(a.distance_to(b) / step))
+	for i in n + 1:
+		var p := a.lerp(b, float(i) / n)
+		var z := side * p.y
+		out.append(Vector3(p.x, Topo.terrain(p.x, z) + 0.05, z))
+	return out
 
 
 ## The ground the walk is laid on, sampled so it follows the slope.
 static func walk_points(side: float) -> Array[Vector3]:
-	var out: Array[Vector3] = []
-	var x := WALK_FROM
-	while x <= WALK_TO + 0.01:
-		var z := side * WALK_Z
-		out.append(Vector3(x, Topo.terrain(x, z) + 0.05, z))
-		x += 3.0
-	return out
+	return _line(side, Vector2(WALK_FROM, WALK_Z), Vector2(WALK_TO, WALK_Z), 3.0)
 
 
-## From the terrace gate down onto the long walk.
+## From the terrace gate down onto the long walk. The gate steps (hilltop.gd)
+## take the drop from the platform; the walk starts at their foot.
 static func connector_points(side: float) -> Array[Vector3]:
-	var out: Array[Vector3] = []
-	# the gate steps (hilltop.gd) take the drop from the platform; the walk
-	# starts at their foot
-	var z := side * (TERRACE_EDGE + 1.35)
-	while absf(z) <= WALK_Z + 0.01:
-		out.append(Vector3(GATE_X, Topo.terrain(GATE_X, z) + 0.05, z))
-		z += side * 1.5
-	return out
+	return _line(side, Vector2(GATE_X, TERRACE_EDGE + 1.35), Vector2(GATE_X, WALK_Z), 1.5)
 
 
 static func cross_points(side: float, x: float) -> Array[Vector3]:
-	var out: Array[Vector3] = []
-	var z := side * CROSS_FROM
-	while absf(z) <= CROSS_TO + 0.01:
-		out.append(Vector3(x, Topo.terrain(x, z) + 0.05, z))
-		z += side * 1.5
+	return _line(side, Vector2(x, CROSS_FROM), Vector2(x, CROSS_TO), 1.5)
+
+
+static func outer_points(side: float) -> Array[Vector3]:
+	return _line(side, Vector2(CROSS_X[0], OUTER_Z), Vector2(CROSS_X[1], OUTER_Z), 2.0)
+
+
+## Every walk of one side, each with its half width.
+static func walks(side: float) -> Array:
+	var out := [[walk_points(side), WALK_HALF], [connector_points(side), CROSS_HALF], [outer_points(side), WALK_HALF]]
+	for cx: float in CROSS_X:
+		out.append([cross_points(side, cx), CROSS_HALF])
 	return out
 
 
-## Every olive of the grove: [x, z]. Trees keep clear of the walks, of the two
-## cross walks and of the gate walk, which all run through the rows.
+## Distance from p (x, z) to the edge of the nearest walk (negative on it).
+static func walk_clearance(p: Vector2) -> float:
+	var best := INF
+	for side: float in [1.0, -1.0]:
+		for w: Array in walks(side):
+			var pts: Array[Vector3] = w[0]
+			for i in pts.size() - 1:
+				var a := Vector2(pts[i].x, pts[i].z)
+				var b := Vector2(pts[i + 1].x, pts[i + 1].z)
+				var ab := b - a
+				var t := clampf((p - a).dot(ab) / maxf(ab.length_squared(), 0.0001), 0.0, 1.0)
+				best = minf(best, p.distance_to(a + ab * t) - float(w[1]))
+	return best
+
+
+## The things on the ground of the park: [x, z] of every figure and bench.
+static func _mirrored(list: Array) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	for e: Array in list:
+		for side: float in [1.0, -1.0]:
+			out.append(Vector2(e[0], side * float(e[1])))
+	return out
+
+
+static func _clear_of(p: Vector2, spots: Array[Vector2], r: float) -> bool:
+	for q: Vector2 in spots:
+		if p.distance_to(q) < r:
+			return false
+	return true
+
+
+## Every olive of the grove: [x, z]. A tree goes wherever its row has room: off
+## the walks, and far enough from figures and benches for its crown not to
+## swallow them.
 static func tree_spots() -> Array[Vector2]:
 	var out: Array[Vector2] = []
+	var figures := _mirrored(FIGURES)
+	var benches := _mirrored(BENCHES)
+	var cypresses := _mirrored(CYPRESSES)
 	for side: float in [1.0, -1.0]:
-		for row: float in ROWS:
-			var x := WALK_FROM + 0.8
+		for r in ROWS.size():
+			var row: float = ROWS[r]
+			# every other row shifted half a step: the old quincunx planting
+			var x := WALK_FROM + 0.8 + float(r % 2) * TREE_STEP * 0.5
 			while x <= WALK_TO - 0.8:
-				var blocked := false
-				# the cross walks only span part of the depth
-				if absf(row) > CROSS_FROM - 1.8 and absf(row) < CROSS_TO + 1.8:
-					for cx: float in CROSS_X:
-						if absf(x - cx) < CROSS_HALF + 1.6:
-							blocked = true
-				# the gate walk runs out along one x, up to the long walk
-				if absf(row) < WALK_Z + 0.5 and absf(x - GATE_X) < CROSS_HALF + 1.6:
-					blocked = true
-				if not blocked:
-					out.append(Vector2(x, side * row))
+				var p := Vector2(x, side * row)
+				if walk_clearance(p) > TREE_CLEAR and _clear_of(p, figures, FIGURE_CLEAR) \
+						and _clear_of(p, benches, BENCH_CLEAR) and _clear_of(p, cypresses, TREE_CLEAR):
+					out.append(p)
 				x += TREE_STEP
 	return out
 
 
-## Where each figure stands, base on the ground.
+static func cypress_spots() -> Array[Vector2]:
+	return _mirrored(CYPRESSES)
+
+
+## Where each figure stands, base on the ground, in FIGURES order, north first.
 static func figure_spots() -> Array[Vector3]:
 	var out: Array[Vector3] = []
+	for p: Vector2 in _mirrored(FIGURES):
+		out.append(Vector3(p.x, Topo.terrain(p.x, p.y) + 0.05, p.y))
+	return out
+
+
+## Which way each figure looks (x, z), in figure_spots() order.
+static func figure_facing() -> Array[Vector2]:
+	var out: Array[Vector2] = []
 	for f: Array in FIGURES:
 		for side: float in [1.0, -1.0]:
-			var z: float = side * float(f[1])
-			out.append(Vector3(f[0], Topo.terrain(f[0], z) + 0.05, z))
+			var a := deg_to_rad(float(f[3]) if side > 0.0 else 180.0 - float(f[3]))
+			out.append(Vector2(sin(a), cos(a)))
 	return out
 
 
 func _ready() -> void:
 	var kit := MeshKit.new()
 	for side: float in [1.0, -1.0]:
-		Arch.path(kit, walk_points(side), WALK_HALF)
-		Arch.path(kit, connector_points(side), CROSS_HALF)
-		for cx: float in CROSS_X:
-			Arch.path(kit, cross_points(side, cx), CROSS_HALF)
-		_figures(kit, side)
-		_benches(kit, side)
+		for w: Array in walks(side):
+			Arch.path(kit, w[0], w[1])
+	_figures(kit)
+	_benches(kit)
 	_grove(kit)
 	add_child(kit.build("Park"))
 
@@ -131,14 +197,18 @@ func _grove(kit: MeshKit) -> void:
 				Vector3(p.x, Topo.terrain(p.x, p.y) - 0.05, p.y))
 		Props.olive_tree(kit, 5000 + i, xf)
 		i += 1
+	for p: Vector2 in cypress_spots():
+		kit.xform = Transform3D(Basis.IDENTITY.scaled(Vector3(0.9, 0.85, 0.9)), Vector3(p.x, Topo.terrain(p.x, p.y) - 0.05, p.y))
+		Props.cypress(kit)
+	kit.xform = Transform3D.IDENTITY
 
 
-func _figures(kit: MeshKit, side: float) -> void:
-	for f: Array in FIGURES:
-		var z: float = side * float(f[1])
-		var at := Vector3(f[0], Topo.terrain(f[0], z) + 0.05, z)
-		# local +z looks back at the walk, so the north side faces south
-		var xf := Transform3D(Basis(Vector3.UP, deg_to_rad(180.0 if side > 0.0 else 0.0)), at)
+func _figures(kit: MeshKit) -> void:
+	var spots := figure_spots()
+	var looks := figure_facing()
+	for i in spots.size():
+		var f: Array = FIGURES[i / 2]
+		var xf := Transform3D(Basis(Vector3.UP, atan2(looks[i].x, looks[i].y)), spots[i])
 		match String(f[2]):
 			"goddess":
 				Arch.statue(kit, xf, {"h": 2.2, "mat": "column", "helmet": true, "plinth": 0.45})
@@ -148,8 +218,7 @@ func _figures(kit: MeshKit, side: float) -> void:
 				Arch.herm(kit, xf, 1.5)
 
 
-func _benches(kit: MeshKit, side: float) -> void:
-	for b: Array in BENCHES:
-		var z: float = side * float(b[1])
-		var at := Vector3(b[0], Topo.terrain(b[0], z) + 0.05, z)
+func _benches(kit: MeshKit) -> void:
+	for p: Vector2 in _mirrored(BENCHES):
+		var at := Vector3(p.x, Topo.terrain(p.x, p.y) + 0.05, p.y)
 		Arch.bench(kit, Arch.frame(at, Vector3.RIGHT), 1.6)

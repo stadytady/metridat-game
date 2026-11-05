@@ -10,10 +10,8 @@ const PARK := preload("res://scripts/world/park.gd")
 func _walks() -> Array[Array]:
 	var out: Array[Array] = []
 	for side: float in [1.0, -1.0]:
-		out.append(PARK.walk_points(side))
-		out.append(PARK.connector_points(side))
-		for cx: float in PARK.CROSS_X:
-			out.append(PARK.cross_points(side, cx))
+		for w: Array in PARK.walks(side):
+			out.append(w[0])
 	return out
 
 
@@ -34,14 +32,14 @@ func _distance_to_walks(p: Vector2) -> float:
 ## grove.
 func test_the_park_is_big() -> void:
 	var trees := PARK.tree_spots()
-	check(trees.size() >= 40, "the grove is only %d trees" % trees.size())
+	check(trees.size() >= 76, "the grove is only %d trees" % trees.size())
 	var span := 0.0
 	var depth := 0.0
 	for p: Vector2 in trees:
 		span = maxf(span, absf(p.x - PARK.GATE_X))
 		depth = maxf(depth, absf(p.y))
 	check(span >= 8.0, "the grove reaches only %.1f m either way" % span)
-	check(depth >= 22.0, "the grove is only %.1f m out from the axis" % depth)
+	check(depth >= 36.0, "the grove is only %.1f m out from the axis" % depth)
 
 
 func test_walks_follow_the_ground() -> void:
@@ -84,7 +82,7 @@ func test_trees_keep_off_the_walks() -> void:
 
 func test_figures_stand_off_the_walk() -> void:
 	var spots := PARK.figure_spots()
-	check(spots.size() >= 6, "only %d figures" % spots.size())
+	check(spots.size() >= 8, "only %d figures" % spots.size())
 	for p: Vector3 in spots:
 		check(absf(p.y - (Topo.terrain(p.x, p.z) + 0.05)) < 0.2,
 				"a figure floats %.2f m at %s" % [p.y - Topo.terrain(p.x, p.z), p])
@@ -104,3 +102,42 @@ func test_statue_and_herm_build_geometry() -> void:
 	var mesh := kit.commit()
 	check(mesh != null and mesh.get_surface_count() > 0, "the figures left an empty mesh")
 	check(kit._colliders.size() >= 3, "the figures have no colliders")
+
+
+## The bug this park once had: rows planted without looking, so a crown grew
+## through every statue and bench. Nothing stands in a tree.
+func test_figures_and_benches_stand_clear_of_the_trees() -> void:
+	var trees := PARK.tree_spots()
+	for c: Vector2 in PARK.cypress_spots():
+		trees.append(c)
+	for f: Vector3 in PARK.figure_spots():
+		for t: Vector2 in trees:
+			var d := t.distance_to(Vector2(f.x, f.z))
+			check(d >= 2.0, "a tree grows %.1f m from the figure at %s" % [d, f])
+	for b: Array in PARK.BENCHES:
+		for side: float in [1.0, -1.0]:
+			var p := Vector2(b[0], side * float(b[1]))
+			check(PARK.walk_clearance(p) > 0.0, "a bench stands on a walk at %s" % p)
+			for t: Vector2 in trees:
+				check(t.distance_to(p) >= 1.5, "a tree grows through the bench at %s" % p)
+
+
+## Each figure looks at a walk, not into the trees: its gaze reaches the stone
+## within a few steps.
+func test_figures_face_a_walk() -> void:
+	var spots := PARK.figure_spots()
+	var looks := PARK.figure_facing()
+	check(spots.size() == looks.size(), "%d figures, %d facings" % [spots.size(), looks.size()])
+	for i in spots.size():
+		var p := Vector2(spots[i].x, spots[i].z)
+		var reaches := false
+		for k in range(1, 9):
+			if PARK.walk_clearance(p + looks[i] * 0.5 * k) < 0.0:
+				reaches = true
+		check(reaches, "the figure at %s looks away from the walk" % p)
+
+
+func test_cypresses_keep_off_the_walks() -> void:
+	for c: Vector2 in PARK.cypress_spots():
+		check(PARK.walk_clearance(c) > 0.8, "a cypress stands on a walk at %s" % c)
+		check(absf(c.y) > Topo.HILL_HALF.y + 1.5, "a cypress grew on the terrace at %s" % c)
