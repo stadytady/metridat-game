@@ -54,6 +54,10 @@ const POSES := {
 		"l_hip": Vector3(80, 0, 10), "r_hip": Vector3(80, 0, -10), "l_knee": Vector3(-60, 0, 0), "r_knee": Vector3(-60, 0, 0)},
 	# walking upright: the stride itself comes from step_motion()
 	"walk": {"chest": Vector3(-4, 0, 0), "head": Vector3(-8, 0, 0)},
+	# spinning standing: the distaff in the crook of the left arm, wool up by the
+	# shoulder; the right hand before the belly, twirling the thread
+	"spin": {"head": Vector3(-12, 0, 0), "l_shoulder": Vector3(30, 0, 12), "l_elbow": Vector3(100, 0, 0),
+		"r_shoulder": Vector3(28, 0, -10), "r_elbow": Vector3(45, 0, 0)},
 	# stopped and thinking about the part: chin on the hand, eyes on the stones
 	"think": {"chest": Vector3(-6, 0, 0), "head": Vector3(-14, 0, 0),
 		"r_shoulder": Vector3(42, 0, -12), "r_elbow": Vector3(105, 0, 0), "l_shoulder": Vector3(8, 0, 6)},
@@ -61,7 +65,7 @@ const POSES := {
 
 ## Pelvis height for a pose (seated figures sit on something low).
 const SEAT := {"stand": 0.92, "potter": 0.46, "turner": 0.32, "mender": 0.4, "sleep": 0.12, "baker": 0.5, "carry": 0.92, "declaim": 0.92, "draw": 0.92,
-	"walk": 0.92, "think": 0.92}
+	"walk": 0.92, "think": 0.92, "spin": 0.92}
 
 
 ## How a person looks: "woman", "beard" (0 none, 1 short, 2 full), "hair"
@@ -79,6 +83,8 @@ const LOOKS := {
 	"actor": {"beard": 0, "hair": 1, "cloth": "chiton_red"},
 	"baker": {"woman": true, "kerchief": "cloth", "skirt": "none"},
 	"water_carrier": {"woman": true, "kerchief": "chiton_dark", "skirt": "long", "cloth": "chiton_blue"},
+	# dress_woman() gives her the kerchief and the skirt: the look only makes her a woman
+	"cottage_woman": {"woman": true, "skirt": "none", "cloth": "chiton_dark"},
 }
 const DYES := ["chiton", "chiton_red", "chiton_blue", "chiton_ochre"]
 const FACES := ["face_bare", "face_short", "face_beard", "face_woman"]
@@ -292,6 +298,10 @@ static func motion(pose: String, t: float) -> Dictionary:
 			# the free arm sweeps across the seats, the head follows
 			var sweep := sin(q * 0.9)
 			return {"r_shoulder": Vector3(sweep * 12, sweep * 25, 0), "head": Vector3(0, sweep * 15, 0), "chest": Vector3(0, sweep * 6, 0)}
+		"spin":
+			# the fingers twirl the thread; now and then she glances down at the spindle
+			return {"r_elbow": Vector3(sin(q * 6.0) * 6.0, 0, 0), "r_shoulder": Vector3(0, sin(q * 6.0) * 4.0, 0),
+				"head": Vector3(sin(q * 0.4) * 5.0, sin(q * 0.25) * 8.0, 0)}
 		"sleep":
 			# slow breathing
 			return {"chest": Vector3(sin(q * 1.4) * 2.0, 0, 0)}
