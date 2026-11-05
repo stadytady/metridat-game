@@ -43,15 +43,11 @@ func _ready() -> void:
 	_ship = place("ship", ship_pos(), 0.0)
 	for g: GeometryInstance3D in _ship.find_children("*", "GeometryInstance3D", true, false):
 		g.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_laid_deck(_ship, 1.0)
+	laid_ship_deck(_ship)
 	_gangway()
 	_crew()
 	_end_lantern()
 
-
-## The model's floor is the bottom of its hull: lay a deck over it.
-func _laid_deck(ship: Node3D, k: float) -> void:
-	laid_deck(ship, DECK_Y, Vector3(14.6, 0.14, 8.0), k)
 
 
 func _pier(kit: MeshKit) -> void:
