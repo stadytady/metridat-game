@@ -866,15 +866,18 @@ def step(rng, idx, kind):
     t = np.arange(n) / SR
     noise = rng.standard_normal(n)
     if kind == "stone":
-        # A sole on a slab: the flat slap of the foot, a short bright edge off
-        # the stone, the body of the slab and its one damped ring. Ringing modes
-        # up at 1.2-3.4 kHz read as a click rather than a step, so the ring sits
-        # low and quiet, and the edge is a whisper on top of the slap.
-        slap = bandpass(noise, 350, 2900) * np.exp(-t * 58)
-        edge = bandpass(noise, 2500, 6000) * np.exp(-t * 200)
-        body = np.sin(2 * np.pi * rng.uniform(110, 160) * t) * np.exp(-t * 60)
-        slab = np.sin(2 * np.pi * 268.0 * t) * np.exp(-t * 34)
-        x = slap + 0.12 * edge + 0.55 * body + 0.15 * slab
+        # A sole on a slab. The flat slap of the foot, a whisper of bright edge,
+        # the body of the slab and one damped ring - the ring is the stone's own
+        # voice, so the four takes must not share it: same ring on every step and
+        # the walk turns into one sound repeated. Body, ring and the slap's band
+        # come from the take's index, the ring gets a breath of jitter.
+        lo, hi = ((330.0, 2700.0), (400.0, 3050.0), (360.0, 2850.0), (305.0, 2600.0))[idx % 4]
+        slap = bandpass(noise, lo, hi) * np.exp(-t * 58)
+        edge = bandpass(noise, 1800, 5000) * np.exp(-t * 260)
+        body = np.sin(2 * np.pi * (118.0, 146.0, 130.0, 158.0)[idx % 4] * t) * np.exp(-t * 60)
+        ring = np.sin(2 * np.pi * ((742.0, 806.0, 688.0, 768.0)[idx % 4] + rng.uniform(-6.0, 6.0)) * t)
+        ring *= np.exp(-t * (30.0, 26.0, 34.0, 28.0)[idx % 4])
+        x = slap + 0.08 * edge + 0.55 * body + 0.3 * ring
         write_wav(f"step_{kind}_{idx}", norm(x * np.minimum(1.0, (0.18 - t) / 0.02), 0.62))
     else:
         # the pitch varies by index rather than by draw: the generator's shared

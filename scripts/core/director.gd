@@ -899,6 +899,14 @@ func _check_audio(player: CharacterBody3D) -> void:
 		_fail.append("only %d steps rang on the paving" % player.stone_steps)
 	if player.dirt_steps < 5:
 		_fail.append("only %d steps fell on the earth" % player.dirt_steps)
+	# A surface that keeps picking the same take turns the walk into one sound
+	# repeated: every set must have been heard in at least three of its four takes.
+	for kind: StringName in [&"stone", &"dirt"]:
+		var counts: Array = player.takes_used.get(kind, [])
+		var heard := counts.filter(func(c: int) -> bool: return c > 0).size()
+		if heard < 3:
+			_fail.append("%s steps used only %d takes of %d" % [kind, heard, counts.size()])
+		print("steps on %s: %s" % [kind, str(counts)])
 	if amb.gulls_played < 1:
 		_fail.append("no gull call during the walk")
 	if amb.heat > 0.05:

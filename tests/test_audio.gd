@@ -105,6 +105,41 @@ func test_steps_differ_between_paving_and_earth() -> void:
 			"paving (%.0f) is not clearly brighter than earth (%.0f)" % [stone / 4.0, dirt / 4.0])
 
 
+## Zero crossings per second in the tail of a take: a slab is still ringing a
+## tenth of a second after the foot came down, the bare ground is dead by then.
+func _tail_crossings(s: AudioStreamWAV) -> float:
+	var rate := float(s.get_mix_rate())
+	var d := s.get_data()
+	var n := d.size() / 2
+	var from := int(0.06 * rate)
+	var to := mini(int(0.16 * rate), n)
+	if to - from < 64:
+		return 0.0
+	var prev := d.decode_s16(from * 2)
+	var cross := 0
+	for i in range(from + 1, to):
+		var v := d.decode_s16(i * 2)
+		if (v >= 0) != (prev >= 0):
+			cross += 1
+		prev = v
+	return float(cross) / (float(to - from) / rate)
+
+
+## The two grounds must not be mistakable: the paving keeps a ring in the tail,
+## the earth never does.
+func test_paving_rings_and_earth_does_not() -> void:
+	for i in 4:
+		var stone: AudioStreamWAV = load(DIR + "/step_stone_%d.wav" % i)
+		var dirt: AudioStreamWAV = load(DIR + "/step_dirt_%d.wav" % i)
+		check(stone != null and dirt != null, "step take %d did not import" % i)
+		if stone == null or dirt == null:
+			continue
+		var zs := _tail_crossings(stone)
+		var zd := _tail_crossings(dirt)
+		check(zs > 1000.0, "paving take %d does not ring (%.0f crossings/s)" % [i, zs])
+		check(zd < 600.0, "earth take %d rings like a slab (%.0f crossings/s)" % [i, zd])
+
+
 ## The player must have both sets wired, and each one must hold several takes.
 func test_player_has_both_step_sets() -> void:
 	var script: GDScript = load("res://scripts/player/player.gd")
