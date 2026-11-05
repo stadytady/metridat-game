@@ -10,6 +10,8 @@ extends RefCounted
 const BOX := 0.62
 ## Advance width of one letter, as a fraction of the cap height.
 const WIDE := 0.78
+## Side bearing each letter carries, as a fraction of the cap height.
+const BEARING := 0.12
 
 ## Glyphs used by the inscriptions in the game. A letter listed here with no
 ## strokes is a bug the test catches, not something to paper over.
@@ -25,7 +27,7 @@ const GLYPHS := {
 			Vector2(0.18, 1), Vector2(0, 0.82), Vector2(0, 0.18), Vector2(0.18, 0)],
 		[Vector2(0, 0.5), Vector2(0.62, 0.5)]],
 	"Ι": [[Vector2(0.2, 0), Vector2(0.42, 0)], [Vector2(0.31, 0), Vector2(0.31, 1)], [Vector2(0.2, 1), Vector2(0.42, 1)]],
-	"Κ": [[Vector2(0, 0), Vector2(0, 1)], [Vector2(0.6, 0), Vector2(0.02, 0.52)], [Vector2(0.2, 0.34), Vector2(0.6, 1)]],
+	"Κ": [[Vector2(0, 0), Vector2(0, 1)], [Vector2(0.6, 0), Vector2(0.0, 0.44)], [Vector2(0.0, 0.44), Vector2(0.6, 1)]],
 	"Λ": [[Vector2(0, 1), Vector2(0.31, 0), Vector2(0.62, 1)]],
 	"Μ": [[Vector2(0, 1), Vector2(0, 0), Vector2(0.31, 0.62), Vector2(0.62, 0), Vector2(0.62, 1)]],
 	"Ν": [[Vector2(0, 1), Vector2(0, 0), Vector2(0.62, 1), Vector2(0.62, 0)]],
@@ -60,22 +62,41 @@ static func missing(word: String) -> String:
 	return out
 
 
+## The width a glyph actually covers, so narrow letters take less room than wide
+## ones: an even step for every letter is what made the first title look crooked.
+static func glyph_width(ch: String) -> float:
+	var m := 0.0
+	for s: Array in GLYPHS.get(ch.to_upper(), []):
+		for p: Vector2 in s:
+			m = maxf(m, p.x)
+	return m / BOX * WIDE
+
+
+## One letter's step, side bearings included.
+static func advance(ch: String, height: float) -> float:
+	return (glyph_width(ch) + BEARING) * height
+
+
 ## Width of a word at this cap height, letter spacing included.
 static func width_of(word: String, height: float, gap: float) -> float:
-	if word.is_empty():
-		return 0.0
-	return word.length() * WIDE * height + (word.length() - 1) * gap
+	var w := 0.0
+	for i in word.length():
+		w += advance(word[i], height)
+		if i > 0:
+			w += gap
+	return w
 
 
 ## Draws the word with its top-left corner at `at`. `stroke` is the line weight in
 ## pixels; `shadow` pushes a dark copy behind it, the way carved letters read in
-## low sun.
+## low sun. Every corner is stamped so the joints do not thin out.
 static func draw(ci: CanvasItem, word: String, at: Vector2, height: float, gap: float,
 		color: Color, stroke: float, shadow := 0.0, shadow_color := Color(0.05, 0.03, 0.02, 0.9)) -> void:
 	var x := at.x
+	var half := stroke * 0.5
 	for i in word.length():
-		var strokes: Array = GLYPHS.get(word[i].to_upper(), [])
-		for s: Array in strokes:
+		var ch := word[i].to_upper()
+		for s: Array in GLYPHS.get(ch, []):
 			var pts := PackedVector2Array()
 			for p: Vector2 in s:
 				pts.append(Vector2(x + p.x / BOX * WIDE * height, at.y + p.y * height))
@@ -87,4 +108,7 @@ static func draw(ci: CanvasItem, word: String, at: Vector2, height: float, gap: 
 					sh.append(p + Vector2(shadow, shadow))
 				ci.draw_polyline(sh, shadow_color, stroke, false)
 			ci.draw_polyline(pts, color, stroke, false)
-		x += WIDE * height + gap
+			# square off the ends and the corners
+			for p: Vector2 in pts:
+				ci.draw_rect(Rect2(p - Vector2(half, half), Vector2(stroke, stroke)), color)
+		x += advance(ch, height) + gap

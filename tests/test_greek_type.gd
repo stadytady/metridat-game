@@ -23,10 +23,16 @@ func test_every_letter_of_the_name_is_cut() -> void:
 
 
 func test_width_adds_up() -> void:
-	check(is_equal_approx(G.width_of("ΠΑ", 100.0, 20.0), 2.0 * G.WIDE * 100.0 + 20.0), "two letters")
+	check(is_equal_approx(G.width_of("ΠΑ", 100.0, 20.0), G.advance("Π", 100.0) + 20.0 + G.advance("Α", 100.0)), "two letters")
 	check(is_equal_approx(G.width_of("", 100.0, 20.0), 0.0), "an empty word has width")
 
 
 func test_missing_reports_unknown_letters() -> void:
 	check(G.missing("ΠΑΝΤΑ") == "", "ΠΑΝΤΑ reported %s" % G.missing("ΠΑΝΤΑ"))
 	check(G.missing("ΠΑΝΤΑQ") == "Q", "an unknown letter was not reported")
+
+
+## Proportional setting: an iota does not stand on a wide letter's base.
+func test_narrow_letters_take_less_room() -> void:
+	check(G.advance("Ι", 100.0) < G.advance("Π", 100.0), "iota is as wide as pi")
+	check(G.advance(" ", 100.0) < G.advance("Ι", 100.0), "a space is as wide as a letter")
