@@ -58,6 +58,7 @@ static func viewpoints() -> Dictionary:
 		"chickens": [Vector3(12.2, Topo.AGORA_H + 1.3, 3.2), Vector3(15.4, Topo.AGORA_H + 0.2, 5.8)],
 		"sacred_way": [Vector3(29.0, Topo.AGORA_H + 1.6, 3.5), Vector3(35.5, 7.2, -12.0)],
 		"dream": [Vector3(0, 61.6, 2601), Vector3(0, 61.2, 2620)],
+		"prologue": [Prologue.arrival_point() + Vector3(0, 1.6, 0), load("res://scripts/world/harbour.gd").skipper_pos() + Vector3(0, 1.45, 0)],
 		"dream_mound": [Vector3(1.0, 61.7, 2668), Vector3(0, 61.5, 2680)],
 		"dream_stair": [preload("res://scripts/world/dream.gd").ORIGIN + Vector3(0, 1.6, preload("res://scripts/world/dream.gd").DOOR_Z + 0.3), preload("res://scripts/world/dream.gd").ORIGIN + Vector3(0, -preload("res://scripts/world/dream.gd").DEPTH + 0.8, preload("res://scripts/world/dream.gd").stair_end())],
 		"dream_tomb": [preload("res://scripts/world/dream.gd").ORIGIN + preload("res://scripts/world/dream.gd").chamber_center() + Vector3(-0.9, 1.6, -1.7), preload("res://scripts/world/dream.gd").ORIGIN + preload("res://scripts/world/dream.gd").chamber_center() + Vector3(0, 0.6, 0.9)],

@@ -22,6 +22,8 @@ const KEYS := [
 
 ## The hour of the dream (see the last key).
 const DREAM := 1.25
+## The prologue's hour: dusk the day before, the sun just down, lamps coming on.
+const PROLOGUE := 0.82
 
 
 static func sample(t: float) -> Dictionary:

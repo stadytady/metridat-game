@@ -6,6 +6,8 @@ extends CanvasLayer
 
 ## The player asked for the next line, or confirmed the highlighted choice.
 signal advanced
+## The panel shut, at the end of the talk or on Esc.
+signal closed
 
 
 var _panel: PanelContainer
@@ -15,6 +17,7 @@ var _choices: VBoxContainer
 var _keys_hint: Label
 
 var _npc: Npc
+var _counts := true
 var _opened_frame := -1
 var _lines_shown := 0
 var _current: DialogueLine
@@ -60,19 +63,24 @@ func lines_shown() -> int:
 	return _lines_shown
 
 
-func open(npc: Npc) -> void:
+## `resource`/`start` play another conversation in this NPC's voice (the
+## prologue); `counts` false keeps it out of the talks a quest or an
+## achievement counts.
+func open(npc: Npc, resource: DialogueResource = null, start: String = "", counts: bool = true) -> void:
 	_npc = npc
+	_counts = counts
 	_lines_shown = 0
 	_current = null
 	_clear_choices()
 	_panel.visible = true
 	_opened_frame = Engine.get_process_frames()
 	Game.ui_blocking = true
-	if npc.dialogue == null:
+	var res: DialogueResource = resource if resource else npc.dialogue
+	if res == null:
 		push_warning("npc %s has no dialogue resource" % npc.npc_id)
 		_finish()
 		return
-	_run(npc.dialogue, npc.dialogue_start)
+	_run(res, start if not start.is_empty() else npc.dialogue_start)
 
 
 ## Show a line, wait, follow the branch the player picked. Mutations and
@@ -173,7 +181,7 @@ func advance() -> void:
 
 
 func _finish() -> void:
-	if _npc and not _npc.npc_id.is_empty():
+	if _npc and _counts and not _npc.npc_id.is_empty():
 		Game.talked[_npc.npc_id] = true
 		Game.talks[_npc.npc_id] = int(Game.talks.get(_npc.npc_id, 0)) + 1
 	close()
@@ -183,6 +191,7 @@ func close() -> void:
 	_panel.visible = false
 	Game.ui_blocking = false
 	Game.mark_ui_closed()
+	closed.emit()
 
 
 func _process(_delta: float) -> void:

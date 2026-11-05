@@ -31,6 +31,9 @@ var talked := {}
 var talks := {}
 ## True from lying down in the abaton until waking: the hour is DayCycle.DREAM.
 var dreaming := false
+## The arrival at the pier the evening before, until the morning on the hill.
+var prologue := false
+signal prologue_changed(on: bool)
 signal dream_requested
 signal dream_changed(on: bool)
 
@@ -86,6 +89,8 @@ func time_target() -> float:
 		return time_override
 	if dreaming:
 		return DayCycle.DREAM
+	if prologue:
+		return DayCycle.PROLOGUE
 	return DayCycle.target_for(found_count(), total())
 
 

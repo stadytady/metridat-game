@@ -209,3 +209,14 @@ UI_ADMIN_SLEEP_AT,Lie down in the abaton,Лечь в абатоне
 UI_ADMIN_WAKE,Wake up,Проснуться
 UI_ADMIN_LAMPS,Light every lamp,Зажечь все светильники
 UI_ADMIN_ENTER_DREAM,Enter the dream,Войти в сон
+LOC_PRO_1,That's the pier. The Swallow goes no further: off you go while there's light.,"Вот и пристань. Дальше «Ласточка» не идёт: сходи, пока светло."
+LOC_PRO_CHOICE_DREAM,I've dreamed of this shore.,Мне снился этот берег.
+LOC_PRO_DREAM_1,You slept the whole way and called out to someone in your sleep. I didn't ask.,Всю дорогу ты спал и звал кого-то во сне. Я не спрашивал.
+LOC_PRO_DREAM_2,"If dreams brought you here, they read them at Hecate's on the hill. But you go to her at night, when every lamp is lit.","Если тебя привели сны, их толкуют у Гекаты на горе. Только к ней приходят ночью, когда зажжены все огни."
+LOC_PRO_CHOICE_CITY,What town is this?,Что это за город?
+LOC_PRO_CITY_1,"A town on a hill. From the top you see everything: the roofs, the strait, who sails where.","Город на горе. Сверху видно всё: и крыши, и пролив, и кто куда плывёт."
+LOC_PRO_CITY_2,"Walk about, look, talk to people. They like being asked here.","Походи, посмотри, поговори с людьми. Здесь любят, когда спрашивают."
+LOC_PRO_CHOICE_NIGHT,Where do I sleep tonight?,Где мне переночевать?
+LOC_PRO_NIGHT_1,"Sleep at the stern, it's out of the wind under the sail. In the morning climb the hill: everyone new here starts there.","Ночуй на корме, под парусом не дует. А утром поднимись на холм: оттуда начинают все, кто тут впервые."
+LOC_PRO_END,"Go on, then. And don't linger by the water after dark.","Ну, ступай. И не задерживайся у воды, когда стемнеет."
+UI_PROLOGUE_MORNING,Morning,Утро

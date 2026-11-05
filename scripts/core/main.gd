@@ -52,7 +52,13 @@ func _ready() -> void:
 		title.name = "TitleScreen"
 		add_child(title)
 		$HUD.set_visible_ui(false)
-		title.started.connect(func() -> void: $HUD.set_visible_ui(true))
+		title.started.connect(func() -> void:
+			$HUD.set_visible_ui(true)
+			# the evening before: off the ship, a word with Damon, then morning
+			var prologue := Prologue.new()
+			prologue.name = "Prologue"
+			add_child(prologue)
+			prologue.begin())
 		title.open()
 
 

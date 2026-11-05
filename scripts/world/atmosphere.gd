@@ -72,6 +72,10 @@ func _ready() -> void:
 
 	t = Game.time_target()
 	apply(t)
+	# the prologue begins and ends behind a fade: the hour jumps, it does not glide
+	Game.prologue_changed.connect(func(_on: bool) -> void:
+		t = Game.time_target()
+		apply(t))
 
 
 func _process(delta: float) -> void:
