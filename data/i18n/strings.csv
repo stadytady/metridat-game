@@ -191,3 +191,21 @@ UI_ACTION_JOURNAL,Journal,Журнал
 UI_ACTION_GOALS,The way,Путь
 UI_ACTION_PAUSE,Pause,Пауза
 UI_LEAN,Lean closer,Склониться
+UI_ADMIN_TITLE,Developer,Отладка
+UI_ADMIN_TIME,Time,Время
+UI_ADMIN_PLACES,Places,Места
+UI_ADMIN_NORMAL,Normal clock,Обычный ход
+UI_ADMIN_NORMAL_VALUE,from finds,по находкам
+UI_ADMIN_MORNING,Morning,Утро
+UI_ADMIN_NOON,Noon,Полдень
+UI_ADMIN_SUNSET,Sunset,Закат
+UI_ADMIN_DUSK,Dusk,Сумерки
+UI_ADMIN_NIGHT,Night,Ночь
+UI_ADMIN_LATE,Deep night,Глубокая ночь
+UI_ADMIN_DREAM,Dream hour,Час сна
+UI_ADMIN_KEYS,"TAB/`~ close    up/down move    E apply    left/right page","`~ закрыть    вверх/вниз выбор    E применить    влево/вправо раздел"
+UI_ADMIN_SCENE,Scene,Сцена
+UI_ADMIN_SLEEP_AT,Lie down in the abaton,Лечь в абатоне
+UI_ADMIN_WAKE,Wake up,Проснуться
+UI_ADMIN_LAMPS,Light every lamp,Зажечь все светильники
+UI_ADMIN_ENTER_DREAM,Enter the dream,Войти в сон

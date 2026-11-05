@@ -67,6 +67,7 @@ func _setup_input() -> void:
 		&"interact": [KEY_E],
 		&"pause": [KEY_ESCAPE],
 		&"journal": [KEY_J],
+		&"admin": [KEY_QUOTELEFT],
 		&"goals": [KEY_TAB],
 		&"perf_overlay": [KEY_F3],
 	}
