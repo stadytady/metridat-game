@@ -103,3 +103,49 @@ func test_apparition_crumbles_away() -> void:
 	var whole: Variant = head.get_instance_shader_parameter(&"fade")
 	check(a.visible and not a.gone and whole is float and whole == 1.0, "not whole again after reset")
 	a.free()
+
+
+func test_named_people_look_different() -> void:
+	var seen := {}
+	for id: String in Figure.LOOKS:
+		var l: Dictionary = Figure.look_for(id)
+		seen["%s|%s|%s|%s" % [Figure.face_of(l), l.get("hair", 0), l.get("cloth", ""), l.get("woman", false)]] = true
+	check(seen.size() == Figure.LOOKS.size(), "two named people look alike: %d looks for %d people" % [seen.size(), Figure.LOOKS.size()])
+	check(Figure.face_of(Figure.look_for("baker")) == "face_woman", "Myrto has a man's face")
+	check(Figure.face_of(Figure.look_for("potter")) == "face_beard", "the potter lost his beard")
+
+
+func test_passers_by_vary_and_keep_their_look() -> void:
+	var faces := {}
+	var dyes := {}
+	for i in 40:
+		var key := "%d,%d" % [i * 37, -i * 11]
+		var l := Figure.look_for(key)
+		check(l == Figure.look_for(key), "a passer-by changes look: %s" % key)
+		faces[Figure.face_of(l)] = true
+		dyes[l.get("cloth", "")] = true
+	check(faces.size() >= 3, "passers-by have %d faces" % faces.size())
+	check(dyes.size() >= 3, "passers-by wear %d colours" % dyes.size())
+
+
+func test_the_face_is_painted_on_the_front() -> void:
+	for look: Dictionary in [Figure.look_for("potter"), Figure.look_for("baker"), Figure.look_for("turner")]:
+		var root := Node3D.new()
+		var joints := Figure.build(root, "chiton", look)
+		var want := Figure.face_of(look)
+		var found := false
+		for mi: MeshInstance3D in (joints["head"] as Node3D).find_children("*", "MeshInstance3D", false, false):
+			for s in mi.mesh.get_surface_count():
+				if mi.mesh.surface_get_material(s).resource_name != want:
+					continue
+				found = true
+				var v: PackedVector3Array = mi.mesh.surface_get_arrays(s)[Mesh.ARRAY_VERTEX]
+				for i in range(0, v.size(), 3):
+					var n := (v[i + 2] - v[i]).cross(v[i + 1] - v[i])
+					check(n.z < 0.0, "%s faces into the head" % want)
+					check(v[i].z < -0.105, "%s sits inside the head at z %.3f" % [want, v[i].z])
+		check(found, "no %s on the head" % want)
+		# every part hangs something off its joint
+		for name: String in Figure.RIG:
+			check((joints[name] as Node3D).get_child_count() > 0, "%s has no mesh" % name)
+		root.free()

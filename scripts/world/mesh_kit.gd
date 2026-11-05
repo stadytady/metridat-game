@@ -114,6 +114,44 @@ func box(mat: String, center: Vector3, size: Vector3, skip: Array = ["bottom"], 
 		quad(mats.get(f, mat), q[0], q[1], q[2], q[3])
 
 
+## A box whose top is a different size from its bottom (a tapered torso, a
+## flaring hem). `base` is the centre of the bottom face; `bottom`/`top` are
+## (width, depth). Faces as in box(), counter-clockwise from outside. With
+## `folds` > 1 each side face is cut into that many vertical strips shaded in
+## turn through the vertex colour: cloth folds, the PS1 way, with no texture.
+func frustum(mat: String, base: Vector3, bottom: Vector2, top: Vector2, height: float, skip: Array = [], folds: int = 1) -> void:
+	var b := func(sx: float, sz: float) -> Vector3:
+		return base + Vector3(sx * bottom.x / 2.0, 0, sz * bottom.y / 2.0)
+	var t := func(sx: float, sz: float) -> Vector3:
+		return base + Vector3(sx * top.x / 2.0, height, sz * top.y / 2.0)
+	var faces := {
+		"top": [t.call(-1, 1), t.call(1, 1), t.call(1, -1), t.call(-1, -1)],
+		"bottom": [b.call(-1, -1), b.call(1, -1), b.call(1, 1), b.call(-1, 1)],
+		"px": [b.call(1, 1), b.call(1, -1), t.call(1, -1), t.call(1, 1)],
+		"nx": [b.call(-1, -1), b.call(-1, 1), t.call(-1, 1), t.call(-1, -1)],
+		"pz": [b.call(-1, 1), b.call(1, 1), t.call(1, 1), t.call(-1, 1)],
+		"nz": [b.call(1, -1), b.call(-1, -1), t.call(-1, -1), t.call(1, -1)],
+	}
+	var base_color := color
+	for f: String in faces:
+		if f in skip:
+			continue
+		var q: Array = faces[f]
+		var n := folds if f != "top" and f != "bottom" else 1
+		for i in n:
+			var u0 := float(i) / n
+			var u1 := float(i + 1) / n
+			var a: Vector3 = (q[0] as Vector3).lerp(q[1], u0)
+			var bb: Vector3 = (q[0] as Vector3).lerp(q[1], u1)
+			var c: Vector3 = (q[3] as Vector3).lerp(q[2], u1)
+			var d: Vector3 = (q[3] as Vector3).lerp(q[2], u0)
+			if n > 1:
+				color = base_color * (1.0 if i % 2 == 0 else 0.82)
+				color.a = base_color.a
+			quad(mat, a, bb, c, d)
+	color = base_color
+
+
 ## Box that also gets a collider.
 func solid_box(mat: String, center: Vector3, size: Vector3, skip: Array = ["bottom"], mats: Dictionary = {}) -> void:
 	box(mat, center, size, skip, mats)

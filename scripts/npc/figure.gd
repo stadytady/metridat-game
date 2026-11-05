@@ -1,8 +1,9 @@
 class_name Figure
 extends RefCounted
-## Rigid-segment low-poly person, the way PS1 games built characters: one box
-## mesh per body part hanging off a joint (Node3D), animated by rotating the
-## joints. Faces -Z. A positive X rotation swings a hanging limb forward, but
+## Rigid-segment low-poly person, the way PS1 games built characters: one mesh
+## per body part hanging off a joint (Node3D), animated by rotating the joints.
+## The parts are tapered (six-sided limbs, a torso wider at the shoulders),
+## with hands, sandalled feet, a painted face and a look (LOOKS) of its own. Faces -Z. A positive X rotation swings a hanging limb forward, but
 ## tips an upright segment (chest, head) backwards: lean forward is negative X.
 
 ## joint name -> [parent, offset from parent, segment size, segment material, segment centre offset]
@@ -63,8 +64,43 @@ const SEAT := {"stand": 0.92, "potter": 0.46, "turner": 0.32, "mender": 0.4, "sl
 	"walk": 0.92, "think": 0.92}
 
 
+## How a person looks: "woman", "beard" (0 none, 1 short, 2 full), "hair"
+## (0 cropped, 1 curly, 2 thinning), "cloth" (dyed tunic, only where the caller
+## left the plain "chiton"), "kerchief" (its cloth), "skirt" ("short" tunic, "long" to the
+## ankles, "none" when the caller dresses the legs itself), "shroud" (no face
+## parts: a hood goes over the head).
+const LOOKS := {
+	"potter": {"beard": 2, "hair": 1, "cloth": "chiton_ochre"},
+	"turner": {"beard": 0, "hair": 0},
+	"fisher": {"beard": 1, "hair": 2},
+	"sailor": {"beard": 2, "hair": 0},
+	"carrier": {"beard": 1, "hair": 1},
+	"splicer": {"beard": 0, "hair": 1},
+	"actor": {"beard": 0, "hair": 1, "cloth": "chiton_red"},
+	"baker": {"woman": true, "kerchief": "cloth", "skirt": "none"},
+	"water_carrier": {"woman": true, "kerchief": "chiton_dark", "skirt": "long", "cloth": "chiton_blue"},
+}
+const DYES := ["chiton", "chiton_red", "chiton_blue", "chiton_ochre"]
+const FACES := ["face_bare", "face_short", "face_beard", "face_woman"]
+
+
+## A look for anyone: the named ones from LOOKS, the rest picked by a hash of
+## their key, so the same person looks the same every time and two passers-by
+## are not twins.
+static func look_for(key: String) -> Dictionary:
+	if LOOKS.has(key):
+		return LOOKS[key]
+	var h := hash(key)
+	return {"beard": posmod(h, 3), "hair": posmod(h >> 3, 3), "cloth": DYES[posmod(h >> 6, DYES.size())]}
+
+
+static func face_of(look: Dictionary) -> String:
+	return FACES[3] if look.get("woman", false) else FACES[clampi(int(look.get("beard", 0)), 0, 2)]
+
+
 ## Builds the joints under `root`; returns {joint name: Node3D}.
-static func build(root: Node3D, body_mat: String = "chiton") -> Dictionary:
+static func build(root: Node3D, body_mat: String = "chiton", look: Dictionary = {}) -> Dictionary:
+	var cloth: String = look.get("cloth", body_mat) if body_mat == "chiton" else body_mat
 	var joints := {}
 	for name: String in RIG:
 		var spec: Array = RIG[name]
@@ -74,16 +110,86 @@ static func build(root: Node3D, body_mat: String = "chiton") -> Dictionary:
 		var parent: Node3D = root if spec[0] == "" else joints[spec[0]]
 		parent.add_child(j)
 		joints[name] = j
-		var mat: String = body_mat if spec[3] == "chiton" else spec[3]
 		var kit := MeshKit.new()
-		kit.box(mat, spec[4], spec[2], [])
-		if name == "head":
-			kit.box("hair", Vector3(0, 0.25, 0.02), Vector3(0.21, 0.07, 0.23), [])
-			kit.box("hair", Vector3(0, 0.15, 0.1), Vector3(0.21, 0.16, 0.05), [])
+		_segment(kit, name, cloth, look)
 		var mi := MeshInstance3D.new()
 		mi.mesh = kit.commit()
 		j.add_child(mi)
 	return joints
+
+
+## One body part, in its joint's frame (limbs hang down -y, the face looks -z).
+static func _segment(kit: MeshKit, name: String, cloth: String, look: Dictionary) -> void:
+	var woman: bool = look.get("woman", false)
+	match name:
+		"pelvis":
+			kit.frustum(cloth, Vector3(0, -0.08, 0), Vector2(0.36 if woman else 0.31, 0.21), Vector2(0.32, 0.2), 0.16)
+			kit.box("belt", Vector3(0, 0.07, 0), Vector3(0.33, 0.04, 0.215), [])
+			var skirt: String = look.get("skirt", "long" if woman else "short")
+			if skirt == "short":
+				# the tunic's hem flares over the thighs, a madder border at its edge
+				kit.frustum(cloth, Vector3(0, -0.32, 0), Vector2(0.42, 0.3), Vector2(0.32, 0.21), 0.26, ["top", "bottom"], 4)
+				kit.frustum("hem", Vector3(0, -0.34, 0), Vector2(0.425, 0.305), Vector2(0.42, 0.3), 0.03, ["top", "bottom"])
+			elif skirt == "long":
+				kit.frustum(cloth, Vector3(0, -0.84, 0), Vector2(0.46, 0.36), Vector2(0.34, 0.22), 0.8, ["top", "bottom"], 5)
+				kit.frustum("hem", Vector3(0, -0.86, 0), Vector2(0.465, 0.365), Vector2(0.46, 0.36), 0.03, ["top", "bottom"])
+		"chest":
+			var waist := Vector2(0.29 if woman else 0.31, 0.2)
+			var shoulders := Vector2(0.36 if woman else 0.4, 0.22)
+			kit.frustum(cloth, Vector3.ZERO, waist, shoulders, 0.44, ["bottom"], 3)
+			# shoulders sloping to the neck, then the neck itself
+			kit.frustum(cloth, Vector3(0, 0.44, 0), shoulders, Vector2(0.24, 0.17), 0.08, ["bottom"])
+			kit.lathe("skin", PackedVector2Array([Vector2(0.045, 0.5), Vector2(0.045, 0.57)]), 6, Vector3.ZERO, 1.0, true, "", true)
+		"head":
+			kit.box("skin", Vector3(0, 0.13, 0), Vector3(0.19, 0.23, 0.21), [])
+			if look.get("shroud", false):
+				return
+			# the face: a painted quad just proud of the front, uv 0..1 so the
+			# whole 32 px face lands on it, mirrored as seen from the front
+			var z := -0.1065
+			var x := 0.095
+			kit.quad(face_of(look), Vector3(x, 0.015, z), Vector3(-x, 0.015, z), Vector3(-x, 0.245, z), Vector3(x, 0.245, z),
+					PackedVector2Array([Vector2(0, 1), Vector2(1, 1), Vector2(1, 0), Vector2(0, 0)]))
+			kit.box("skin", Vector3(0, 0.12, -0.118), Vector3(0.035, 0.05, 0.025), [])  # nose
+			_hair(kit, look)
+		"l_shoulder", "r_shoulder":
+			kit.lathe("skin", PackedVector2Array([Vector2(0.038, -0.3), Vector2(0.046, 0.0)]), 6, Vector3.ZERO, 1.0, true, "", true)
+			# a short sleeve of the tunic over the top of the arm
+			kit.lathe(cloth, PackedVector2Array([Vector2(0.058, -0.13), Vector2(0.06, 0.03)]), 6, Vector3.ZERO, 1.0, true, "", true)
+		"l_elbow", "r_elbow":
+			kit.lathe("skin", PackedVector2Array([Vector2(0.03, -0.24), Vector2(0.038, 0.0)]), 6, Vector3.ZERO, 1.0, true, "", true)
+			kit.box("skin", Vector3(0, -0.285, -0.005), Vector3(0.05, 0.085, 0.03), [])  # hand
+		"l_hip", "r_hip":
+			kit.lathe("skin", PackedVector2Array([Vector2(0.052, -0.44), Vector2(0.068, 0.0)]), 6, Vector3.ZERO, 1.0, true, "", true)
+		"l_knee", "r_knee":
+			kit.lathe("skin", PackedVector2Array([Vector2(0.036, -0.4), Vector2(0.05, 0.0)]), 6, Vector3.ZERO, 1.0, true, "", true)
+			kit.box("belt", Vector3(0, -0.415, -0.045), Vector3(0.075, 0.05, 0.2), [])  # a sandalled foot
+
+
+static func _hair(kit: MeshKit, look: Dictionary) -> void:
+	if look.get("woman", false):
+		kit.box("hair", Vector3(0, 0.25, 0.02), Vector3(0.21, 0.07, 0.23), [])
+		kit.box("hair", Vector3(0, 0.02, 0.12), Vector3(0.18, 0.3, 0.06), [])  # down the back
+		var kerchief: String = look.get("kerchief", "")
+		if not kerchief.is_empty():
+			kit.box(kerchief, Vector3(0, 0.26, 0.02), Vector3(0.23, 0.06, 0.25), [])
+			kit.box(kerchief, Vector3(0, 0.18, 0.11), Vector3(0.23, 0.14, 0.05), [])
+		return
+	match int(look.get("hair", 0)):
+		1:  # curly: fuller on top and over the ears
+			kit.box("hair", Vector3(0, 0.26, 0.02), Vector3(0.23, 0.09, 0.25), [])
+			kit.box("hair", Vector3(0, 0.15, 0.1), Vector3(0.23, 0.18, 0.07), [])
+		2:  # thinning: a fringe of grey-dark at the back and sides
+			kit.box("hair", Vector3(0, 0.255, 0.05), Vector3(0.2, 0.035, 0.15), [])
+			kit.box("hair", Vector3(0, 0.15, 0.1), Vector3(0.21, 0.14, 0.05), [])
+		_:  # cropped
+			kit.box("hair", Vector3(0, 0.25, 0.02), Vector3(0.21, 0.07, 0.23), [])
+			kit.box("hair", Vector3(0, 0.15, 0.1), Vector3(0.21, 0.16, 0.05), [])
+	match int(look.get("beard", 0)):
+		1:
+			kit.box("hair", Vector3(0, 0.02, -0.085), Vector3(0.16, 0.06, 0.05), [])
+		2:
+			kit.box("hair", Vector3(0, 0.0, -0.08), Vector3(0.19, 0.11, 0.07), [])
 
 
 ## The mysterious figure (the night street, the dream path): a standing body
@@ -92,7 +198,7 @@ static func build(root: Node3D, body_mat: String = "chiton") -> Dictionary:
 ## only black (`void`), the same from every angle and in any light. Both
 ## materials use psx_ghost, so an Apparition can dissolve it.
 static func shrouded(root: Node3D) -> Dictionary:
-	var joints := build(root, "robe")
+	var joints := build(root, "robe", {"shroud": true, "skirt": "none"})
 	apply_pose(joints, "stand")
 	var robe: Material = Mats.get_mat("robe")
 	for mi: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):

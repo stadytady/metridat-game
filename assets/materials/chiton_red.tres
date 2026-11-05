@@ -1,0 +1,11 @@
+[gd_resource type="ShaderMaterial" load_steps=3 format=3]
+
+[ext_resource type="Shader" path="res://assets/shaders/psx_lit.gdshader" id="1_s"]
+[ext_resource type="Texture2D" path="res://assets/textures/chiton.png" id="2_t"]
+
+[resource]
+resource_name = "chiton_red"
+shader = ExtResource("1_s")
+shader_parameter/albedo_tex = ExtResource("2_t")
+shader_parameter/tint = Color(0.7686, 0.5020, 0.4078, 1)
+shader_parameter/uv_scale = Vector2(1.0, 1.0)

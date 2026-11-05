@@ -347,15 +347,4 @@ func _well() -> void:
 	woman.body_mat = "chiton"
 	woman.talkable = false
 	woman.position = w + Vector3(0, 0, 1.0)  # faces -z, the well
-	add_child(woman)
-	var hk := MeshKit.new()
-	hk.box("hair", Vector3(0, 0.02, 0.12), Vector3(0.18, 0.3, 0.06), [])  # hair down the back
-	hk.box("chiton_dark", Vector3(0, 0.25, 0.02), Vector3(0.23, 0.06, 0.25), [])  # kerchief
-	var hm := MeshInstance3D.new()
-	hm.mesh = hk.commit()
-	(woman.joints["head"] as Node3D).add_child(hm)
-	var sk := MeshKit.new()
-	sk.box("chiton", Vector3(0, -0.45, 0), Vector3(0.36, 0.8, 0.26), [])  # a long chiton to the ankles
-	var sm := MeshInstance3D.new()
-	sm.mesh = sk.commit()
-	(woman.joints["pelvis"] as Node3D).add_child(sm)
+	add_child(woman)  # hair, kerchief and the long chiton: Figure.LOOKS["water_carrier"]
