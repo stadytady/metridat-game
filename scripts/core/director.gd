@@ -9,6 +9,9 @@ extends Node
 
 var _out := "user://shots"
 var _only: PackedStringArray = []
+## A single shot from anywhere: "--at=x,z" and "--yaw=degrees".
+var _at := ""
+var _at_yaw := 0.0
 
 
 func _ready() -> void:
@@ -23,6 +26,11 @@ func _ready() -> void:
 			# Not Game.set_language(): automation must not overwrite saved settings.
 			Game.language = a.substr(7)
 			TranslationServer.set_locale(Game.language)
+		elif a.begins_with("--at="):
+			# A shot from anywhere: --at=x,z looks along --yaw (degrees, 0 = -z).
+			_at = a.substr(5)
+		elif a.begins_with("--yaw="):
+			_at_yaw = a.substr(6).to_float()
 	if "--shots" in OS.get_cmdline_user_args():
 		_shots.call_deferred()
 	elif "--walkthrough" in OS.get_cmdline_user_args():
@@ -45,6 +53,11 @@ func _shots() -> void:
 		for lamp: Lamp in Game.lamps:
 			lamp.interact()
 	await _frames(10)
+	# A one-off look from anywhere, so a new prop can be checked without editing
+	# World.viewpoints() first: --at=x,z --yaw=deg [--name=look].
+	if _at != "":
+		await _shot_at(player)
+		return
 	var vps: Dictionary = _main().world.viewpoints()
 	for name: String in vps:
 		if not _only.is_empty() and name not in _only:
@@ -69,6 +82,23 @@ func _shots() -> void:
 
 
 ## Prompt, info panel and pause menu over the agora.
+## One frame from an arbitrary spot: eye at ground + 1.6 m, looking along yaw.
+func _shot_at(player: CharacterBody3D) -> void:
+	var bits := _at.split(",")
+	var x := bits[0].to_float()
+	var z := bits[1].to_float() if bits.size() > 1 else 0.0
+	var eye := Vector3(x, Topo.surface(x, z) + 1.6, z)
+	player.global_position = eye - Vector3(0, 1.6, 0)
+	var yaw := deg_to_rad(_at_yaw)
+	player.look_at_point(eye + Vector3(-sin(yaw), 0, -cos(yaw)) * 14.0)
+	player.camera.position.y = 0.0
+	await _frames(10)
+	var name := "at_%d_%d" % [roundi(x), roundi(z)]
+	var img := get_viewport().get_texture().get_image()
+	img.save_png(_out.path_join(name + ".png"))
+	print("shot ", _out.path_join(name + ".png"))
+
+
 func _ui_shots(player: CharacterBody3D) -> void:
 	var hud: Node = _main().get_node("HUD")
 	hud.set_visible_ui(false)
@@ -533,6 +563,9 @@ func _check_dream(player: CharacterBody3D) -> void:
 		_fail.append("the dream's drone goes on after waking")
 	if Game.dreaming or player.global_position.distance_to(abaton) > 1.5:
 		_fail.append("did not wake in the abaton (dreaming %s, at %s)" % [Game.dreaming, player.global_position])
+	if not Achievements.is_unlocked("ACH_DREAM"):
+		_fail.append("the dream did not unlock its achievement")
+	print("achievements: %d of %d" % [Achievements.count(), Achievements.LIST.size()])
 	if env.fog_depth_end < 300.0:
 		_fail.append("night fog did not come back after waking: %.0f m" % env.fog_depth_end)
 	var j: Node = _main().get_node("JournalPanel")
@@ -645,6 +678,8 @@ func _light_nearby(player: CharacterBody3D) -> void:
 			lamp.lit = true  # do not retry forever
 		else:
 			print("lit lamp %d/%d" % [Game.lamps_lit(), Game.lamps.size()])
+			if not lamp.just_caught():
+				_fail.append("lamp at %s lit without the catch of the flame" % lamp.global_position)
 
 
 ## All finds bring the night; every lamp should be lit by the end of the route.
@@ -657,6 +692,46 @@ func _check_night() -> void:
 	if Game.lamps_lit() != Game.lamps.size():
 		_fail.append("lit %d of %d lamps" % [Game.lamps_lit(), Game.lamps.size()])
 	print("night: hour %.2f, lamps %d/%d" % [atm.t, Game.lamps_lit(), Game.lamps.size()])
+	# A lit lamp must also be heard: the burning bed is what says it is burning.
+	var silent := 0
+	for l: Lamp in Game.lamps:
+		if l.lit and not l.looping():
+			silent += 1
+	if silent > 0:
+		_fail.append("%d of %d lit lamps are silent" % [silent, Game.lamps.size()])
+	print("lamps: %d of %d burning" % [Game.lamps.size() - silent, Game.lamps.size()])
+	# The square's braziers and column lamps follow the same dusk.
+	var night_fires := get_tree().get_nodes_in_group(&"night_fire")
+	if night_fires.size() < 10:
+		_fail.append("agora: %d dusk fires, expected 10" % night_fires.size())
+	for f: Node in night_fires:
+		if not f.lit:
+			_fail.append("agora: a brazier stayed dark after dusk")
+			break
+	print("agora: %d dusk fires lit of %d" % [night_fires.filter(func(f: Node) -> bool: return f.lit).size(), night_fires.size()])
+	# Everything the route does should have paid out; the dream one comes later.
+	var missing: PackedStringArray = []
+	for id: String in ["ACH_FIRST_FIND", "ACH_ALL_FINDS", "ACH_ALL_LAMPS", "ACH_HEARD_ALL"]:
+		if not Achievements.is_unlocked(id):
+			missing.append(id)
+	if not missing.is_empty():
+		_fail.append("achievements still locked: %s" % ", ".join(missing))
+	print("achievements after the route: %d of %d" % [Achievements.count(), Achievements.LIST.size()])
+	# The square must also be heard: the murmur bed runs for the whole slice.
+	var amb: Node = _main().world.get_node_or_null("Ambience")
+	if amb != null:
+		var market: AudioStreamPlayer3D = amb.get_node_or_null("Market")
+		if market == null or not market.playing:
+			_fail.append("the market is silent")
+	# Every lamp is lit by now, so the two by the orchestra have answered too.
+	var fires := get_tree().get_nodes_in_group(&"corner_fire")
+	if fires.size() < 4:
+		_fail.append("theatre: %d corner fires, expected 4" % fires.size())
+	for f: Node in fires:
+		if not f.lit:
+			_fail.append("theatre: a corner fire stayed dark with every lamp lit")
+			break
+	print("theatre: %d corner fires lit" % fires.filter(func(f: Node) -> bool: return f.lit).size())
 	var om: Node = _main().world.get_node("Omens")
 	if not om.night:
 		_fail.append("omens: night not noticed")
