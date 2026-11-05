@@ -45,20 +45,14 @@ func _ready() -> void:
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(col)
 	col.add_child(_band())
-	var title := Label.new()
-	title.text = TITLE  # a proper name, the same in every language
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var fv := FontVariation.new()
-	fv.base_font = ThemeDB.fallback_font
-	fv.spacing_glyph = 22  # wide, even spacing of a carved inscription
-	fv.variation_embolden = 0.6
-	title.add_theme_font_override("font", fv)
-	title.add_theme_font_size_override("font_size", 112)
-	title.add_theme_color_override("font_color", GOLD)
-	title.add_theme_color_override("font_shadow_color", SHADOW)
-	title.add_theme_constant_override("shadow_offset_x", 5)
-	title.add_theme_constant_override("shadow_offset_y", 5)
-	col.add_child(title)
+	# the name itself in Greek capitals, cut rather than typed
+	col.add_child(GreekTitle.new())
+	var latin := Label.new()
+	latin.text = "PANTICAPAEUM"
+	latin.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	latin.add_theme_font_size_override("font_size", 18)
+	latin.add_theme_color_override("font_color", Color(UiStyle.MUTED, 0.75))
+	col.add_child(latin)
 	col.add_child(_band())
 	var gap := Control.new()
 	gap.custom_minimum_size = Vector2(0, 40)

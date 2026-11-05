@@ -5,6 +5,8 @@ extends Node3D
 ## Everything is stepped at 15 fps.
 
 const BODY_Y := 1.12
+## The rump ends at z = 0.65; the tail hangs just behind it, not inside it.
+const TAIL_Z := 0.68
 
 var _head: Node3D
 var _tail: Node3D
@@ -46,11 +48,12 @@ func _ready() -> void:
 	_ear_l = _head
 	# tail on its own pivot
 	_tail = Node3D.new()
-	_tail.position = Vector3(0, BODY_Y + 0.18, 0.6)
+	# on the rear face of the rump, not buried in it
+	_tail.position = Vector3(0, BODY_Y + 0.12, TAIL_Z)
 	add_child(_tail)
 	var tk := MeshKit.new()
-	tk.box("hair", Vector3(0, -0.26, 0), Vector3(0.05, 0.5, 0.05), [])
-	tk.box("dark", Vector3(0, -0.54, 0), Vector3(0.09, 0.12, 0.09), [])
+	tk.box("hair", Vector3(0, -0.28, 0.01), Vector3(0.055, 0.56, 0.055), [])
+	tk.box("dark", Vector3(0, -0.6, 0.02), Vector3(0.1, 0.14, 0.1), [])
 	var tm := MeshInstance3D.new()
 	tm.mesh = tk.commit()
 	_tail.add_child(tm)

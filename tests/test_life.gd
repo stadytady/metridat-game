@@ -63,3 +63,47 @@ func test_yard_is_across_the_lane() -> void:
 	var w := L.well_pos()
 	check(absf(d) > Topo.STREET_HALF + 1.0, "the yard's fence is in the lane")
 	check(signf(d) != signf(w.z - Topo.street_z(w.x)), "the yard is on the well's side, not across")
+
+
+## The pen is a pen: posts around it, rails between neighbours, one gate opening.
+func test_yard_fence_is_a_closed_pen_with_one_gate() -> void:
+	var f: Dictionary = L.yard_fence()
+	var posts: Array = f["posts"]
+	var rails: Array = f["rails"]
+	var gate: Vector2i = f["gate"]
+	# every rail is a short span between two posts, not a plank hanging in the air
+	for r: Vector2i in rails:
+		var a: Vector2 = posts[r.x]
+		var b: Vector2 = posts[r.y]
+		var span := a.distance_to(b)
+		check(span <= 1.6, "a rail spans %.2f m between posts" % span)
+	# no post stands on its own
+	var used := {}
+	for r: Vector2i in rails:
+		used[r.x] = true
+		used[r.y] = true
+	for i in posts.size():
+		check(used.has(i), "post %d has no rails" % i)
+	# the gate is the only way in, and a person fits through it
+	var opening: float = (posts[gate.x] as Vector2).distance_to(posts[gate.y] as Vector2)
+	check(opening > 0.9, "the gate is only %.2f m wide" % opening)
+	check(opening < 1.4, "the gate is %.2f m — the pen barely closes" % opening)
+	# the fence is off the paving, or the lane would run through the pen
+	for p: Vector2 in posts:
+		var off := absf(p.y - Topo.street_z(p.x))
+		check(off > Topo.STREET_HALF, "a post stands on the lane at %s" % p)
+
+## The tail hangs behind the rump: inside it, a mule looks docked.
+func test_mule_tail_hangs_behind_the_rump() -> void:
+	var mule := preload("res://scripts/world/mule.gd")
+	check(mule.TAIL_Z > 0.65, "the tail sits in the rump at z=%.2f" % mule.TAIL_Z)
+
+
+## The gate is shut: a leaf that reaches across the opening.
+func test_yard_gate_leaf_closes_the_opening() -> void:
+	var f: Dictionary = L.yard_fence()
+	var posts: Array = f["posts"]
+	var gate: Vector2i = f["gate"]
+	var opening: float = (posts[gate.x] as Vector2).distance_to(posts[gate.y] as Vector2)
+	check(L.GATE_LEAF >= opening - 0.1, "the leaf is %.2f m for a %.2f m gate" % [L.GATE_LEAF, opening])
+	check(L.GATE_SWING_DEG < 20.0, "the gate stands open at %.0f deg" % L.GATE_SWING_DEG)

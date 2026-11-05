@@ -609,6 +609,8 @@ MATERIALS = {
     "paving": ("psx_lit", "paving", "#ffffff", (0.35, 0.35)),
     "earth": ("psx_lit", "earth", "#ffffff", (0.12, 0.12)),
     "grass": ("psx_lit", "grass", "#ffffff", (0.15, 0.15)),
+    # Dry steppe grass: the golden straw west of town.
+    "steppe": ("psx_lit", "grass", "#cfa96a", (0.15, 0.15)),
     "rock": ("psx_lit", "rock", "#ffffff", (0.3, 0.3)),
     "foliage": ("psx_lit", "foliage", "#ffffff", (0.8, 0.8)),
     "cypress": ("psx_lit", "foliage", "#9aa08a", (0.8, 0.8)),
@@ -924,6 +926,17 @@ def sandals(rng):
     write_wav("sandals", norm(x, 0.4))
 
 
+def sheep(rng):
+    """A bleat from the far pasture: a voiced tone with a slow vibrato."""
+    n = int(SR * 0.62)
+    t = np.arange(n) / SR
+    f0 = rng.uniform(300.0, 340.0)
+    pitch = f0 * (1.0 + 0.06 * np.sin(2 * np.pi * 7.0 * t)) * (1.0 - 0.25 * t / 0.62)
+    phase = 2 * np.pi * np.cumsum(pitch) / SR
+    voice = np.sin(phase) + 0.45 * np.sin(2 * phase) + 0.25 * np.sin(3 * phase)
+    env = np.minimum(t / 0.06, 1.0) * np.exp(-np.maximum(0.0, t - 0.18) * 6.0)
+    write_wav("sheep", norm(bandpass(voice * env, 400, 2600), 0.35))
+
 def achievement(rng):
     """A soft two-note chime for an unlocked achievement: G5 then D6, with the
     bell's overtones and a short tail."""
@@ -1066,6 +1079,7 @@ def main() -> None:
     wheel(np.random.default_rng(522))
     sandals(np.random.default_rng(523))
     achievement(np.random.default_rng(524))
+    sheep(np.random.default_rng(525))
     print(f"textures: {len(TEXTURES)}, materials: {len(MATERIALS)}, audio: {len(list(AUD.glob('*.wav')))}")
 
 

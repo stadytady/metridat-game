@@ -50,7 +50,7 @@ func test_wheel_loops() -> void:
 
 
 func test_cries_and_footsteps_are_one_shots() -> void:
-	for name: String in ["market_cry.wav", "sandals.wav"]:
+	for name: String in ["market_cry.wav", "sandals.wav", "sheep.wav"]:
 		var s: AudioStreamWAV = load(DIR + "/" + name)
 		check(s != null, name + " did not import")
 		if s == null:

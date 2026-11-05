@@ -69,6 +69,80 @@ static func window_lit(seed: int, i: int) -> bool:
 	return posmod(hash(seed * 31 + i), 2) == 0
 
 
+## A house you can walk into. Same shell as house() from the street, but the walls
+## are boxes with a doorway left in the front one, the room has its own level floor
+## and a ceiling, and the roof is the same gable. Returns where the wall lantern
+## goes, in the house's own frame.
+const COTTAGE_DOOR := 1.15
+const COTTAGE_DOOR_H := 2.05
+const COTTAGE_WALL := 0.32
+
+## The two pieces of the front wall either side of the doorway, as [from, to] in x.
+static func cottage_front_segments(w: float) -> Array[Vector2]:
+	var half := COTTAGE_DOOR * 0.5
+	var out: Array[Vector2] = []
+	if w * 0.5 - half > 0.05:
+		out.append(Vector2(-w * 0.5, -half))
+		out.append(Vector2(half, w * 0.5))
+	return out
+
+
+static func cottage(kit: MeshKit, xf: Transform3D, w: float, d: float, h: float,
+		opts: Dictionary = {}) -> Dictionary:
+	var drop: float = opts.get("drop", 1.5)
+	var socle := 0.75
+	var t := COTTAGE_WALL
+	var wall_h := h - socle
+	var mid := socle + wall_h * 0.5
+	kit.xform = xf
+	kit.color = Color.WHITE
+	# plinth, then a level floor for the room to stand on
+	kit.solid_box("limestone", Vector3(0, (socle - drop) / 2.0, -d / 2.0), Vector3(w, socle + drop, d), ["bottom"])
+	# the floor keeps its top face: skipping it leaves a hole you can see the sea through
+	kit.solid_box("plaster", Vector3(0, socle - 0.1, -d / 2.0), Vector3(w - 2.0 * t, 0.2, d - 2.0 * t),
+			["bottom"], {"top": "earth"})
+	# front wall with the doorway, and the lintel over it
+	for seg: Vector2 in cottage_front_segments(w):
+		kit.solid_box("plaster", Vector3((seg.x + seg.y) * 0.5, mid, -t * 0.5),
+				Vector3(seg.y - seg.x, wall_h, t), ["bottom", "top"])
+	var over := wall_h - COTTAGE_DOOR_H  # the strip of wall above the door
+	if over > 0.1:
+		kit.solid_box("plaster", Vector3(0, socle + COTTAGE_DOOR_H + over * 0.5, -t * 0.5),
+				Vector3(COTTAGE_DOOR, over, t), ["bottom", "top"])
+	# back and side walls, and a ceiling so the room reads as a room
+	kit.solid_box("plaster", Vector3(0, mid, -d + t * 0.5), Vector3(w, wall_h, t), ["bottom", "top"])
+	for sx: float in [-1.0, 1.0]:
+		kit.solid_box("plaster", Vector3(sx * (w * 0.5 - t * 0.5), mid, -d * 0.5),
+				Vector3(t, wall_h, d - 2.0 * t), ["bottom", "top"])
+	kit.box("wood", Vector3(0, h - 0.14, -d * 0.5), Vector3(w - t, 0.16, d - t), ["bottom"], {})
+	# the roof, the same gable the street uses
+	kit.xform = xf * Transform3D(Basis.IDENTITY, Vector3(0, h, -d / 2.0))
+	kit.gable_roof("roof", "plaster", w, d, minf(d * 0.22, 1.4), 0.4)
+	kit.xform = xf
+	# steps from the sill down to the lane: the front of a house sits on the
+	# highest corner of its plot, so the ground at the door may be lower
+	var sill_y := xf.origin.y + socle
+	for i in 4:
+		var local := Vector3(0, 0, 0.5 + i * 0.42)
+		var world := xf * local
+		var ground := Topo.terrain(world.x, world.z)
+		var high := sill_y - (i + 1) * 0.26
+		if high <= ground + 0.03:
+			break
+		kit.solid_box("limestone", Vector3(0, high - 0.13, 0.5 + i * 0.42), Vector3(COTTAGE_DOOR + 0.45, 0.26, 0.48), ["bottom", "top"])
+	# the door: a leaf standing open against the inside wall
+	kit.box("door", Vector3(-COTTAGE_DOOR * 0.5 + 0.06, socle + COTTAGE_DOOR_H * 0.5, -COTTAGE_DOOR),
+			Vector3(0.08, COTTAGE_DOOR_H, COTTAGE_DOOR), ["bottom"], {})
+	kit.box("limestone", Vector3(0, socle + COTTAGE_DOOR_H + 0.08, 0.06), Vector3(COTTAGE_DOOR + 0.3, 0.16, 0.16), ["bottom"], {})
+	# inside: a bench, a shelf and a niche for the household lamp
+	kit.box("wood", Vector3(w * 0.5 - t - 0.5, socle + 0.22, -d * 0.5), Vector3(0.9, 0.1, 2.0), ["bottom"], {})
+	kit.box("wood", Vector3(-w * 0.5 + t + 0.3, socle + 0.9, -d * 0.35), Vector3(0.35, 0.08, 0.9), ["bottom"], {})
+	kit.box("clay", Vector3(-w * 0.5 + t + 0.3, socle + 1.0, -d * 0.35), Vector3(0.18, 0.12, 0.18), ["bottom"], {})
+	kit.xform = Transform3D.IDENTITY
+	# the bracket hangs on the front wall beside the doorway, not past the corner
+	return {"lamp": Vector3(COTTAGE_DOOR * 0.5 + 0.75, socle + 1.95, 0.02), "door": Vector3(0, socle, 0.0)}
+
+
 ## Where a window's lamp is in its flicker (psx_lamp reads it from the vertex
 ## alpha), so the lamps of a street never pulse in step.
 static func lamp_phase(seed: int, i: int) -> float:
