@@ -14,11 +14,10 @@ const SHIPS := [
 	[Vector3(640, 0, 60), -15.0, 1.2, Vector3(156, 0, -12)],
 ]
 
-## Ride low in the water like the moored ship, with a deck laid over the model's
-## own floor so the boat stays dry inside.
+## Ride low in the water like the moored ship, with the deck District lays over the
+## model's own floor — shaped to the hull, not a slab across it.
 const WATERLINE := 0.0
-const DECK_Y := 0.9
-## The model's keel, from its mesh bounds: the test keeps it under the sea.
+## The hull's own half beams at deck level, measured from the model; the test keeps
 const HULL_BOTTOM := -0.67
 ## Under way from this hour, at anchor by that one.
 const SAIL_FROM := 0.12
@@ -48,13 +47,11 @@ static func heading_at(start: Vector3, start_yaw: float, anchor: Vector3, hour: 
 	var course := rad_to_deg(atan2(-d.z, d.x))
 	var turn := smoothstep(0.0, 0.08, progress(hour))
 	return rad_to_deg(lerp_angle(deg_to_rad(start_yaw), deg_to_rad(course), turn))
-
-
 func _ready() -> void:
 	_atm = get_parent().get_node_or_null("Atmosphere")
 	for s: Array in SHIPS:
 		var n := place("ship", s[0], s[1], Vector3.ONE * float(s[2]))
-		laid_deck(n, DECK_Y, Vector3(14.6, 0.14, 8.0), float(s[2]))
+		laid_ship_deck(n)
 		for g: GeometryInstance3D in n.find_children("*", "GeometryInstance3D", true, false):
 			g.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		_ships.append(n)

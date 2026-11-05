@@ -32,6 +32,8 @@ var _glow: Node3D
 ## The one house you can walk into, and the lamp beside its door.
 var _cottage_lamp: WallLamp
 var _cottage_at := Transform3D.IDENTITY
+## The householder in the cottage: a woman with her hair under a kerchief.
+var _woman: Npc
 var _smoke: Array[GPUParticles3D] = []
 var _atm: Node
 
@@ -286,6 +288,7 @@ func _house(kit: MeshKit, glow: MeshKit, hs: Dictionary) -> void:
 		_cottage_lamp.position = xf * (info["lamp"] as Vector3)
 		_cottage_lamp.rotation.y = hs.yaw
 		add_child(_cottage_lamp)
+		_place_woman(xf, info, hs.yaw)
 		# the room is not a cellar: a small warm light of its own
 		var room := OmniLight3D.new()
 		room.position = xf * Vector3(0, 1.7, -hs.d * 0.5)
@@ -299,6 +302,23 @@ func _house(kit: MeshKit, glow: MeshKit, hs: Dictionary) -> void:
 	else:
 		Arch.house(kit, xf, hs.w, hs.d, hs.h, opts)
 
+
+## The woman of the house, standing on the new floor between the bench and the
+## shelf. Dressed as a woman — hair, kerchief, long chiton — because an empty room
+## with a bench in it could be anyone's.
+func _place_woman(xf: Transform3D, info: Dictionary, yaw: float) -> void:
+	var woman := Npc.new()
+	woman.name = "CottageWoman"
+	woman.npc_id = "cottage_woman"
+	woman.talkable = false
+	woman.stops_for_player = false
+	woman.pose = "think"
+	woman.body_mat = "chiton_dark"
+	woman.position = xf * (info["woman"] as Vector3)
+	woman.rotation.y = yaw
+	add_child(woman)
+	Figure.dress_woman(woman.joints)
+	_woman = woman
 
 ## Trodden earth between the rows, hugging the ground.
 func _lanes(houses: Array) -> void:
