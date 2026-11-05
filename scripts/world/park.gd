@@ -13,25 +13,25 @@ const BEDS := [Rect2(-93.0, 5.4, 9.2, 1.9), Rect2(-93.0, -7.3, 9.2, 1.9)]
 ## Figure per bed: [x, z, kind]. Kinds: "youth" (bronze), "goddess" (marble, helmeted),
 ## "herm" (a pillar with a head). Each faces the orchestra.
 const FIGURES := [
-	[-88.0, 6.9, "youth"],
-	[-84.6, 6.9, "herm"],
+	[-87.6, 6.80, "youth"],
+	[-84.6, 6.78, "herm"],
 	[-89.0, -6.72, "goddess"],
 ]
-## Trees: [x, z, "olive"/"cypress", scale].
+## Olives: [x, z, scale]. Olives only, the way the hill's own slope is planted:
+## a cypress here would stand against the sky and dwarf the terrace.
 const TREES := [
-	[-92.2, 6.35, "cypress", 1.0],
-	[-90.3, 6.30, "olive", 0.85],
-	[-85.4, 6.35, "olive", 0.75],
-	[-92.4, -6.35, "cypress", 0.92],
-	[-90.4, -6.30, "olive", 0.8],
-	[-86.6, -6.35, "olive", 0.9],
+	[-92.2, 6.30, 0.80],
+	[-89.7, 6.28, 0.70],
+	[-85.2, 6.32, 0.72],
+	[-92.3, -6.30, 0.82],
+	[-86.4, -6.28, 0.70],
+	[-84.2, -6.34, 0.62],
 ]
-## Benches: [x, z, yaw_deg] - the seat faces the orchestra.
+## Benches: [x, z]. The seat lies along x, so it faces the orchestra in either bed.
 const BENCHES := [
-	[-86.4, 6.55, 180.0],
-	[-84.4, -6.6, 0.0],
+	[-86.2, 6.30],
+	[-87.6, -6.30],
 ]
-
 
 static func bed_rects() -> Array[Rect2]:
 	var out: Array[Rect2] = []
@@ -79,18 +79,15 @@ func _figure(kit: MeshKit, f: Array, top: float) -> void:
 	var xf := Transform3D(Basis(Vector3.UP, deg_to_rad(180.0 if f[1] > 0.0 else 0.0)), at)
 	match String(f[2]):
 		"goddess":
-			Arch.statue(kit, xf, {"h": 2.4, "mat": "column", "helmet": true, "plinth": 0.6})
+			Arch.statue(kit, xf, {"h": 2.2, "mat": "column", "helmet": true, "plinth": 0.45})
 		"youth":
-			Arch.statue(kit, xf, {"h": 1.7, "mat": "bronze", "arm": "up"})
+			Arch.statue(kit, xf, {"h": 1.7, "mat": "bronze", "arm": "up", "plinth": 0.35})
 		"herm":
-			Arch.herm(kit, xf, 1.6)
+			Arch.herm(kit, xf, 1.5)
 
 
 func _trees(top: float) -> void:
 	for t: Array in TREES:
 		var at := Vector3(t[0], top + 0.04, t[1])
-		var s := float(t[3])
-		if String(t[2]) == "cypress":
-			place("cypress", at, 0.0, Vector3.ONE * s)
-		else:
-			place("olive_tree", at, 20.0, Vector3(s * 1.25, s * 0.8, s * 1.25))
+		var s := float(t[2])
+		place("olive_tree", at, 20.0, Vector3(s * 1.15, s * 0.75, s * 1.15))

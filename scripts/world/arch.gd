@@ -439,48 +439,52 @@ static func stele(kit: MeshKit, xf: Transform3D) -> void:
 ## opts: h (figure height, m), mat ("bronze"/"column"), helmet (Corinthian, bool),
 ## plinth (base height, m), arm ("down"/"up"/"spear").
 ## Returns the total height of plinth and figure, for tests and layout.
+##
+## Proportions are the whole job here: a head narrower than a tenth of the height
+## and a straight column of a body read as a post, not as a person, at any
+## distance the player sees them.
 static func statue(kit: MeshKit, xf: Transform3D, opts: Dictionary = {}) -> float:
 	var h: float = opts.get("h", 1.7)
 	var mat: String = opts.get("mat", "bronze")
-	var plinth: float = opts.get("plinth", 0.5)
-	var w := h * 0.30
+	var plinth: float = opts.get("plinth", 0.38)
+	var y := plinth
 	kit.xform = xf
-	# plinth: a foot block under a cap, cut in two mouldings
-	kit.solid_box("limestone", Vector3(0, plinth * 0.22, 0), Vector3(w * 1.5, plinth * 0.44, w * 1.5), ["bottom"])
-	kit.solid_box("limestone", Vector3(0, plinth * 0.72, 0), Vector3(w * 1.2, plinth * 0.56, w * 1.2), ["bottom"])
-	# the fall of the mantle, a tapered drum: cloth reads as cloth, not as a box
+	# plinth: a foot block under a cap, cut in two mouldings, wider than the skirt
+	kit.solid_box("limestone", Vector3(0, plinth * 0.22, 0), Vector3(h * 0.46, plinth * 0.44, h * 0.46), ["bottom"])
+	kit.solid_box("limestone", Vector3(0, plinth * 0.72, 0), Vector3(h * 0.38, plinth * 0.56, h * 0.38), ["bottom"])
+	# the fall of the mantle: a flared skirt from the feet to the waist
 	kit.lathe(mat, PackedVector2Array([
-		Vector2(w * 0.52, plinth), Vector2(w * 0.50, plinth + h * 0.05),
-		Vector2(w * 0.40, plinth + h * 0.34), Vector2(w * 0.32, plinth + h * 0.56)]),
-		8, Vector3.ZERO, 1.0, false, mat)
-	# chest and shoulders
-	kit.box(mat, Vector3(0, plinth + h * 0.66, 0), Vector3(w * 0.86, h * 0.24, w * 0.60), ["bottom"])
-	kit.box(mat, Vector3(0, plinth + h * 0.83, 0), Vector3(w * 1.10, h * 0.09, w * 0.60), ["bottom"])
-	# arms: one hangs, the other answers the options
+		Vector2(h * 0.20, y), Vector2(h * 0.195, y + h * 0.04),
+		Vector2(h * 0.155, y + h * 0.34), Vector2(h * 0.125, y + h * 0.62)]),
+		10, Vector3.ZERO, 1.0, true, mat)
+	# chest, then shoulders wider than the waist: the first thing the eye reads
+	kit.box(mat, Vector3(0, y + h * 0.71, 0), Vector3(h * 0.26, h * 0.19, h * 0.19), ["bottom"])
+	kit.box(mat, Vector3(0, y + h * 0.815, 0), Vector3(h * 0.38, h * 0.07, h * 0.21), ["bottom"])
+	# arms: one hangs, the other answers the option
+	var arm := String(opts.get("arm", "down"))
 	for sx: float in [-1.0, 1.0]:
-		var arm: String = String(opts.get("arm", "down")) if sx > 0.0 else "down"
-		if arm == "up":
-			kit.box(mat, Vector3(w * 0.60 * sx, plinth + h * 0.86, 0), Vector3(w * 0.18, h * 0.34, w * 0.18), ["bottom"])
-		elif arm == "spear":
-			kit.box(mat, Vector3(w * 0.62 * sx, plinth + h * 0.70, w * 0.05), Vector3(w * 0.16, h * 0.44, w * 0.16), ["bottom"])
+		if sx > 0.0 and arm == "up":
+			kit.box(mat, Vector3(h * 0.21, y + h * 0.88, 0), Vector3(h * 0.10, h * 0.30, h * 0.12), ["bottom"])
+		elif sx > 0.0 and arm == "spear":
+			kit.box(mat, Vector3(h * 0.21, y + h * 0.71, h * 0.03), Vector3(h * 0.09, h * 0.34, h * 0.11), ["bottom"])
 		else:
-			kit.box(mat, Vector3(w * 0.58 * sx, plinth + h * 0.66, 0), Vector3(w * 0.17, h * 0.42, w * 0.17), ["bottom"])
-	# neck, head, hair
-	kit.box(mat, Vector3(0, plinth + h * 0.90, 0), Vector3(w * 0.24, h * 0.05, w * 0.24), ["bottom"])
-	kit.box(mat, Vector3(0, plinth + h * 0.965, 0), Vector3(w * 0.32, h * 0.12, w * 0.30), ["bottom"])
-	kit.box(mat, Vector3(0, plinth + h * 0.995, -w * 0.03), Vector3(w * 0.36, h * 0.07, w * 0.32), ["bottom"])
+			kit.box(mat, Vector3(h * 0.21 * sx, y + h * 0.68, 0), Vector3(h * 0.09, h * 0.36, h * 0.12), ["bottom"])
+	# neck, head, hair: the head is a seventh of the figure, not a tenth
+	kit.box(mat, Vector3(0, y + h * 0.865, 0), Vector3(h * 0.07, h * 0.04, h * 0.07), ["bottom"])
+	kit.box(mat, Vector3(0, y + h * 0.935, h * 0.005), Vector3(h * 0.125, h * 0.13, h * 0.13), ["bottom"])
+	kit.box(mat, Vector3(0, y + h * 0.995, -h * 0.01), Vector3(h * 0.145, h * 0.06, h * 0.145), ["bottom"])
 	if bool(opts.get("helmet", false)):
 		# Corinthian helmet: dome over the brow, cheek pieces, crest front to back
-		kit.box(mat, Vector3(0, plinth + h * 1.045, 0), Vector3(w * 0.36, h * 0.07, w * 0.34), ["bottom"])
+		kit.box(mat, Vector3(0, y + h * 1.03, 0), Vector3(h * 0.15, h * 0.05, h * 0.16), ["bottom"])
 		for sx: float in [-1.0, 1.0]:
-			kit.box(mat, Vector3(w * 0.15 * sx, plinth + h * 0.985, w * 0.06), Vector3(w * 0.06, h * 0.10, w * 0.18), ["bottom"])
-		kit.box(mat, Vector3(0, plinth + h * 1.10, -w * 0.02), Vector3(w * 0.07, h * 0.09, w * 0.40), ["bottom"])
-	if String(opts.get("arm", "down")) == "spear":
-		kit.box("wood", Vector3(w * 0.62, plinth + h * 0.72, w * 0.05), Vector3(0.035, h * 0.95, 0.035), [])
+			kit.box(mat, Vector3(h * 0.06 * sx, y + h * 0.965, h * 0.02), Vector3(h * 0.03, h * 0.10, h * 0.10), ["bottom"])
+		kit.box(mat, Vector3(0, y + h * 1.075, -h * 0.01), Vector3(h * 0.03, h * 0.05, h * 0.20), ["bottom"])
+	if arm == "spear":
+		kit.box("wood", Vector3(h * 0.21, y + h * 0.72, h * 0.03), Vector3(0.03, h * 1.0, 0.03), [])
 	kit.xform = xf
-	kit.add_collider(Vector3(0, (plinth + h) * 0.5, 0), Vector3(w * 1.2, plinth + h, w * 1.0))
+	kit.add_collider(Vector3(0, (plinth + h) * 0.5, 0), Vector3(h * 0.42, plinth + h, h * 0.34))
 	kit.xform = Transform3D.IDENTITY
-	return plinth + h
+	return plinth + h * 1.10
 
 
 ## Herm: a square pillar with a bearded head and stubs of shoulders, the oldest
