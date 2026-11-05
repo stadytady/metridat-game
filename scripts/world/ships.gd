@@ -17,7 +17,24 @@ const SHIPS := [
 ## Ride low in the water like the moored ship, with a deck laid over the model's
 ## own floor so the boat stays dry inside.
 const WATERLINE := 0.0
-const DECK_Y := 0.9
+const DECK_Y := 0.86
+## The hull's own half beams at deck level, measured from the model; the test keeps
+## the deck inside them.
+const HULL_PLAN := [
+	[0.0, 1.97], [1.0, 1.93], [2.0, 1.90], [3.0, 1.82],
+	[4.0, 1.63], [5.0, 1.34], [6.0, 1.14], [7.0, 0.94],
+]
+
+## The hull's own plan at deck level, measured from the model: [distance from
+## midships, half beam]. A straight box deck would hang over the sides and past the
+## stern — it used to, 8 m wide on a 3.9 m hull.
+const DECK_PLAN := [
+	[0.0, 1.86], [1.0, 1.82], [2.0, 1.76], [3.0, 1.70],
+	[4.0, 1.52], [5.0, 1.22], [6.0, 1.00], [6.5, 0.82],
+]
+## How far aft and forward the deck runs, and the rail it sits on.
+const DECK_END := 6.5
+const DECK_STEP := 0.5
 ## The model's keel, from its mesh bounds: the test keeps it under the sea.
 const HULL_BOTTOM := -0.67
 ## Under way from this hour, at anchor by that one.
@@ -50,11 +67,64 @@ static func heading_at(start: Vector3, start_yaw: float, anchor: Vector3, hour: 
 	return rad_to_deg(lerp_angle(deg_to_rad(start_yaw), deg_to_rad(course), turn))
 
 
+## Half the hull's beam at a distance from midships, so the deck can follow it.
+static func deck_half_beam(x: float) -> float:
+	var ax := absf(x)
+	if ax >= DECK_END:
+		return DECK_PLAN[DECK_PLAN.size() - 1][1]
+	for i in DECK_PLAN.size() - 1:
+		var a: Array = DECK_PLAN[i]
+		var b: Array = DECK_PLAN[i + 1]
+		if ax <= b[0]:
+			var t: float = (ax - float(a[0])) / (float(b[0]) - float(a[0]))
+			return lerpf(a[1], b[1], t)
+	return DECK_PLAN[DECK_PLAN.size() - 1][1]
+
+
+## The hull's half beam at a distance from midships, for the tests.
+static func hull_half_beam(x: float) -> float:
+	var ax := absf(x)
+	for i in HULL_PLAN.size() - 1:
+		var a: Array = HULL_PLAN[i]
+		var b: Array = HULL_PLAN[i + 1]
+		if ax <= b[0]:
+			var t: float = (ax - float(a[0])) / (float(b[0]) - float(a[0]))
+			return lerpf(a[1], b[1], t)
+	return HULL_PLAN[HULL_PLAN.size() - 1][1]
+
+## A deck that follows the hull instead of a slab laid over it: strips between the
+## measured beams, and a transom closing each end so the boat is not a scoop.
+## The ship node carries its own scale, so the deck is built in the model's own units.
+func _shaped_deck(ship: Node3D) -> void:
+	var kit := MeshKit.new()
+	var x := -DECK_END
+	while x < DECK_END - 0.01:
+		var x1 := minf(x + DECK_STEP, DECK_END)
+		var w0 := deck_half_beam(x)
+		var w1 := deck_half_beam(x1)
+		kit.quad("wood", Vector3(x, DECK_Y, -w0), Vector3(x, DECK_Y, w0),
+				Vector3(x1, DECK_Y, w1), Vector3(x1, DECK_Y, -w1))
+		x = x1
+	for sx: float in [-1.0, 1.0]:
+		var ex: float = sx * (DECK_END - 0.2)
+		var w := deck_half_beam(DECK_END - 0.4)
+		var top := DECK_Y
+		var low := 0.3
+		if sx > 0.0:
+			kit.quad("hull", Vector3(ex, top, -w), Vector3(ex, top, w), Vector3(ex, low, w), Vector3(ex, low, -w))
+		else:
+			kit.quad("hull", Vector3(ex, top, w), Vector3(ex, top, -w), Vector3(ex, low, -w), Vector3(ex, low, w))
+	var mi := MeshInstance3D.new()
+	mi.name = "Deck"
+	mi.mesh = kit.commit()
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	ship.add_child(mi)
+
 func _ready() -> void:
 	_atm = get_parent().get_node_or_null("Atmosphere")
 	for s: Array in SHIPS:
 		var n := place("ship", s[0], s[1], Vector3.ONE * float(s[2]))
-		laid_deck(n, DECK_Y, Vector3(14.6, 0.14, 8.0), float(s[2]))
+		_shaped_deck(n)
 		for g: GeometryInstance3D in n.find_children("*", "GeometryInstance3D", true, false):
 			g.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		_ships.append(n)

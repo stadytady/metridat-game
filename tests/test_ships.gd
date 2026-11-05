@@ -43,3 +43,16 @@ func test_anchorages_in_deep_water_and_apart() -> void:
 		for j in range(i + 1, S.SHIPS.size()):
 			var b: Vector3 = S.SHIPS[j][3]
 			check(a.distance_to(b) > 25.0, "anchorages %d and %d overlap" % [i, j])
+
+
+## The deck follows the hull: no strip of it hangs over a gunwale or past the stern.
+func test_the_deck_stays_inside_the_hull() -> void:
+	var ships := preload("res://scripts/world/ships.gd")
+	check(ships.DECK_END < 8.5, "the deck runs past the hull's tip: %.2f" % ships.DECK_END)
+	var x := 0.0
+	while x <= ships.DECK_END:
+		var deck := ships.deck_half_beam(x)
+		var hull := ships.hull_half_beam(x)
+		check(deck < hull, "at %.1f m the deck is %.2f wide, the hull %.2f" % [x, deck, hull])
+		check(deck > hull - 0.45, "at %.1f m the deck leaves a %.2f m gap" % [x, hull - deck])
+		x += 0.5

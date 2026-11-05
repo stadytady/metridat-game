@@ -36,8 +36,10 @@ const FIELD_CELL := 3.0
 
 ## The flock grazes around here: a walk west of the terrace, still in sight.
 const PASTURE := Vector2(-110.0, 18.0)
+## How far from that centre a sheep may wander.
+const ROAM := 26.0
 const PASTURE_R := 9.0
-const SHEEP_COUNT := 7
+const SHEEP_COUNT := 9
 ## Tufts of dry grass, spread over this stretch of the steppe.
 const GRASS_FROM := -102.0
 const GRASS_TO := -168.0
@@ -62,7 +64,6 @@ func _ready() -> void:
 	_ridges()
 	_kurgans()
 	_grass()
-	_fold()
 	_flock()
 
 
@@ -147,26 +148,6 @@ func _grass() -> void:
 	add_child(kit.build("Grass"))
 
 
-## The fold: a low ring of stones with a gap, where the flock is driven at night.
-func _fold() -> void:
-	var centre := pasture()
-	var kit := MeshKit.new()
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 91
-	for i in 14:
-		var a := TAU * i / 14.0
-		if i >= 6 and i <= 7:
-			continue
-		var p := centre + Vector3(cos(a), 0, sin(a)) * 8.0
-		p.y = Topo.terrain(p.x, p.z)
-		kit.box("limestone", p + Vector3(0, 0.28, 0), Vector3(0.9, 0.55, 0.5),
-				["bottom"], {})
-		if rng.randf() < 0.4:
-			var q := p + Vector3(rng.randf_range(-0.4, 0.4), 0.62, rng.randf_range(-0.4, 0.4))
-			kit.box("limestone", q, Vector3(0.42, 0.22, 0.42), ["bottom"], {})
-	add_child(kit.build("Fold"))
-
-
 func _flock() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 13
@@ -178,7 +159,7 @@ func _flock() -> void:
 		var s: Sheep = SHEEP.new()
 		s.name = "Sheep%d" % i
 		s.home = p
-		s.radius = rng.randf_range(3.0, 6.0)
+		s.radius = rng.randf_range(6.0, ROAM)
 		s.position = p
 		s.rotation.y = rng.randf() * TAU
 		add_child(s)

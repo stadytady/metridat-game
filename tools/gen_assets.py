@@ -620,7 +620,7 @@ MATERIALS = {
     "bronze": ("psx_lit", "bronze", "#ffffff", (1.0, 1.0)),
     "gold": ("psx_lit", "coin", "#ffffff", (1.0, 1.0)),
     "cloth": ("psx_lit", "cloth", "#ffffff", (0.5, 0.5)),
-    "sail": ("psx_lit", "cloth", "#c8b8a0", (0.3, 0.3)),
+    "sail": ("psx_sail", "cloth", "#c8b8a0", (0.3, 0.3)),
     "hull": ("psx_lit", "wood", "#6a5a4a", (0.4, 0.4)),
     "basket": ("psx_lit", "basket", "#ffffff", (1.0, 1.0)),
     "figurine": ("psx_lit", "figurine", "#ffffff", (1.0, 1.0)),
