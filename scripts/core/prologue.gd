@@ -40,6 +40,8 @@ func begin() -> void:
 	Game.prologue_changed.emit(true)
 	player.global_position = arrival_point() + Vector3(0, 0.05, 0)
 	player.velocity = Vector3.ZERO
+	# teleported, not walked in: no zone fires, so name the place here
+	Game.location_entered.emit("LOC_SHORE")
 	var damon := skipper()
 	if damon == null:
 		push_warning("prologue: no skipper on the pier")
@@ -66,6 +68,7 @@ func morning() -> void:
 	player.global_position = Topo.spawn_point()
 	player.velocity = Vector3.ZERO
 	player.look_at_point(Vector3(20, 6, 0))  # as World places the player at the start
+	Game.location_entered.emit("LOC_HILL")
 	await get_tree().create_timer(HOLD).timeout
 	await _tween(_caption, 0.0, 0.4)
 	Game.ui_blocking = false

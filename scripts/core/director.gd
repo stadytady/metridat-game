@@ -436,6 +436,13 @@ func _talk(player: CharacterBody3D, npc_id: String) -> void:
 		return
 	if npc.marker == null or not npc.marker.visible:
 		_fail.append("no talk marker over " + npc_id)
+	# a walking NPC (Fedr in the orchestra) is wherever his round has taken
+	# him: step up to him, as a player would; he stops for the player
+	var to := Vector2(npc.global_position.x - player.global_position.x, npc.global_position.z - player.global_position.z)
+	if not npc.patrol.is_empty() and to.length() > 2.0:
+		await _walk_to(player, Vector2(npc.global_position.x, npc.global_position.z) - to.normalized() * 1.6)
+		player.bot_move = Vector2.ZERO
+		await _frames(5)
 	player.look_at_point(npc.global_position + Vector3(0, 0.9, 0))
 	await get_tree().physics_frame
 	await get_tree().physics_frame
@@ -705,9 +712,15 @@ func _check_chickens(player: CharacterBody3D) -> void:
 		return
 	var back := player.global_position
 	var c: Chicken = null
+	# a calm one: a hen still running from the bot passing by cannot be scared
+	# again, and its count would not move
 	for b: Chicken in birds:
-		if b.name.begins_with("agora") and (c == null or b.global_position.distance_to(back) < c.global_position.distance_to(back)):
+		var calm := b.state != Chicken.State.FLEE and b.state != Chicken.State.ROOST
+		if calm and b.name.begins_with("agora") and (c == null or b.global_position.distance_to(back) < c.global_position.distance_to(back)):
 			c = b
+	if c == null:
+		_fail.append("no calm chicken on the agora to scare")
+		return
 	player.bot_move = Vector2.ZERO
 	var before := c.fled
 	player.global_position = Vector3(c.global_position.x - 1.0, Topo.AGORA_H, c.global_position.z)
