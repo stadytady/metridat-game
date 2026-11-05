@@ -545,6 +545,39 @@ func _check_dream(player: CharacterBody3D) -> void:
 	if Game.found_count() != Game.total():
 		_fail.append("the mirror changed the city's count: %d/%d" % [Game.found_count(), Game.total()])
 	info.close()
+	# the mirror opens the mound: the doors creak open, then down the stair
+	for i in 60:
+		await get_tree().create_timer(0.1).timeout
+		if dream.doors_open:
+			break
+	if _main().get_node_or_null("EndScreen"):
+		_fail.append("THE END came at the mirror, before the tomb")
+		return
+	if not dream.doors_open:
+		_fail.append("the mound's doors did not open after the mirror")
+		return
+	var o2: Vector3 = dream.ORIGIN
+	var c: Vector3 = o2 + dream.chamber_center()
+	for p: Vector2 in [Vector2(o2.x + 1.8, o2.z + dream.ALTAR.z - 0.6), Vector2(o2.x + 1.8, o2.z + dream.ALTAR.z + 1.2),
+			Vector2(o2.x, o2.z + dream.DOOR_Z - 1.2), Vector2(o2.x, o2.z + dream.DOOR_Z + 0.6),
+			Vector2(o2.x, o2.z + dream.stair_end() + 0.6), Vector2(c.x - 0.9, c.z - 0.6)]:
+		if not await _walk_to(player, p):
+			_fail.append("could not walk down into the tomb, stuck near %s" % player.global_position)
+			player.bot_move = Vector2.ZERO
+			return
+	player.bot_move = Vector2.ZERO
+	if player.global_position.y > o2.y - dream.DEPTH + 0.5:
+		_fail.append("not down in the chamber: at %s" % player.global_position)
+	var sleeper: Node3D = dream.sleeper
+	player.look_at_point(sleeper.global_position + Vector3(0, 0.7, 0))
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	if player.interactor.current != sleeper:
+		_fail.append("the ray does not find the sleeper from %s: %s" % [player.global_position, player.interactor.current])
+		return
+	if sleeper.get_prompt() != tr("UI_LEAN"):
+		_fail.append("the sleeper does not offer to lean closer: %s" % sleeper.get_prompt())
+	player.interactor.try_interact()
 	var end: Node = null
 	for i in 60:
 		await get_tree().create_timer(0.1).timeout
@@ -552,7 +585,7 @@ func _check_dream(player: CharacterBody3D) -> void:
 		if end:
 			break
 	if end == null:
-		_fail.append("no THE END after the mirror")
+		_fail.append("no THE END after leaning over the sleeper")
 		return
 	await _frames(3)
 	end.skip_to_keys()
@@ -576,7 +609,7 @@ func _check_dream(player: CharacterBody3D) -> void:
 	await _frames(2)
 	if rows.x != Game.total() + 1:
 		_fail.append("journal does not list the mirror after the dream: %d rows" % rows.x)
-	print("dream: figures %d/%d, mirror found, woke in the abaton" % [dream.vanished, dream.FIGURES_Z.size()])
+	print("dream: figures %d/%d, mirror found, doors opened, down the stair to the sleeper, woke in the abaton" % [dream.vanished, dream.FIGURES_Z.size()])
 
 
 ## The start screen holds the game until START, then hands it over.

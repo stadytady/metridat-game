@@ -937,6 +937,33 @@ def sheep(rng):
     env = np.minimum(t / 0.06, 1.0) * np.exp(-np.maximum(0.0, t - 0.18) * 6.0)
     write_wav("sheep", norm(bandpass(voice * env, 400, 2600), 0.35))
 
+def door_creak(rng):
+    """Heavy wooden doors swinging open on dry pivots: stick-slip groans whose
+    rate rises and sags as the leaves move, ringing the wood's body, then a
+    dull knock as they come to rest. Heard in a stone passage, so a long tail."""
+    dur = 3.4
+    n = int(SR * dur)
+    t = np.arange(n) / SR
+    # slip rate: slow at first, quicker as the leaves get going, dying at the end
+    rate = 18 + 70 * np.sin(np.pi * np.clip(t / 2.8, 0, 1)) ** 0.8 + 12 * np.sin(2 * np.pi * 0.9 * t)
+    phase = np.cumsum(rate) / SR
+    ticks = np.zeros(n)
+    idx = np.nonzero(np.diff(np.floor(phase)) > 0)[0]
+    ticks[idx] = rng.uniform(0.5, 1.0, len(idx))
+    body = np.zeros(n)
+    for f, q in [(310, 40), (620, 55), (1150, 70)]:
+        k = np.arange(int(SR * 0.05)) / SR
+        body += np.convolve(ticks, np.sin(2 * np.pi * f * k) * np.exp(-k * q), mode="same")
+    env = np.clip(t / 0.15, 0, 1) * np.clip((2.95 - t) / 0.4, 0, 1)
+    x = body * env
+    # the knock: two leaves meet the stone stops
+    for at in (2.98, 3.05):
+        k = t - at
+        hit = (k > 0) * np.exp(-np.clip(k, 0, None) * 30)
+        x += 0.9 * hit * lowpass(rng.standard_normal(n), 220)
+    write_wav("door_creak", norm(reverb(bandpass(x, 120, 3200), rng, 2.6, 0.45), 0.6))
+
+
 def achievement(rng):
     """A soft two-note chime for an unlocked achievement: G5 then D6, with the
     bell's overtones and a short tail."""
@@ -1080,6 +1107,7 @@ def main() -> None:
     sandals(np.random.default_rng(523))
     achievement(np.random.default_rng(524))
     sheep(np.random.default_rng(525))
+    door_creak(np.random.default_rng(526))
     print(f"textures: {len(TEXTURES)}, materials: {len(MATERIALS)}, audio: {len(list(AUD.glob('*.wav')))}")
 
 
