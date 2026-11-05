@@ -28,6 +28,9 @@ var steps_played := 0
 ## Of those, how many rang off the paving and how many fell on the bare ground.
 var stone_steps := 0
 var dirt_steps := 0
+## Which take played, per surface: counts indexed by the take's place in STEPS.
+## The walkthrough reads it to prove a surface is not stuck on one sound.
+var takes_used := {}
 ## Test hook: when set, replaces keyboard movement (x = strafe, y = back).
 var bot_move := Vector2.ZERO
 var bot_enabled := false
@@ -178,12 +181,18 @@ func _bob_and_steps(delta: float, sprint: bool) -> void:
 			_step_dist = 0.0
 			var kind: StringName = _surface if STEPS.has(_surface) else &"dirt"
 			var set_: Array = STEPS[kind]
-			footsteps.stream = set_[randi() % set_.size()]
+			var pick := randi() % set_.size()
+			footsteps.stream = set_[pick]
 			footsteps.pitch_scale = randf_range(0.9, 1.1)
 			# paving rings, the ground takes the ring away
 			footsteps.volume_db = -7.0 if kind == &"stone" else -10.0
 			footsteps.play()
 			steps_played += 1
+			var counts: Array = takes_used.get(kind, [])
+			while counts.size() < set_.size():
+				counts.append(0)
+			counts[pick] = int(counts[pick]) + 1
+			takes_used[kind] = counts
 			if kind == &"stone":
 				stone_steps += 1
 			else:
