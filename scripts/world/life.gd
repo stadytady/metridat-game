@@ -20,6 +20,9 @@ const YARD_OFF := 2.2
 ## The pen is five metres across and a little over three deep.
 const YARD_HALF := 2.5
 const YARD_DEPTH := 3.4
+## The gate is shut: the leaf reaches across the opening and the latch closes it.
+const GATE_LEAF := 1.05
+const GATE_SWING_DEG := 8.0
 const NPC := preload("res://scripts/npc/npc.gd")
 ## Where feet have worn the stone: [centre, size, yaw deg].
 const WORN := [
@@ -274,10 +277,12 @@ func _yard() -> void:
 		_yard_rail(kit, a, b, 0.95)
 	# the gate itself: one leaf standing open into the pen
 	var hinge: Vector2 = posts[gate.x]
-	var swing := deg_to_rad(58.0)
-	var tip := hinge + Vector2(cos(swing), sin(swing)) * 1.05
-	_yard_rail(kit, hinge, tip, 0.55)
-	_yard_rail(kit, hinge, tip, 0.92)
+	var swing := deg_to_rad(GATE_SWING_DEG)
+	var tip := hinge + Vector2(cos(swing), sin(swing)) * GATE_LEAF
+	_yard_rail(kit, hinge, tip, 0.5)
+	_yard_rail(kit, hinge, tip, 0.9)
+	# the latch: the gap between the leaf and the far gate post
+	_yard_rail(kit, tip, posts[gate.y], 0.9)
 	# manger with hay inside, by the back fence
 	var m: Vector3 = (fence["centre"] as Vector3) + Vector3(-1.3, 0, 0.9)
 	m.y = Topo.surface(m.x, m.z)

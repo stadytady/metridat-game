@@ -92,3 +92,18 @@ func test_yard_fence_is_a_closed_pen_with_one_gate() -> void:
 	for p: Vector2 in posts:
 		var off := absf(p.y - Topo.street_z(p.x))
 		check(off > Topo.STREET_HALF, "a post stands on the lane at %s" % p)
+
+## The tail hangs behind the rump: inside it, a mule looks docked.
+func test_mule_tail_hangs_behind_the_rump() -> void:
+	var mule := preload("res://scripts/world/mule.gd")
+	check(mule.TAIL_Z > 0.65, "the tail sits in the rump at z=%.2f" % mule.TAIL_Z)
+
+
+## The gate is shut: a leaf that reaches across the opening.
+func test_yard_gate_leaf_closes_the_opening() -> void:
+	var f: Dictionary = L.yard_fence()
+	var posts: Array = f["posts"]
+	var gate: Vector2i = f["gate"]
+	var opening: float = (posts[gate.x] as Vector2).distance_to(posts[gate.y] as Vector2)
+	check(L.GATE_LEAF >= opening - 0.1, "the leaf is %.2f m for a %.2f m gate" % [L.GATE_LEAF, opening])
+	check(L.GATE_SWING_DEG < 20.0, "the gate stands open at %.0f deg" % L.GATE_SWING_DEG)
