@@ -236,6 +236,22 @@ static func _attach(joint: Node3D, kit: MeshKit) -> void:
 	joint.add_child(mi)
 
 
+## A woman's figure: hair down the back under a kerchief, and a long chiton over
+## the legs. The same recipe as Myrto at her oven, kept here so any NPC can wear it.
+static func dress_woman(joints: Dictionary) -> void:
+	var head: Node3D = joints.get("head")
+	if head != null:
+		var hk := MeshKit.new()
+		hk.box("hair", Vector3(0, 0.02, 0.12), Vector3(0.18, 0.3, 0.06), [])  # down the back
+		hk.box("cloth", Vector3(0, 0.25, 0.02), Vector3(0.23, 0.06, 0.25), [])  # kerchief
+		hk.box("cloth", Vector3(0, 0.17, 0.11), Vector3(0.23, 0.14, 0.05), [])
+		_attach(head, hk)
+	var pelvis: Node3D = joints.get("pelvis")
+	if pelvis != null:
+		var sk := MeshKit.new()
+		sk.box("chiton_dark", Vector3(0, -0.22, 0.05), Vector3(0.42, 0.42, 0.5), [])  # skirt
+		_attach(pelvis, sk)
+
 static func apply_pose(joints: Dictionary, pose: String, extra: Dictionary = {}) -> void:
 	var p: Dictionary = POSES.get(pose, {})
 	for name: String in joints:

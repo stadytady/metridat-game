@@ -29,8 +29,8 @@ func test_decks_stay_above_the_water() -> void:
 		var k := float(s[2])
 		var water := Topo.SEA_LEVEL + Sea.height_at(a.x, a.z)
 		var heave := Sea.float_pose(a, 0.0, 7.0 * k, 2.2 * k).x
-		var deck := (S.WATERLINE + S.DECK_Y) * k + heave
-		var keel := (S.WATERLINE + S.HULL_BOTTOM) * k + heave
+		var deck: float = (S.WATERLINE + District.SHIP_DECK_Y) * k + heave
+		var keel: float = (S.WATERLINE + S.HULL_BOTTOM) * k + heave
 		check(deck > water + 0.25 * k, "anchored ship deck under water: %.2f vs %.2f" % [deck, water])
 		check(keel < water - 0.25 * k, "anchored ship floats on top: keel %.2f vs %.2f" % [keel, water])
 
@@ -43,3 +43,15 @@ func test_anchorages_in_deep_water_and_apart() -> void:
 		for j in range(i + 1, S.SHIPS.size()):
 			var b: Vector3 = S.SHIPS[j][3]
 			check(a.distance_to(b) > 25.0, "anchorages %d and %d overlap" % [i, j])
+
+
+## The deck follows the hull: no strip of it hangs over a gunwale or past the stern.
+func test_the_deck_stays_inside_the_hull() -> void:
+	check(District.SHIP_DECK_END < 8.5, "the deck runs past the hull's tip: %.2f" % District.SHIP_DECK_END)
+	var x := 0.0
+	while x <= District.SHIP_DECK_END:
+		var deck: float = District.ship_deck_half_beam(x)
+		var hull: float = District.ship_hull_half_beam(x)
+		check(deck < hull, "at %.1f m the deck is %.2f wide, the hull %.2f" % [x, deck, hull])
+		check(deck > hull - 0.45, "at %.1f m the deck leaves a %.2f m gap" % [x, hull - deck])
+		x += 0.5
