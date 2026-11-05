@@ -107,3 +107,35 @@ func test_yard_gate_leaf_closes_the_opening() -> void:
 	var opening: float = (posts[gate.x] as Vector2).distance_to(posts[gate.y] as Vector2)
 	check(L.GATE_LEAF >= opening - 0.1, "the leaf is %.2f m for a %.2f m gate" % [L.GATE_LEAF, opening])
 	check(L.GATE_SWING_DEG < 20.0, "the gate stands open at %.0f deg" % L.GATE_SWING_DEG)
+
+## The mule walks its pen: grazes at the tufts, drinks at the trough, and never
+## takes its body through the fence. Forty minutes of its day in 0.1 s ticks.
+func test_mule_walks_grazes_and_drinks_inside_the_pen() -> void:
+	var M := preload("res://scripts/world/mule.gd")
+	var m: Node3D = M.new()
+	var walk := L.yard_walk()
+	m.bounds = walk
+	var c := L.yard_pos()
+	for g: Vector2 in L.TUFTS:
+		m.tufts.append(Vector2(c.x + g.x, c.z + g.y))
+		check(walk.grow(M.REACH).has_point(Vector2(c.x + g.x, c.z + g.y)), "a tuft is out of the mule's reach at %s" % g)
+	var t := L.trough_pos()
+	m.drink_at = Vector2(t.x, t.z)
+	m.position = c
+	var start := Vector2(c.x, c.z)
+	var far := 0.0
+	var outside := 0
+	var fence := Rect2(c.x - L.YARD_HALF, c.z - L.YARD_DEPTH * 0.5, L.YARD_HALF * 2.0, L.YARD_DEPTH)
+	for i in 24000:
+		m.step(0.1)
+		var p := Vector2(m.position.x, m.position.z)
+		far = maxf(far, p.distance_to(start))
+		# the body (half a metre either side of its middle along its length) stays in
+		var fwd := Vector2(-sin(m.rotation.y), -cos(m.rotation.y)) * 0.7
+		if not fence.has_point(p + fwd) or not fence.has_point(p - fwd):
+			outside += 1
+	check(outside == 0, "the mule's body went through the fence %d times" % outside)
+	check(far > 1.5, "the mule hardly moved: %.2f m" % far)
+	check(m.grazed >= 10, "the mule grazed only %d times" % m.grazed)
+	check(m.drunk >= 1, "the mule never drank")
+	m.free()

@@ -638,6 +638,7 @@ MATERIALS = {
     "chiton_blue": ("psx_lit", "chiton", "#8c9cb4", (1.0, 1.0)),
     "chiton_ochre": ("psx_lit", "chiton", "#d0b070", (1.0, 1.0)),
     "hem": ("psx_lit", "white", "#7c361c", (1.0, 1.0)),
+    "trough_water": ("psx_lit", "white", "#3d5f70", (1.0, 1.0)),
     "belt": ("psx_lit", "white", "#3a2618", (1.0, 1.0)),
     "face_bare": ("psx_lit", "face_bare", "#ffffff", (1.0, 1.0)),
     "face_short": ("psx_lit", "face_short", "#ffffff", (1.0, 1.0)),

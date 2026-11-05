@@ -14,12 +14,16 @@ const WELL_X := 5.0
 const WELL_SIDE := -1.0
 const WELL_OFF := 1.1
 
-## A yard on the other side of the same lane: a fence, hay and a mule.
-const YARD_X := 2.6
-const YARD_OFF := 2.2
-## The pen is five metres across and a little over three deep.
-const YARD_HALF := 2.5
-const YARD_DEPTH := 3.4
+## A yard on the other side of the same lane: a fence, hay, a water trough,
+## grass, and a mule that walks it.
+const YARD_X := 5.6
+const YARD_OFF := 3.5
+## The pen is six metres across and four and a half deep: room for a mule to walk.
+const YARD_HALF := 3.0
+const YARD_DEPTH := 4.6
+## Tufts of grass the mule grazes, as offsets from the yard's centre.
+const TUFTS: Array[Vector2] = [Vector2(-1.4, -0.6), Vector2(0.2, 0.9), Vector2(1.5, -0.4), Vector2(-0.4, -1.0),
+	Vector2(1.0, 1.2), Vector2(-1.7, 0.7)]
 ## The gate is shut: the leaf reaches across the opening and the latch closes it.
 const GATE_LEAF := 1.05
 const GATE_SWING_DEG := 8.0
@@ -259,8 +263,9 @@ static func yard_fence() -> Dictionary:
 	rails.append(Vector2i(first_back + 2, right_back))
 	return {"centre": c, "posts": posts, "rails": rails, "gate": Vector2i(2, 3)}
 
-## A yard across the lane from the well: a fenced pen with a gate standing open,
-## hay in a manger, and a mule in it with nothing to do. Every post stands on the
+## A yard across the lane from the well: a fenced pen with a shut gate, hay in
+## a manger, a water trough, tufts of grass and a mule that walks from one to
+## the next, grazing, and now and then goes to drink. Every post stands on the
 ## ground it is actually set in and every rail runs between two posts, because the
 ## ground here falls a quarter of a metre across the pen.
 func _yard() -> void:
@@ -283,18 +288,57 @@ func _yard() -> void:
 	_yard_rail(kit, hinge, tip, 0.9)
 	# the latch: the gap between the leaf and the far gate post
 	_yard_rail(kit, tip, posts[gate.y], 0.9)
+	var c: Vector3 = fence["centre"]
 	# manger with hay inside, by the back fence
-	var m: Vector3 = (fence["centre"] as Vector3) + Vector3(-1.3, 0, 0.9)
+	var m: Vector3 = c + Vector3(-1.6, 0, YARD_DEPTH * 0.5 - 0.45)
 	m.y = Topo.surface(m.x, m.z)
 	kit.box("wood", m + Vector3(0, 0.34, 0), Vector3(1.5, 0.5, 0.5), ["bottom"], {})
 	kit.box("bread", m + Vector3(0, 0.61, 0), Vector3(1.4, 0.2, 0.42), ["bottom"], {})
 	kit.add_collider(m + Vector3(0, 0.22, 0), Vector3(1.5, 0.44, 0.5))
+	# a water trough by the gate: a plank box with water near the brim
+	var t := trough_pos()
+	kit.box("wood", t + Vector3(0, 0.05, 0), Vector3(1.2, 0.1, 0.5), ["bottom"], {})
+	for sz: float in [-1.0, 1.0]:
+		kit.box("wood", t + Vector3(0, 0.27, sz * 0.22), Vector3(1.2, 0.44, 0.06), ["bottom"], {})
+	for sx: float in [-1.0, 1.0]:
+		kit.box("wood", t + Vector3(sx * 0.57, 0.27, 0), Vector3(0.06, 0.44, 0.38), ["bottom"], {})
+	kit.quad("trough_water", t + Vector3(-0.54, 0.4, 0.19), t + Vector3(0.54, 0.4, 0.19), t + Vector3(0.54, 0.4, -0.19), t + Vector3(-0.54, 0.4, -0.19))
+	kit.add_collider(t + Vector3(0, 0.25, 0), Vector3(1.2, 0.5, 0.5))
+	# tufts of greener grass where the mule grazes
+	for g: Vector2 in TUFTS:
+		var p := Vector3(c.x + g.x, 0, c.z + g.y)
+		p.y = Topo.surface(p.x, p.z)
+		for k in 4:
+			var a := k * TAU / 4.0 + g.x
+			kit.box("foliage", p + Vector3(cos(a) * 0.12, 0.06, sin(a) * 0.12), Vector3(0.14, 0.12 + 0.04 * (k % 2), 0.14), ["bottom"], {})
 	add_child(kit.build("Yard"))
+	# an olive in the back corner gives the mule shade
+	var o := c + Vector3(YARD_HALF - 0.7, 0, YARD_DEPTH * 0.5 - 0.7)
+	place("olive_tree", Vector3(o.x, Topo.surface(o.x, o.z), o.z), 40.0, Vector3(1.0, 0.9, 1.0))
 	var mule := Mule.new()
-	mule.position = (fence["centre"] as Vector3) + Vector3(0.55, 0, 0.35)
+	mule.bounds = yard_walk()
+	for g: Vector2 in TUFTS:
+		mule.tufts.append(Vector2(c.x + g.x, c.z + g.y))
+	mule.drink_at = Vector2(t.x, t.z)
+	mule.position = c + Vector3(0.3, 0, 0.2)
 	mule.position.y = Topo.surface(mule.position.x, mule.position.z)
-	mule.rotation.y = deg_to_rad(125.0)  # head down to the manger, three quarters on
 	add_child(mule)
+
+
+## Where the trough stands: inside the front fence, to the right of the gate.
+static func trough_pos() -> Vector3:
+	var c := yard_pos()
+	var t := Vector3(c.x + 1.6, 0, c.z - YARD_DEPTH * 0.5 + 0.45)
+	t.y = Topo.surface(t.x, t.z)
+	return t
+
+
+## The ground the mule's middle may cross: inside the fence by more than half
+## its length, so neither head nor tail goes through a rail.
+static func yard_walk() -> Rect2:
+	var c := yard_pos()
+	var m := 0.85
+	return Rect2(c.x - YARD_HALF + m, c.z - YARD_DEPTH * 0.5 + m, (YARD_HALF - m) * 2.0, YARD_DEPTH - m * 2.0)
 
 
 ## A fence post, standing on the ground where it is set.

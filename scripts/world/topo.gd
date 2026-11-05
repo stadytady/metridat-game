@@ -36,9 +36,10 @@ const AGORA_H := 5.0
 ## The forecourt: where the street widens into a square before the agora, from
 ## the last houses (x 3) to the agora's west edge, as wide as the agora. Its
 ## pavement keeps the street's own height at each x, so it meets the street and
-## the agora (street_height(9) = AGORA_H) with no step. The south part starts
-## east of the mule's yard, which keeps its earth. Rect2: (x, z) and size.
-const FORECOURTS: Array[Rect2] = [Rect2(3.0, -11.0, 6.0, 11.0), Rect2(5.8, 0.0, 3.2, 11.0)]
+## the agora (street_height(9) = AGORA_H) with no step. South of the street
+## the mule's yard takes the ground, on its own earth and grass. Rect2: (x, z)
+## and size.
+const FORECOURTS: Array[Rect2] = [Rect2(3.0, -11.0, 6.0, 11.0)]
 
 const SANCT_CENTER := Vector2(46, -27)
 const SANCT_HALF := Vector2(8, 7)

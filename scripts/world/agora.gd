@@ -102,14 +102,10 @@ func _forecourt(kit: MeshKit) -> void:
 		var hw := Topo.forecourt_height(w)
 		kit.quad("limestone", Vector3(w, hw, z1), Vector3(w, hw, z0), Vector3(w, hw - 0.45, z0), Vector3(w, hw - 0.45, z1))  # faces -x
 		kit.add_collider(Vector3(w - 0.3, hw - 0.15, (z0 + z1) / 2.0), Vector3(0.6, 0.3, z1 - z0))
-	# a stone bench under the stoa's west end, an olive in a ring of stone
+	# a stone bench under the stoa's west end
 	var by := Topo.forecourt_height(6.0)
 	Arch.bench(kit, Arch.frame(Vector3(6.0, by, -9.6), Vector3.BACK), 2.6)
 	kit.xform = Transform3D.IDENTITY
-	var ty := Topo.forecourt_height(7.4)
-	kit.lathe("limestone", PackedVector2Array([Vector2(0.75, 0.0), Vector2(0.75, 0.3)]), 10, Vector3(7.4, ty, 8.6), 2.0, false, "earth", true)
-	kit.add_collider(Vector3(7.4, ty + 0.15, 8.6), Vector3(1.5, 0.3, 1.5))
-	place("olive_tree", Vector3(7.4, ty + 0.3, 8.6), 40.0, Vector3(1.1, 1.0, 1.1))
 
 
 ## Ribbons off the column capitals and a cloth hung between two of them: the
