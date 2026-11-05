@@ -62,7 +62,9 @@
 | ![Ворота к святилищу](docs/sacred_way.png) | ![Вид с холма](docs/hill.png) |
 | ![«Путь»: задачи](docs/waybook.png) | ![Карточка достижения](docs/achievement.png) |
 | ![Степь за парапетом](docs/steppe.png) | ![Домик у моря](docs/cottage.png) |
+| ![Пролог: пристань на закате](docs/prologue.png) | ![Кормчий Дамон у «Ласточки»](docs/skipper.png) |
 | ![Святилище Гекаты ночью](docs/sanctuary_night.png) | ![Сон](docs/dream.png) |
+| ![Лестница в кургане](docs/tomb_stair.png) | ![Камера кургана](docs/tomb.png) |
 
 ## Правда и вымысел
 
