@@ -17,6 +17,9 @@ const WELL_OFF := 1.1
 ## A yard on the other side of the same lane: a fence, hay and a mule.
 const YARD_X := 2.6
 const YARD_OFF := 2.2
+## The pen is five metres across and a little over three deep.
+const YARD_HALF := 2.5
+const YARD_DEPTH := 3.4
 const NPC := preload("res://scripts/npc/npc.gd")
 ## Where feet have worn the stone: [centre, size, yaw deg].
 const WORN := [
@@ -208,37 +211,109 @@ func _process(delta: float) -> void:
 		_cloths[i].rotation.x = sin(q * 1.3 + i * 1.7) * 0.12
 
 
-## A yard across the lane from the well: a fence with a gate, hay in a manger,
-## and a mule standing in it with nothing to do.
-func _yard() -> void:
+## The pen as data, so the fence can be checked without building it: posts around
+## a rectangle with a gate in the middle of the lane side, and the rails between
+## them. A pen is closed by definition — the gate is the only opening.
+static func yard_fence() -> Dictionary:
 	var c := yard_pos()
+	var front := c.z - YARD_DEPTH * 0.5
+	var back := c.z + YARD_DEPTH * 0.5
+	var left := c.x - YARD_HALF
+	var right := c.x + YARD_HALF
+	var gate := 0.55
+	var posts: Array[Vector2] = []
+	var rails: Array[Vector2i] = []
+	# the lane side: two runs with the gate between them
+	var front_xs: Array[float] = [left, c.x - 1.5, c.x - gate, c.x + gate, c.x + 1.5, right]
+	for x: float in front_xs:
+		posts.append(Vector2(x, front))
+	for i in 4:
+		if i == 2:
+			continue  # the gate opening
+		rails.append(Vector2i(i, i + 1))
+	# both sides: a post every third of the depth, so no rail is a long plank
+	var left_back := -1
+	var right_back := -1
+	for side: float in [left, right]:
+		var corner := 0 if is_equal_approx(side, left) else 5
+		var first := posts.size()
+		for s in range(1, 4):
+			posts.append(Vector2(side, front + (back - front) * float(s) / 3.0))
+		rails.append(Vector2i(corner, first))
+		for s in 2:
+			rails.append(Vector2i(first + s, first + s + 1))
+		if is_equal_approx(side, left):
+			left_back = first + 2
+		else:
+			right_back = first + 2
+	# the back: three posts between the corners
+	var first_back := posts.size()
+	for s in 3:
+		posts.append(Vector2(left + (right - left) * float(s + 1) / 4.0, back))
+	rails.append(Vector2i(left_back, first_back))
+	rails.append(Vector2i(first_back, first_back + 1))
+	rails.append(Vector2i(first_back + 1, first_back + 2))
+	rails.append(Vector2i(first_back + 2, right_back))
+	return {"centre": c, "posts": posts, "rails": rails, "gate": Vector2i(2, 3)}
+
+## A yard across the lane from the well: a fenced pen with a gate standing open,
+## hay in a manger, and a mule in it with nothing to do. Every post stands on the
+## ground it is actually set in and every rail runs between two posts, because the
+## ground here falls a quarter of a metre across the pen.
+func _yard() -> void:
+	var fence := yard_fence()
+	var gate: Vector2i = fence["gate"]
+	var posts: Array = fence["posts"]
 	var kit := MeshKit.new()
-	# fence along the lane, with a gate gap in the middle
-	for i in 6:
-		var x := c.x - 2.5 + i * 1.0
-		if absf(x - c.x) < 0.5:
-			continue  # the gate
-		kit.box("wood", Vector3(x, c.y + 0.55, c.z - 1.6), Vector3(0.09, 1.1, 0.09), [])
-	for seg: Vector2 in [Vector2(c.x - 2.5, c.x - 0.5), Vector2(c.x + 0.5, c.x + 2.5)]:
-		var mid: float = (seg.x + seg.y) / 2.0
-		var length: float = seg.y - seg.x
-		kit.box("wood", Vector3(mid, c.y + 0.95, c.z - 1.6), Vector3(length, 0.08, 0.06), [])
-		kit.box("wood", Vector3(mid, c.y + 0.55, c.z - 1.6), Vector3(length, 0.07, 0.05), [])
-	# side fences running back from the gate towards the wall
-	for sx: float in [-1.0, 1.0]:
-		for i in 3:
-			kit.box("wood", Vector3(c.x + sx * 2.5, c.y + 0.55, c.z - 1.6 + i), Vector3(0.09, 1.1, 0.09), [])
-		kit.box("wood", Vector3(c.x + sx * 2.5, c.y + 0.95, c.z), Vector3(0.06, 0.08, 3.2), [])
-	# manger with hay
-	var m := c + Vector3(-1.1, 0, 0.6)
-	kit.box("wood", m + Vector3(0, 0.35, 0), Vector3(1.6, 0.5, 0.55), [])
-	kit.box("bread", m + Vector3(0, 0.63, 0), Vector3(1.5, 0.22, 0.46), [])
+	for p: Vector2 in posts:
+		_yard_post(kit, p.x, p.y)
+	for r: Vector2i in fence["rails"]:
+		var a: Vector2 = posts[r.x]
+		var b: Vector2 = posts[r.y]
+		_yard_rail(kit, a, b, 0.55)
+		_yard_rail(kit, a, b, 0.95)
+	# the gate itself: one leaf standing open into the pen
+	var hinge: Vector2 = posts[gate.x]
+	var swing := deg_to_rad(58.0)
+	var tip := hinge + Vector2(cos(swing), sin(swing)) * 1.05
+	_yard_rail(kit, hinge, tip, 0.55)
+	_yard_rail(kit, hinge, tip, 0.92)
+	# manger with hay inside, by the back fence
+	var m: Vector3 = (fence["centre"] as Vector3) + Vector3(-1.3, 0, 0.9)
+	m.y = Topo.surface(m.x, m.z)
+	kit.box("wood", m + Vector3(0, 0.34, 0), Vector3(1.5, 0.5, 0.5), ["bottom"], {})
+	kit.box("bread", m + Vector3(0, 0.61, 0), Vector3(1.4, 0.2, 0.42), ["bottom"], {})
+	kit.add_collider(m + Vector3(0, 0.22, 0), Vector3(1.5, 0.44, 0.5))
 	add_child(kit.build("Yard"))
 	var mule := Mule.new()
-	mule.position = c + Vector3(0.7, 0, 0.4)
+	mule.position = (fence["centre"] as Vector3) + Vector3(0.55, 0, 0.35)
+	mule.position.y = Topo.surface(mule.position.x, mule.position.z)
 	mule.rotation.y = deg_to_rad(125.0)  # head down to the manger, three quarters on
 	add_child(mule)
 
+
+## A fence post, standing on the ground where it is set.
+func _yard_post(kit: MeshKit, x: float, z: float) -> void:
+	var y := Topo.surface(x, z)
+	kit.box("wood", Vector3(x, y + 0.55, z), Vector3(0.11, 1.15, 0.11), [], {})
+	kit.add_collider(Vector3(x, y + 0.55, z), Vector3(0.11, 1.15, 0.11))
+
+
+## A rail between two points on the ground, tilted to follow the slope between them.
+func _yard_rail(kit: MeshKit, a: Vector2, b: Vector2, height: float) -> void:
+	var pa := Vector3(a.x, Topo.surface(a.x, a.y) + height, a.y)
+	var pb := Vector3(b.x, Topo.surface(b.x, b.y) + height, b.y)
+	var dir := pb - pa
+	var length := dir.length()
+	if length < 0.02:
+		return
+	var x_axis := dir / length
+	var z_axis := x_axis.cross(Vector3.UP).normalized()
+	var y_axis := z_axis.cross(x_axis).normalized()
+	kit.xform = Transform3D(Basis(x_axis, y_axis, z_axis), (pa + pb) * 0.5)
+	kit.box("wood", Vector3.ZERO, Vector3(length, 0.075, 0.06), [], {})
+	kit.add_collider(Vector3.ZERO, Vector3(length, 0.075, 0.06))
+	kit.xform = Transform3D.IDENTITY
 
 ## A stone well-head with a wooden frame and pulley, and a woman drawing water
 ## hand over hand, her hydria waiting by the curb.
