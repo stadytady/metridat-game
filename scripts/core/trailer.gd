@@ -99,6 +99,11 @@ func _ready() -> void:
 	player.set_physics_process(false)
 	for n in get_tree().get_nodes_in_group(&"inspectable"):
 		n.get_node("Marker").visible = false
+	# nor the talk bubbles over the people: a film, not a game screen
+	for n: Npc in get_tree().get_nodes_in_group(&"npc"):
+		if n.marker:
+			n.marker.queue_free()
+			n.marker = null
 	_cam = Camera3D.new()
 	_cam.name = "TrailerCamera"
 	_cam.far = 4000.0
