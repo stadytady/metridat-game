@@ -304,7 +304,7 @@ func _house(kit: MeshKit, glow: MeshKit, hs: Dictionary) -> void:
 
 
 ## The woman of the house, standing on the new floor between the bench and the
-## shelf. Dressed as a woman — hair, kerchief, long chiton — because an empty room
+## shelf, spinning wool. Dressed as a woman — hair, kerchief, long chiton — because an empty room
 ## with a bench in it could be anyone's.
 func _place_woman(xf: Transform3D, info: Dictionary, yaw: float) -> void:
 	var woman := Npc.new()
@@ -312,12 +312,18 @@ func _place_woman(xf: Transform3D, info: Dictionary, yaw: float) -> void:
 	woman.npc_id = "cottage_woman"
 	woman.talkable = false
 	woman.stops_for_player = false
-	woman.pose = "think"
+	woman.pose = "spin"
 	woman.body_mat = "chiton_dark"
 	woman.position = xf * (info["woman"] as Vector3)
 	woman.rotation.y = yaw
 	add_child(woman)
 	Figure.dress_woman(woman.joints)
+	# she spins: distaff in the left hand, the spindle hanging from the right
+	Spindle.hold_distaff(woman.joints)
+	var spindle := Spindle.new()
+	spindle.name = "Spindle"
+	spindle.hand = Spindle.right_hand(woman.joints)
+	add_child(spindle)
 	_woman = woman
 
 ## Trodden earth between the rows, hugging the ground.
