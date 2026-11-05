@@ -190,6 +190,7 @@ UI_ACTION_USE,"Inspect, talk","Осмотр, разговор"
 UI_ACTION_JOURNAL,Journal,Журнал
 UI_ACTION_GOALS,The way,Путь
 UI_ACTION_PAUSE,Pause,Пауза
+UI_LEAN,Lean closer,Склониться
 UI_ADMIN_TITLE,Developer,Отладка
 UI_ADMIN_TIME,Time,Время
 UI_ADMIN_PLACES,Places,Места

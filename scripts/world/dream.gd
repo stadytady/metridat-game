@@ -3,8 +3,10 @@ extends District
 ## map (behind the fog no one sees it): a stony path through thick fog under a
 ## bright moon, a figure standing ahead that is gone when you come close,
 ## three times, and at the end a burial mound with a stone-lined entrance
-## (dromos) and an altar before it, where a bronze mirror lies. After the
-## mirror: THE END, credits, and waking in the abaton.
+## (dromos) and an altar before it, where a bronze mirror lies. Looking into
+## the mirror opens the mound: its doors creak open on a long stair down to a
+## corbel-vaulted chamber, where someone sleeps on a couch, lying as the
+## dreamer lay down. Leaning over them: THE END, credits, waking in the abaton.
 ##
 ## Lying down and waking happen behind a fade to black; the hour jumps to
 ## DayCycle.DREAM and back, the city's sounds go quiet meanwhile.
@@ -21,6 +23,33 @@ const ALTAR := Vector3(0, 0, 76.5)
 const ALTAR_TOP := 1.03  # top of the altar's crowning slab
 const MIRROR_LIFT := 0.33  # disc centre above it: the handle (0.32) stands on the slab
 const MIRROR_LEAN := 70.0  # degrees from lying flat
+const ATM := preload("res://scripts/world/atmosphere.gd")
+
+## The tomb under the mound. The doorway is in the dromos' front, between the
+## jambs; inside, a stair goes down to a level passage and a square chamber.
+## Vaults are corbelled, each course stepping in over the one below, as in the
+## Bosporan kurgans of the 4th century BCE; the long stair is the dream's own.
+const DOOR_Z := MOUND.z - MOUND_R - 0.4  # a stone portal at the mound's foot
+const DOOR_HALF := 0.95
+const DOOR_H := 2.38
+const HALL_HALF := 0.95
+const STEPS := 22
+const STEP_RISE := 0.2
+const STEP_RUN := 0.4
+const STAIR_Z := DOOR_Z + 0.4  # a short landing behind the doors
+const DEPTH := STEPS * STEP_RISE
+const PASSAGE := 3.6  # level dromos between the stair foot and the chamber
+const CHAMBER_HALF := 2.2
+const WALL_H := 1.7  # dromos walls below the first corbel course
+const COURSES := 4
+const COURSE_H := 0.35
+const COURSE_IN := 0.2
+const CH_WALL_H := 2.2
+const CH_COURSES := 6
+const CH_COURSE_H := 0.4
+const CH_COURSE_IN := 0.3
+const DOOR_OPEN_DEG := 88.0  # back against the passage walls
+const DOOR_SECONDS := 3.0
 
 var figures: Array[Apparition] = []
 ## Sound of the dream: a low drone, and a dog howling somewhere ahead in the
@@ -33,6 +62,13 @@ var _rng := RandomNumberGenerator.new()
 var vanished := 0
 var ended := false
 
+var doors_open := false
+var _door_t := -1.0
+var _leaves: Array[Node3D] = []
+var _door_body: StaticBody3D
+var _creak: AudioStreamPlayer3D
+var sleeper: TombSleeper
+
 var _fade: ColorRect
 var _end: CanvasLayer
 var _mirror_found := false
@@ -44,6 +80,31 @@ var _wake_at := Vector3.ZERO
 ## then turned to face -z, back down the path.
 static func mirror_basis() -> Basis:
 	return Basis(Vector3.UP, PI) * Basis(Vector3.RIGHT, deg_to_rad(MIRROR_LEAN))
+
+
+## How far the doors are open (0 shut .. 1 wide), t seconds after they start:
+## eased out, stepped at 15 fps like everything that moves in the game.
+static func door_open_at(t: float) -> float:
+	var q := floorf(t * 15.0 + 0.001) / 15.0
+	var u := clampf(q / DOOR_SECONDS, 0.0, 1.0)
+	return 1.0 - (1.0 - u) * (1.0 - u)
+
+
+## Floor height (local y) at local z inside the tomb: the landing, the stair
+## (as a ramp through the step edges, which is what the player walks on), the
+## passage and the chamber.
+static func tomb_floor(z: float) -> float:
+	if z <= STAIR_Z:
+		return 0.0
+	return -minf((z - STAIR_Z) / STEP_RUN * STEP_RISE, DEPTH)
+
+
+static func stair_end() -> float:
+	return STAIR_Z + STEPS * STEP_RUN
+
+
+static func chamber_center() -> Vector3:
+	return Vector3(0, -DEPTH, stair_end() + PASSAGE + CHAMBER_HALF)
 
 
 ## The path's centre line, gently winding (local x for a local z).
@@ -67,6 +128,12 @@ func _ready() -> void:
 	_altar(kit)
 	_walls(kit)
 	add_child(kit.build("Dream", &"dirt"))
+	var tk := MeshKit.new()
+	tk.xform = Transform3D(Basis.IDENTITY, ORIGIN)
+	_tomb(tk)
+	var tomb := tk.build("Tomb", &"stone")
+	add_child(tomb)
+	_underground(tomb)
 	_trees(rng)
 	_olives()
 	_figures()
@@ -78,6 +145,8 @@ func _ready() -> void:
 	var model := mirror.get_child(0) as Node3D
 	model.transform = Transform3D(mirror_basis(), Vector3(0, MIRROR_LIFT, 0))
 	_altar_lamp()
+	_doors()
+	_tomb_contents()
 	var zone := Area3D.new()
 	zone.set_script(preload("res://scripts/world/zone.gd"))
 	zone.title = "LOC_DREAM"
@@ -95,7 +164,7 @@ func _ready() -> void:
 			_mirror_found = true)
 	Game.inspect_closed.connect(func() -> void:
 		if _mirror_found and Game.dreaming and not ended:
-			the_end())
+			open_doors())
 
 
 func _ground(kit: MeshKit, rng: RandomNumberGenerator) -> void:
@@ -108,6 +177,8 @@ func _ground(kit: MeshKit, rng: RandomNumberGenerator) -> void:
 		for ix in range(-12, 12):
 			var x0 := ix * step
 			var z0 := iz * step
+			if x0 >= -4.0 and x0 < 4.0 and z0 >= 80.0:
+				continue  # the portal's forecourt and the mound: the tomb is dug here
 			var a := Vector3(x0, hill.call(x0, z0), z0)
 			var b := Vector3(x0 + step, hill.call(x0 + step, z0), z0)
 			var c := Vector3(x0 + step, hill.call(x0 + step, z0 + step), z0 + step)
@@ -116,7 +187,26 @@ func _ground(kit: MeshKit, rng: RandomNumberGenerator) -> void:
 			kit.color.a = 1.0
 			kit.quad("grass" if rng.randf() < 0.7 else "earth", d, c, b, a)
 	kit.color = Color.WHITE
-	kit.add_collider(Vector3(0, -0.5, 40), Vector3(96, 1.0, 140))
+	# a paved forecourt before the portal, open where the passage goes down
+	var fz := 79.6
+	for sx: float in [-1.0, 1.0]:
+		var a := Vector3(sx * HALL_HALF, 0.0, fz)
+		var b := Vector3(sx * 4.0, 0.0, fz)
+		var c := Vector3(sx * 4.0, 0.0, 84.0)
+		var d := Vector3(sx * HALL_HALF, 0.0, 84.0)
+		if sx > 0:
+			kit.quad("paving", d, c, b, a)
+		else:
+			kit.quad("paving", a, b, c, d)
+	kit.quad("paving", Vector3(-HALL_HALF, 0.0, DOOR_Z), Vector3(HALL_HALF, 0.0, DOOR_Z), Vector3(HALL_HALF, 0.0, fz), Vector3(-HALL_HALF, 0.0, fz))
+	# the ground, with a slot left open over the passage and the tomb below it
+	var cut := DOOR_Z
+	var side := HALL_HALF + 0.4
+	kit.add_collider(Vector3(0, -0.5, (-30.0 + cut) / 2.0), Vector3(96, 1.0, cut + 30.0))
+	for sx: float in [-1.0, 1.0]:
+		kit.add_collider(Vector3(sx * (side + 48.0) / 2.0, -0.5, (cut + 110.0) / 2.0), Vector3(48.0 - side, 1.0, 110.0 - cut))
+	var back := chamber_center().z + CHAMBER_HALF + 0.4
+	kit.add_collider(Vector3(0, -0.5, (back + 110.0) / 2.0), Vector3(side * 2.0, 1.0, 110.0 - back))
 
 
 func _path(kit: MeshKit, rng: RandomNumberGenerator) -> void:
@@ -140,15 +230,291 @@ func _path(kit: MeshKit, rng: RandomNumberGenerator) -> void:
 ## The burial mound: a low cone of earth and grass, with a dromos (stone-lined
 ## entrance passage) facing the path, its doorway dark.
 func _mound(kit: MeshKit) -> void:
-	kit.lathe("grass", PackedVector2Array([Vector2(MOUND_R, -0.2), Vector2(MOUND_R * 0.8, MOUND_H * 0.45), Vector2(MOUND_R * 0.45, MOUND_H * 0.85),
-		Vector2(0.0, MOUND_H)]), 14, MOUND, 4.0, false)
-	kit.add_collider(MOUND + Vector3(0, MOUND_H * 0.35, 0), Vector3(MOUND_R * 1.4, MOUND_H * 0.7, MOUND_R * 1.4))
-	var front := MOUND.z - MOUND_R * 0.86
+	_mound_shell(kit)
+	# hollow now: the mound's bulk either side of the tomb, and over the doorway
+	var bulk := MOUND_R * 1.4
 	for sx: float in [-1.0, 1.0]:
-		kit.solid_box("limestone", Vector3(sx * 1.25, 1.2, front + 1.0), Vector3(0.6, 2.4, 3.2), ["bottom"])
-	kit.box("limestone", Vector3(0, 2.6, front + 1.0), Vector3(3.2, 0.45, 3.2), [])
-	# the dark doorway faces the path (-z): wound to face it
-	kit.quad("dark", Vector3(0.95, 0.0, front + 1.8), Vector3(-0.95, 0.0, front + 1.8), Vector3(-0.95, 2.38, front + 1.8), Vector3(0.95, 2.38, front + 1.8))
+		var w := bulk / 2.0 - 1.25
+		kit.add_collider(MOUND + Vector3(sx * (1.25 + w / 2.0), MOUND_H * 0.35, 0), Vector3(w, MOUND_H * 0.7, bulk))
+	kit.add_collider(MOUND + Vector3(0, 2.83 + (MOUND_H * 0.7 - 2.83) / 2.0, 0), Vector3(2.5, MOUND_H * 0.7 - 2.83, bulk))
+	# the portal: two jambs and a lintel at the mound's foot, a threshold slab;
+	# the passage behind runs in under the earth
+	for sx: float in [-1.0, 1.0]:
+		kit.solid_box("limestone", Vector3(sx * (DOOR_HALF + 0.35), (DOOR_H + 0.1) / 2.0, DOOR_Z + 0.2), Vector3(0.7, DOOR_H + 0.1, 1.0), ["bottom"])
+	kit.box("limestone", Vector3(0, DOOR_H + 0.3, DOOR_Z + 0.2), Vector3(DOOR_HALF * 2.0 + 1.6, 0.45, 1.2), [])
+	kit.box("limestone", Vector3(0, DOOR_H + 0.62, DOOR_Z + 0.35), Vector3(DOOR_HALF * 2.0 + 1.0, 0.2, 0.9), [])
+	kit.box("limestone", Vector3(0, 0.03, DOOR_Z - 0.35), Vector3(DOOR_HALF * 2.0 + 0.8, 0.06, 0.7), [])
+
+
+## The mound's earth: a lathe of grass, but with the two lowest sectors facing
+## the portal left out, so the passage can go in under it (its stone walls and
+## vault close the cut). No bottom cap: the tomb is below it.
+const MOUND_SEGMENTS := 56
+
+
+static func mound_profile() -> PackedVector2Array:
+	return PackedVector2Array([Vector2(MOUND_R, -0.2), Vector2(MOUND_R * 0.8, MOUND_H * 0.45), Vector2(MOUND_R * 0.45, MOUND_H * 0.85),
+		Vector2(0.0, MOUND_H)])
+
+
+## Is this sector of this ring cut away for the passage? Sectors straddling
+## -z (the portal side) in the lowest ring only.
+static func mound_cut(i: int, j: int) -> bool:
+	var mid := TAU * (i + 0.5) / MOUND_SEGMENTS
+	return j == 0 and absf(cos(mid)) * MOUND_R < HALL_HALF + 0.4 and sin(mid) < 0.0
+
+
+func _mound_shell(kit: MeshKit) -> void:
+	var prof := mound_profile()
+	var n := MOUND_SEGMENTS
+	var ring := func(r: float, y: float, i: int) -> Vector3:
+		var ang := TAU * float(i) / float(n)
+		return MOUND + Vector3(cos(ang) * r, y, sin(ang) * r)
+	for i in n:
+		var u0 := float(i) / n * 4.0
+		var u1 := float(i + 1) / n * 4.0
+		for j in prof.size() - 1:
+			if mound_cut(i, j):
+				continue
+			var lo := prof[j]
+			var hi := prof[j + 1]
+			var a: Vector3 = ring.call(lo.x, lo.y, i)
+			var b: Vector3 = ring.call(lo.x, lo.y, i + 1)
+			var c: Vector3 = ring.call(hi.x, hi.y, i + 1)
+			var d: Vector3 = ring.call(hi.x, hi.y, i)
+			# as MeshKit.lathe: a,d,c,b is counter-clockwise seen from outside
+			var ua := Vector2(u0, -lo.y)
+			var ub := Vector2(u1, -lo.y)
+			var uc := Vector2(u1, -hi.y)
+			var ud := Vector2(u0, -hi.y)
+			if hi.x < 0.0001:
+				kit.tri("grass", a, d, b, ua, ud, ub)
+			else:
+				kit.tri("grass", a, d, c, ua, ud, uc)
+				kit.tri("grass", a, c, b, ua, uc, ub)
+
+
+## Inside the mound: walls and corbelled vaults of dressed stone, darker the
+## deeper they go (baked into the vertex colour; the lamp below lights the
+## chamber). Built with no affine cut-up: it is all small blocks already.
+func _tomb(kit: MeshKit) -> void:
+	var shade := func(y: float) -> Color:
+		var c := Color.WHITE * lerpf(0.85, 0.4, clampf(-y / DEPTH, 0.0, 1.0))
+		c.a = 1.0
+		return c
+	# the landing and the stair: one block per step, its vault stepping down with it
+	kit.color = shade.call(0.0)
+	kit.solid_box("limestone", Vector3(0, -0.1, (DOOR_Z - 0.3 + STAIR_Z) / 2.0), Vector3(HALL_HALF * 2.0, 0.2, STAIR_Z - DOOR_Z + 0.3), [])
+	_passage_section(kit, DOOR_Z, STAIR_Z, 0.0, shade)
+	for i in STEPS:
+		var z0 := STAIR_Z + i * STEP_RUN
+		var top := -(i + 1) * STEP_RISE
+		kit.color = shade.call(top)
+		kit.box("limestone", Vector3(0, top - 0.1, z0 + STEP_RUN / 2.0), Vector3(HALL_HALF * 2.0, 0.2 + STEP_RISE, STEP_RUN), [])
+	# the walls and vault come down in stretches of two steps: one stretch per
+	# step made a saw of the ceiling
+	var i := 0
+	while i < STEPS:
+		var n := mini(2, STEPS - i)
+		var z0 := STAIR_Z + i * STEP_RUN
+		_passage_section(kit, z0, z0 + n * STEP_RUN, -(i + n) * STEP_RISE, shade, n * STEP_RISE)
+		i += n
+	# the stair as the player feels it: a ramp along the step edges
+	var run := STEPS * STEP_RUN
+	var slope := atan2(DEPTH, run)
+	kit.xform = kit.xform * Transform3D(Basis(Vector3.RIGHT, slope), Vector3(0, -DEPTH / 2.0 - 0.1, STAIR_Z + run / 2.0))
+	kit.add_collider(Vector3(0, -0.1, 0), Vector3(HALL_HALF * 2.0, 0.2, run / cos(slope)))
+	kit.xform = Transform3D(Basis.IDENTITY, ORIGIN)
+	# the level passage
+	var p0 := stair_end()
+	kit.color = shade.call(-DEPTH)
+	kit.solid_box("limestone", Vector3(0, -DEPTH - 0.1, p0 + PASSAGE / 2.0), Vector3(HALL_HALF * 2.0, 0.2, PASSAGE), [])
+	_passage_section(kit, p0, p0 + PASSAGE, -DEPTH, shade)
+	# side walls along the whole run keep the player in the passage
+	for sx: float in [-1.0, 1.0]:
+		var zz := (DOOR_Z + p0 + PASSAGE) / 2.0
+		kit.add_collider(Vector3(sx * (HALL_HALF + 0.2), -DEPTH / 2.0 + 1.0, zz), Vector3(0.4, DEPTH + 2.0, p0 + PASSAGE - DOOR_Z))
+	_chamber(kit, shade)
+	kit.color = Color.WHITE
+
+
+## One stretch of the dromos: walls, four corbel courses closing in, a capstone.
+func _passage_section(kit: MeshKit, z0: float, z1: float, floor_y: float, shade: Callable, drop: float = 0.0) -> void:
+	var span := z1 - z0
+	var zm := (z0 + z1) / 2.0
+	kit.color = shade.call(floor_y)
+	for sx: float in [-1.0, 1.0]:
+		# down past the floor to the step below, so no gap shows under a wall
+		var bottom := floor_y - STEP_RISE - 0.2
+		var top := floor_y + WALL_H + drop
+		kit.box("limestone", Vector3(sx * (HALL_HALF + 0.2), (bottom + top) / 2.0, zm), Vector3(0.4, top - bottom, span), [])
+		for k in COURSES:
+			var inner := HALL_HALF - COURSE_IN * (k + 1)
+			var y := floor_y + drop + WALL_H + COURSE_H * (k + 0.5)
+			var outer := HALL_HALF + 0.4
+			kit.box("limestone", Vector3(sx * (inner + outer) / 2.0, y, zm), Vector3(outer - inner, COURSE_H, span), [])
+	var gap := HALL_HALF - COURSE_IN * COURSES
+	# a key block fills the slit between the top courses: where the vault
+	# steps down to the next stretch, an open slit showed the sky beyond
+	kit.box("limestone", Vector3(0, floor_y + drop + WALL_H + COURSE_H * (COURSES - 0.5), zm), Vector3(gap * 2.0 + 0.02, COURSE_H, span), [])
+	kit.box("limestone", Vector3(0, floor_y + drop + WALL_H + COURSE_H * COURSES + 0.1, zm), Vector3(gap * 2.0 + 0.3, 0.2, span), [])
+	# an unseen ceiling, so a jump on the stair does not end up in the vault
+	kit.add_collider(Vector3(0, floor_y + drop + 2.5, zm), Vector3(HALL_HALF * 2.0, 0.2, span))
+
+
+## The burial chamber: square, its walls rising into a corbelled dome of six
+## courses, each stepping in over the one below, closed by a slab. A couch of
+## stone with the sleeper, grave goods round it, a lamp burning in a niche.
+func _chamber(kit: MeshKit, shade: Callable) -> void:
+	var c := chamber_center()
+	var h := CHAMBER_HALF
+	var fy := c.y
+	kit.color = shade.call(fy)
+	kit.solid_box("limestone", Vector3(c.x, fy - 0.1, c.z), Vector3(h * 2.0, 0.2, h * 2.0), [])
+	# walls; the front one has the passage's doorway, a lintel over it
+	var front := c.z - h
+	for sx: float in [-1.0, 1.0]:
+		kit.solid_box("limestone", Vector3(sx * (h + 0.2), fy + CH_WALL_H / 2.0, c.z), Vector3(0.4, CH_WALL_H, h * 2.0 + 0.8), [])
+		var w := h - HALL_HALF
+		kit.solid_box("limestone", Vector3(sx * (HALL_HALF + w / 2.0), fy + CH_WALL_H / 2.0, front - 0.2), Vector3(w, CH_WALL_H, 0.4), [])
+	kit.solid_box("limestone", Vector3(0, fy + CH_WALL_H / 2.0, c.z + h + 0.2), Vector3(h * 2.0, CH_WALL_H, 0.4), [])
+	kit.box("limestone", Vector3(0, fy + (WALL_H + CH_WALL_H) / 2.0, front - 0.2), Vector3(HALL_HALF * 2.0, CH_WALL_H - WALL_H, 0.4), [])
+	# the dome
+	for k in CH_COURSES:
+		var inner := h - CH_COURSE_IN * (k + 1)
+		var outer := h + 0.4
+		var y := fy + CH_WALL_H + CH_COURSE_H * (k + 0.5)
+		for sx: float in [-1.0, 1.0]:
+			kit.box("limestone", Vector3(sx * (inner + outer) / 2.0, y, c.z), Vector3(outer - inner, CH_COURSE_H, outer * 2.0), [])
+			kit.box("limestone", Vector3(0, y, c.z + sx * (inner + outer) / 2.0), Vector3(inner * 2.0, CH_COURSE_H, outer - inner), [])
+	var top := h - CH_COURSE_IN * CH_COURSES
+	kit.box("limestone", Vector3(0, fy + CH_WALL_H + CH_COURSE_H * CH_COURSES + 0.1, c.z), Vector3(top * 2.0 + 0.3, 0.2, top * 2.0 + 0.3), [])
+	# the couch against the back wall, a fleece on it and a stone headrest
+	var couch := Vector3(0, fy, c.z + 0.9)
+	kit.solid_box("limestone", couch + Vector3(0, 0.25, 0), Vector3(2.2, 0.5, 0.95), [])
+	kit.box("fleece", couch + Vector3(0, 0.53, 0), Vector3(2.0, 0.06, 0.85), [])
+	kit.box("limestone", couch + Vector3(-0.95, 0.62, 0), Vector3(0.25, 0.18, 0.7), [])
+	# a niche in the side wall for the lamp
+	kit.box("dark", Vector3(-h + 0.01, fy + 1.15, c.z + 0.2), Vector3(0.02, 0.45, 0.5), [])
+	kit.box("limestone", Vector3(-h + 0.15, fy + 0.92, c.z + 0.2), Vector3(0.3, 0.06, 0.45), [])  # its sill
+	kit.color = Color.WHITE
+
+
+## Out of the sun's and the moon's reach (see ATM.UNDERGROUND).
+static func _underground(n: Node) -> void:
+	for g: GeometryInstance3D in n.find_children("*", "GeometryInstance3D", true, false):
+		g.layers = ATM.UNDERGROUND
+	if n is GeometryInstance3D:
+		(n as GeometryInstance3D).layers = ATM.UNDERGROUND
+
+
+func _tomb_contents() -> void:
+	var c := ORIGIN + chamber_center()
+	sleeper = TombSleeper.new()
+	sleeper.name = "TombSleeper"
+	sleeper.position = c + Vector3(0, 0, 0.9)
+	add_child(sleeper)
+	sleeper.leaned.connect(func() -> void:
+		if Game.dreaming and not ended:
+			the_end())
+	# grave goods: an amphora in each back corner, a krater by the couch's foot,
+	# a gold wreath laid by the sleeper's head
+	for sx: float in [-1.0, 1.0]:
+		_underground(place("amphora", c + Vector3(sx * 1.75, 0, 1.75), sx * 30.0, Vector3.ONE * 0.9))
+	_underground(place("krater", c + Vector3(1.55, 0, 0.0), 20.0))
+	_underground(sleeper)
+	var wk := MeshKit.new()
+	for i in 10:
+		var a := TAU * i / 10.0
+		wk.box("gold", c + Vector3(-0.55 + cos(a) * 0.14, 0.57, 0.55 + sin(a) * 0.14), Vector3(0.07, 0.02, 0.04), [])
+	var wreath := wk.build("Wreath")
+	add_child(wreath)
+	_underground(wreath)
+	# the lamp in its niche lights the chamber; another, on a ledge halfway
+	# down the stair, keeps the way from being black
+	_tomb_lamp("TombLamp", c + Vector3(-CHAMBER_HALF + 0.12, 0.95, 0.2), 6.5, 1.4)
+	var mid := STAIR_Z + STEPS * STEP_RUN * 0.5
+	var ledge := ORIGIN + Vector3(-HALL_HALF + 0.12, tomb_floor(mid) + 1.25, mid)
+	var lk := MeshKit.new()
+	lk.box("limestone", ledge + Vector3(0.0, -0.04, 0), Vector3(0.24, 0.08, 0.36), [])
+	var shelf := lk.build("StairLedge")
+	add_child(shelf)
+	_underground(shelf)
+	_tomb_lamp("StairLamp", ledge, 5.0, 0.9)
+
+
+func _tomb_lamp(name_: String, at: Vector3, reach: float, energy: float) -> void:
+	var lk := MeshKit.new()
+	lk.lathe("clay", PackedVector2Array([Vector2(0.05, 0.0), Vector2(0.08, 0.03), Vector2(0.06, 0.07)]), 6, at, 1.0, true, "dark", true)
+	lk.box("flame", at + Vector3(0.09, 0.1, 0), Vector3(0.04, 0.07, 0.04), [])
+	var lamp := lk.build(name_)
+	add_child(lamp)
+	_underground(lamp)
+	var glow := OmniLight3D.new()
+	glow.position = at + Vector3(0.4, 0.3, 0)
+	glow.light_color = Color(1, 0.66, 0.36)
+	glow.omni_range = reach
+	glow.set_script(preload("res://scripts/world/flicker.gd"))
+	glow.base_energy = energy
+	glow.amount = 0.3
+	glow.shadow_enabled = true  # keep the lamp's light inside the mound
+	add_child(glow)
+
+
+## Two wooden leaves in the doorway, hinged on the jambs, opening inward.
+func _doors() -> void:
+	for sx: float in [-1.0, 1.0]:
+		var hinge := Node3D.new()
+		hinge.name = "DoorLeaf%s" % ("L" if sx < 0 else "R")
+		hinge.position = ORIGIN + Vector3(sx * DOOR_HALF, 0, DOOR_Z)
+		add_child(hinge)
+		var k := MeshKit.new()
+		k.box("door", Vector3(-sx * DOOR_HALF / 2.0, DOOR_H / 2.0, 0.04), Vector3(DOOR_HALF - 0.02, DOOR_H - 0.02, 0.08), [])
+		for y: float in [0.45, DOOR_H - 0.45]:
+			k.box("bronze", Vector3(-sx * DOOR_HALF / 2.0, y, -0.01), Vector3(DOOR_HALF - 0.1, 0.06, 0.02), [])  # straps
+		var mi := MeshInstance3D.new()
+		mi.mesh = k.commit()
+		hinge.add_child(mi)
+		_leaves.append(hinge)
+	_door_body = StaticBody3D.new()
+	_door_body.name = "DoorStop"
+	var cs := CollisionShape3D.new()
+	var sh := BoxShape3D.new()
+	sh.size = Vector3(DOOR_HALF * 2.0, DOOR_H, 0.2)
+	cs.shape = sh
+	cs.position = ORIGIN + Vector3(0, DOOR_H / 2.0, DOOR_Z + 0.05)
+	_door_body.add_child(cs)
+	add_child(_door_body)
+	_creak = AudioStreamPlayer3D.new()
+	_creak.name = "DoorCreak"
+	_creak.stream = preload("res://assets/audio/door_creak.wav")
+	_creak.position = ORIGIN + Vector3(0, 1.4, DOOR_Z)
+	_creak.unit_size = 12.0
+	_creak.volume_db = -2.0
+	add_child(_creak)
+	_set_doors(0.0)
+
+
+func _set_doors(open: float) -> void:
+	var deg := DOOR_OPEN_DEG * open
+	_leaves[0].rotation.y = deg_to_rad(-deg)  # the left leaf swings in (+z)
+	_leaves[1].rotation.y = deg_to_rad(deg)
+
+
+## The mirror seen: the mound opens.
+func open_doors() -> void:
+	if _door_t >= 0.0:
+		return
+	_door_t = 0.0
+	_creak.play()
+	(_door_body.get_child(0) as CollisionShape3D).disabled = true
+
+
+func _shut_doors() -> void:
+	_door_t = -1.0
+	doors_open = false
+	_set_doors(0.0)
+	(_door_body.get_child(0) as CollisionShape3D).disabled = false
 
 
 func _altar(kit: MeshKit) -> void:
@@ -273,7 +639,12 @@ func _figures() -> void:
 		figures.append(root)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	if _door_t >= 0.0 and not doors_open:
+		_door_t += delta
+		var f := door_open_at(_door_t)
+		_set_doors(f)
+		doors_open = f >= 1.0
 	if not Game.dreaming:
 		return
 	var cam := get_viewport().get_camera_3d()
@@ -322,6 +693,7 @@ func enter() -> void:
 	Game.dream_changed.emit(true)
 	for f in figures:
 		f.reset()
+	_shut_doors()
 	vanished = 0
 	ended = false
 	_mirror_found = Game.found.has(&"bronze_mirror")
