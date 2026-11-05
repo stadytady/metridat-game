@@ -708,6 +708,13 @@ func _check_night() -> void:
 		if not f.lit:
 			_fail.append("agora: a brazier stayed dark after dusk")
 			break
+	# The lamp beside the cottage door follows the same dusk.
+	var wall_lamps := get_tree().get_nodes_in_group(&"wall_lamp")
+	for w: Node in wall_lamps:
+		if not w.lit:
+			_fail.append("a wall lamp stayed dark after dusk")
+			break
+	print("wall lamps: %d lit of %d" % [wall_lamps.filter(func(w: Node) -> bool: return w.lit).size(), wall_lamps.size()])
 	print("agora: %d dusk fires lit of %d" % [night_fires.filter(func(f: Node) -> bool: return f.lit).size(), night_fires.size()])
 	# Everything the route does should have paid out; the dream one comes later.
 	var missing: PackedStringArray = []

@@ -29,6 +29,9 @@ const SMOKE_EVERY := 7
 const GLOW_FROM := 0.75
 
 var _glow: Node3D
+## The one house you can walk into, and the lamp beside its door.
+var _cottage_lamp: WallLamp
+var _cottage_at := Transform3D.IDENTITY
 var _smoke: Array[GPUParticles3D] = []
 var _atm: Node
 
@@ -241,6 +244,9 @@ func _ready() -> void:
 	var kit := MeshKit.new()
 	var glow := MeshKit.new()
 	var houses := plan()
+	var cottage := _pick_cottage(houses)
+	if cottage:
+		cottage["opts"]["cottage"] = true
 	for hs: Dictionary in houses:
 		_house(kit, glow, hs)
 	_walls(kit)
@@ -250,6 +256,8 @@ func _ready() -> void:
 	_lanes(houses)
 	_terraces(houses)
 	_hearths(houses)
+	if _cottage_lamp != null:
+		_cottage_lamp.set_lit(false)
 
 
 func _house(kit: MeshKit, glow: MeshKit, hs: Dictionary) -> void:
@@ -269,7 +277,27 @@ func _house(kit: MeshKit, glow: MeshKit, hs: Dictionary) -> void:
 	opts["drop"] = hi - lo + 1.0
 	opts["glow"] = glow
 	hs["front"] = front
-	Arch.house(kit, Transform3D(basis, front), hs.w, hs.d, hs.h, opts)
+	var xf := Transform3D(basis, front)
+	if opts.get("cottage", false):
+		var info := Arch.cottage(kit, xf, hs.w, hs.d, hs.h, opts)
+		_cottage_at = xf
+		_cottage_lamp = WallLamp.new()
+		_cottage_lamp.name = "DoorLamp"
+		_cottage_lamp.position = xf * (info["lamp"] as Vector3)
+		_cottage_lamp.rotation.y = hs.yaw
+		add_child(_cottage_lamp)
+		# the room is not a cellar: a small warm light of its own
+		var room := OmniLight3D.new()
+		room.position = xf * Vector3(0, 1.7, -hs.d * 0.5)
+		room.light_color = Color(1.0, 0.66, 0.35)
+		room.omni_range = 5.0
+		room.light_energy = 0.0
+		room.set_script(preload("res://scripts/world/flicker.gd"))
+		room.base_energy = 0.85
+		room.amount = 0.2
+		add_child(room)
+	else:
+		Arch.house(kit, xf, hs.w, hs.d, hs.h, opts)
 
 
 ## Trodden earth between the rows, hugging the ground.
@@ -382,9 +410,27 @@ func _hearths(houses: Array) -> void:
 	add_child(pots.build("SmokePots"))
 
 
+## The house nearest the sea on the right hand as you come down: the one you can
+## walk into. Chosen as the easternmost house on the +z side, so it is always the
+## same house whatever the city grows into.
+func _pick_cottage(houses: Array) -> Dictionary:
+	var best: Dictionary = {}
+	var best_x := -INF
+	for hs: Dictionary in houses:
+		var z: float = hs.pos.y
+		if z < 0.0:
+			continue
+		if hs.pos.x > best_x:
+			best_x = hs.pos.x
+			best = hs
+	return best
+
+
 func _process(_delta: float) -> void:
 	var hour: float = _atm.t if _atm else 0.0
 	_glow.visible = hour >= GLOW_FROM
+	if _cottage_lamp != null:
+		_cottage_lamp.set_lit(hour >= WallLamp.DUSK)
 	var day := hour < 0.95
 	for s in _smoke:
 		if s.emitting != day:
