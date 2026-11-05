@@ -273,8 +273,10 @@ static func altar(kit: MeshKit, xf: Transform3D) -> void:
 	kit.xform = Transform3D.IDENTITY
 
 
-## Merchant stall: table on trestles, four posts, sloping cloth canopy.
-static func stall(kit: MeshKit, xf: Transform3D) -> void:
+## Merchant stall: table on trestles, four posts, sloping cloth canopy. With a
+## `stripes` palette the canopy is built stripe by stripe, the way dyed cloth
+## reads on the vases; an empty palette keeps the plain cloth.
+static func stall(kit: MeshKit, xf: Transform3D, stripes: Array = []) -> void:
 	kit.xform = xf
 	kit.solid_box("wood", Vector3(0, 0.85, 0), Vector3(2.6, 0.08, 1.0), [])
 	for sx: float in [1.0, -1.0]:
@@ -282,17 +284,24 @@ static func stall(kit: MeshKit, xf: Transform3D) -> void:
 	for p: Vector3 in [Vector3(-1.5, 0, 0.75), Vector3(1.5, 0, 0.75), Vector3(-1.5, 0, -0.95), Vector3(1.5, 0, -0.95)]:
 		var h := 2.35 if p.z > 0 else 2.75
 		kit.solid_box("wood", p + Vector3(0, h / 2.0, 0), Vector3(0.12, h, 0.12), [])
-	var a := Vector3(-1.75, 2.3, 1.05)
-	var b := Vector3(1.75, 2.3, 1.05)
-	var c := Vector3(1.75, 2.8, -1.15)
-	var d := Vector3(-1.75, 2.8, -1.15)
-	kit.quad("cloth", a, b, c, d)
-	kit.quad("cloth", b, a, d, c)
-	# scalloped front edge of the awning
-	for i in 7:
+	var palette: Array = stripes if not stripes.is_empty() else ["cloth"]
+	var n := 7
+	for i in n:
+		var mat: String = palette[i % palette.size()]
+		var x0 := -1.75 + 3.5 * i / n
+		var x1 := -1.75 + 3.5 * (i + 1) / n
+		var a := Vector3(x0, 2.3, 1.05)
+		var b := Vector3(x1, 2.3, 1.05)
+		var c := Vector3(x1, 2.8, -1.15)
+		var d := Vector3(x0, 2.8, -1.15)
+		kit.quad(mat, a, b, c, d)
+		kit.quad(mat, b, a, d, c)
+	# scalloped front edge of the awning, in the same colours
+	for i in n:
+		var mat: String = palette[i % palette.size()]
 		var x := -1.75 + 0.25 + i * 0.5
-		kit.quad("cloth", Vector3(x - 0.25, 2.1, 1.05), Vector3(x + 0.25, 2.1, 1.05), Vector3(x + 0.25, 2.3, 1.05), Vector3(x - 0.25, 2.3, 1.05))
-		kit.quad("cloth", Vector3(x + 0.25, 2.1, 1.05), Vector3(x - 0.25, 2.1, 1.05), Vector3(x - 0.25, 2.3, 1.05), Vector3(x + 0.25, 2.3, 1.05))
+		kit.quad(mat, Vector3(x - 0.25, 2.1, 1.05), Vector3(x + 0.25, 2.1, 1.05), Vector3(x + 0.25, 2.3, 1.05), Vector3(x - 0.25, 2.3, 1.05))
+		kit.quad(mat, Vector3(x + 0.25, 2.1, 1.05), Vector3(x - 0.25, 2.1, 1.05), Vector3(x - 0.25, 2.3, 1.05), Vector3(x + 0.25, 2.3, 1.05))
 	kit.xform = Transform3D.IDENTITY
 
 

@@ -55,6 +55,8 @@ func _ready() -> void:
 	floor_snap_length = 0.6
 	floor_max_angle = deg_to_rad(48.0)
 	interactor.add_exception(self)
+	# So the dog and the pacing actor can see who is walking about.
+	add_to_group(&"player")
 
 
 func add_look(relative: Vector2) -> void:

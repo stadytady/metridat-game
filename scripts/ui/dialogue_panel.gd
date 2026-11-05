@@ -175,6 +175,7 @@ func advance() -> void:
 func _finish() -> void:
 	if _npc and not _npc.npc_id.is_empty():
 		Game.talked[_npc.npc_id] = true
+		Game.talks[_npc.npc_id] = int(Game.talks.get(_npc.npc_id, 0)) + 1
 	close()
 
 

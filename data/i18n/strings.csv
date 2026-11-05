@@ -154,3 +154,31 @@ LOC_SAILOR_STRAIT_1,"Moods, yes. Flat as a floor at dawn, then a wind off the fa
 LOC_SAILOR_LIGHT_1,"We keep the lantern lit and the men below. A lamp that answers no hail is not a lamp.","Держим фонарь зажжённым, а людей — внизу. Огонь, который не отвечает на оклик, — не огонь."
 LOC_SAILOR_LIGHT_2,"My grandfather called it the toll. Something out there takes its share of the crossing, and the sea keeps the rest.","Дед называл это пошлиной. Что-то там берёт свою долю с перехода, а остальное оставляет море."
 LOC_SAILOR_LEAVE_1,"Then be here at first light with nothing to carry that you would miss. We sail on the morning wind, not on a promise.","Тогда будь здесь на рассвете и не бери с собой ничего, о чём будешь жалеть. Мы уходим с утренним ветром, а не с обещанием."
+UI_ACHIEVEMENT,Achievement: %s,Достижение: %s
+ACH_FIRST_FIND_NAME,The first find,Первая находка
+ACH_FIRST_FIND_DESC,"Inspect the first find.","Осмотреть первую находку."
+ACH_ALL_FINDS_NAME,All of them,Все находки
+ACH_ALL_FINDS_DESC,"Inspect every find in the city.","Осмотреть все находки города."
+ACH_ALL_LAMPS_NAME,Light along the way,Свет по всему пути
+ACH_ALL_LAMPS_DESC,"Light every lamp on the route.","Зажечь все светильники на пути."
+ACH_HEARD_ALL_NAME,Everyone in town,"Все, кто говорит"
+ACH_HEARD_ALL_DESC,"Hear out everyone who talks in the city.","Выслушать всех, кто говорит в городе."
+ACH_DREAM_NAME,Hecate's dream,Сон у Гекаты
+ACH_DREAM_DESC,"Lie down in the abaton and follow the dream.","Лечь в абатоне и пройти путём сна."
+UI_ACHIEVEMENT_CAPTION,Achievement unlocked,Достижение получено
+ACH_SILENT_NAME,The quiet one,Молчун
+ACH_SILENT_DESC,"Reach the dream without talking to anyone.","Дойти до сна, не поговорив ни с кем."
+ACH_AGAIN_NAME,Come back tomorrow,Зайти ещё раз
+ACH_AGAIN_DESC,"Talk to Fedr a second time.","Поговорить с Федром во второй раз."
+ACH_NIGHT_NAME,Night watch,Ночной дозор
+ACH_NIGHT_DESC,"Spend a minute in the city after dark.","Пробыть минуту в городе после темноты."
+UI_GOALS_TITLE,The way,Путь
+UI_GOALS_TAB_QUESTS,Tasks,Задачи
+UI_GOALS_TAB_ACH,Achievements,Достижения
+UI_GOALS_KEYS,"[TAB] close    [<] [>] page","[TAB] закрыть    [<] [>] раздел"
+UI_QUEST_FINDS,Finds,Находки
+UI_QUEST_LAMPS,Lamps,Светильники
+UI_QUEST_TALKS,Conversations,Разговоры
+UI_QUEST_SLEEP,Night in the abaton,Ночь в абатоне
+UI_QUEST_NOTE,"The evening comes with the finds: the more you look at, the closer the night.","Вечер приходит с находками: чем больше осмотришь, тем ближе ночь."
+UI_GOALS_EARNED,Earned,Получено

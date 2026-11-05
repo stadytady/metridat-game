@@ -3,12 +3,19 @@ extends Node3D
 ## A dog asleep against a wall, curled up, built like the hens from rigid
 ## boxes: it breathes and now and then twitches an ear (stepped at 15 fps,
 ## PS1-style). No collider: it is never in the way. Faces -Z, head on its paws.
+##
+## It sleeps until something is worth watching: at night Omens points it at the
+## sanctuary, and by day it lifts its head for the player who comes close.
+
+## How far away a player wakes it up. Omens still owns the night.
+const NOTICE := 7.0
 
 ## Set by Omens at night: a point the dog lifts its head to watch. INF: asleep.
 var watch := Vector3.INF
 var _parts := {}
 var _t := 0.0
 var _twitch_at := 3.0
+var _wake := 0.0
 
 
 func _ready() -> void:
@@ -45,6 +52,16 @@ func _ready() -> void:
 		_mesh(ear, ek)
 
 
+## What the dog looks at, if anything: Omens' night watch first, then a player
+## standing close enough to be worth lifting the head for.
+static func look_target(watch: Vector3, player: Vector3, dog: Vector3, radius: float) -> Vector3:
+	if watch != Vector3.INF:
+		return watch
+	if player == Vector3.INF:
+		return Vector3.INF
+	return player if Vector2(player.x - dog.x, player.z - dog.z).length() <= radius else Vector3.INF
+
+
 func _part(name: String, parent: Node3D, pos: Vector3) -> Node3D:
 	var n := Node3D.new()
 	n.name = name
@@ -75,14 +92,20 @@ func _process(delta: float) -> void:
 		_twitch_at = _t + randf_range(3.0, 9.0)
 	var p := pose_at(_t, _twitch_at)
 	(_parts.body as Node3D).scale = Vector3(1, p.x, 1)
+	var player := get_tree().get_first_node_in_group(&"player") as Node3D
+	var player_pos := player.global_position if player != null else Vector3.INF
+	var target := look_target(watch, player_pos, global_position, NOTICE)
+	# Lifting the head takes a moment, and is stepped like everything else.
+	_wake = move_toward(_wake, 1.0 if target != Vector3.INF else 0.0, delta * 2.5)
+	var w := floorf(_wake * 15.0) / 15.0
 	var head := _parts.head as Node3D
-	if watch == Vector3.INF:
-		head.position = Vector3(0, 0.15, -0.6)
+	head.position = Vector3(0, 0.15, -0.6).lerp(Vector3(0, 0.3, -0.52), w)
+	if w > 0.0 and target != Vector3.INF:
+		var to := global_transform.affine_inverse() * target - head.position
+		var look := Vector3(clampf(atan2(to.y, Vector2(to.x, to.z).length()), -0.2, 0.5),
+			clampf(atan2(-to.x, -to.z), -1.2, 1.2), 0)
+		head.rotation = Vector3.ZERO.lerp(look, w)
+	else:
 		head.rotation = Vector3.ZERO
-		(_parts.ear_r as Node3D).rotation_degrees.x = -p.y
-		return
-	# awake: head up off the paws, turned to what it hears, ears still
-	head.position = Vector3(0, 0.3, -0.52)
-	var to := global_transform.affine_inverse() * watch - head.position
-	head.rotation = Vector3(clampf(atan2(to.y, Vector2(to.x, to.z).length()), -0.2, 0.5), clampf(atan2(-to.x, -to.z), -1.2, 1.2), 0)
-	(_parts.ear_r as Node3D).rotation_degrees.x = 0.0
+	# Ears still while watching; the idle twitch only while asleep.
+	(_parts.ear_r as Node3D).rotation_degrees.x = -p.y * (1.0 - w)

@@ -51,10 +51,16 @@ const POSES := {
 	"mender": {"chest": Vector3(-28, 0, 0), "head": Vector3(-22, 0, 0),
 		"l_shoulder": Vector3(20, 0, 10), "r_shoulder": Vector3(20, 0, -10), "l_elbow": Vector3(45, 0, 0), "r_elbow": Vector3(45, 0, 0),
 		"l_hip": Vector3(80, 0, 10), "r_hip": Vector3(80, 0, -10), "l_knee": Vector3(-60, 0, 0), "r_knee": Vector3(-60, 0, 0)},
+	# walking upright: the stride itself comes from step_motion()
+	"walk": {"chest": Vector3(-4, 0, 0), "head": Vector3(-8, 0, 0)},
+	# stopped and thinking about the part: chin on the hand, eyes on the stones
+	"think": {"chest": Vector3(-6, 0, 0), "head": Vector3(-14, 0, 0),
+		"r_shoulder": Vector3(42, 0, -12), "r_elbow": Vector3(105, 0, 0), "l_shoulder": Vector3(8, 0, 6)},
 }
 
 ## Pelvis height for a pose (seated figures sit on something low).
-const SEAT := {"stand": 0.92, "potter": 0.46, "turner": 0.32, "mender": 0.4, "sleep": 0.12, "baker": 0.5, "carry": 0.92, "declaim": 0.92, "draw": 0.92}
+const SEAT := {"stand": 0.92, "potter": 0.46, "turner": 0.32, "mender": 0.4, "sleep": 0.12, "baker": 0.5, "carry": 0.92, "declaim": 0.92, "draw": 0.92,
+	"walk": 0.92, "think": 0.92}
 
 
 ## Builds the joints under `root`; returns {joint name: Node3D}.
@@ -175,3 +181,19 @@ static func motion(pose: String, t: float) -> Dictionary:
 				"head": Vector3(0, pull * 8, 0)}
 		_:
 			return {"chest": Vector3(sin(q * 1.1) * 2, 0, 0)}
+
+
+## One stride of a walking figure, driven by the distance covered (phase in
+## cycles, 1.0 = both legs back where they started). Legs and arms swing in
+## opposition and the knees only bend backwards, the way a knee does.
+static func step_motion(phase: float) -> Dictionary:
+	var s := sin(phase * TAU)
+	var swing := s * 24.0
+	return {
+		"l_hip": Vector3(swing, 0, 0),
+		"r_hip": Vector3(-swing, 0, 0),
+		"l_knee": Vector3(-maxf(0.0, -s) * 26.0, 0, 0),
+		"r_knee": Vector3(-maxf(0.0, s) * 26.0, 0, 0),
+		"l_shoulder": Vector3(-swing * 0.55, 0, 0),
+		"r_shoulder": Vector3(swing * 0.55, 0, 0),
+	}

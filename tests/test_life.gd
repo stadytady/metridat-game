@@ -41,11 +41,25 @@ func test_dog_clear_of_the_stoa() -> void:
 	check(L.DOG.z - 0.25 > -4.7, "the dog lies in the stoa's step")
 
 
-func test_well_off_the_way_across_the_agora() -> void:
-	# the walk crosses from the street's end (9, 0) to the stele (22, -0.9)
-	var a := Vector2(9.0, 0.0)
-	var b := Vector2(22.0, -0.9)
-	var p := Vector2(L.WELL.x, L.WELL.z)
-	var t := clampf((p - a).dot(b - a) / (b - a).length_squared(), 0.0, 1.0)
-	check(p.distance_to(a.lerp(b, t)) > 2.2, "the well (and the woman at it) stands in the way")
-	check(Topo.in_rect(p.x, p.y, Topo.AGORA_CENTER, Topo.AGORA_HALF), "the well is off the agora")
+## The well left the square for the lane: it must stand clear of the way past and
+## on ground flat enough to carry a curb, and the yard must sit across from it.
+func test_well_stands_off_the_lane() -> void:
+	var p := L.well_pos()
+	var d := absf(p.z - Topo.street_z(p.x))
+	check(d > Topo.STREET_HALF + 0.4, "the well stands in the lane: %.2f m from its centre" % d)
+	var lo := INF
+	var hi := -INF
+	for dx: float in [-0.6, 0.0, 0.6]:
+		for dz: float in [-0.6, 0.0, 0.6]:
+			var h := Topo.surface(p.x + dx, p.z + dz)
+			lo = minf(lo, h)
+			hi = maxf(hi, h)
+	check(hi - lo < 0.3, "the well stands on a slope: %.2f m under it" % (hi - lo))
+
+
+func test_yard_is_across_the_lane() -> void:
+	var c := L.yard_pos()
+	var d := c.z - Topo.street_z(c.x)
+	var w := L.well_pos()
+	check(absf(d) > Topo.STREET_HALF + 1.0, "the yard's fence is in the lane")
+	check(signf(d) != signf(w.z - Topo.street_z(w.x)), "the yard is on the well's side, not across")

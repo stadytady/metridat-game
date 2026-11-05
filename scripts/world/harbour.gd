@@ -9,7 +9,13 @@ const NPC := preload("res://scripts/npc/npc.gd")
 
 ## The ship lies along the pier's south side, bow out to sea.
 const SHIP_GAP := 3.7  # the hull is 2.4 m either side of the keel, the yard about 3.5
-const WATERLINE := -1.0
+## The hull rides low, like a laden merchantman: keel under the sea, rail well
+## above it. The model's own floor is its bottom, so a laid deck goes over it at
+## DECK_Y: the boat sits in the water and still stays dry inside.
+const WATERLINE := 0.0
+const DECK_Y := 0.9
+## The model's keel, from its mesh bounds: the test keeps it under the sea.
+const HULL_BOTTOM := -0.67
 const LANTERN_FROM := 0.8
 
 var _ship: Node3D
@@ -37,9 +43,15 @@ func _ready() -> void:
 	_ship = place("ship", ship_pos(), 0.0)
 	for g: GeometryInstance3D in _ship.find_children("*", "GeometryInstance3D", true, false):
 		g.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_laid_deck(_ship, 1.0)
 	_gangway()
 	_crew()
 	_end_lantern()
+
+
+## The model's floor is the bottom of its hull: lay a deck over it.
+func _laid_deck(ship: Node3D, k: float) -> void:
+	laid_deck(ship, DECK_Y, Vector3(14.6, 0.14, 8.0), k)
 
 
 func _pier(kit: MeshKit) -> void:

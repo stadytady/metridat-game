@@ -18,6 +18,11 @@ const STAND := Vector2(-88.6, 3.9)
 ## The actor rehearses in the orchestra, facing the empty seats.
 const ACTOR := Vector2(-90.6, 0.3)
 const NPC := preload("res://scripts/npc/npc.gd")
+## Two lamps of the hill lit within this radius and fire answers at the corners.
+const FIRE_RADIUS := 12.0
+
+var _fires: Array[CornerFire] = []
+var _fires_lit := false
 
 
 ## Every seat block: [centre on the floor, yaw (rad), size].
@@ -55,6 +60,53 @@ func _ready() -> void:
 	_stand(kit)
 	add_child(kit.build("Theatre"))
 	_actor()
+	_braziers()
+	Game.lamp_lit.connect(_on_lamp_lit)
+	_sync_braziers()
+
+
+## Four torches: the two ends of the seat ring and the two front corners of the
+## orchestra, where the audience would have come in.
+func _braziers() -> void:
+	var top := Topo.HILL_PLATFORM_TOP
+	var ring := INNER_R + TIERS * TIER_DEPTH + 0.5
+	for a: float in [ARC_FROM, ARC_TO]:
+		var rad := deg_to_rad(a)
+		_add_fire(Vector3(CENTER.x + cos(rad) * ring, top, CENTER.y + sin(rad) * ring))
+	for a: float in [-32.0, 32.0]:
+		var rad := deg_to_rad(a)
+		var r := ORCHESTRA_R + 0.55
+		_add_fire(Vector3(CENTER.x + cos(rad) * r, top, CENTER.y + sin(rad) * r))
+
+
+func _add_fire(pos: Vector3) -> void:
+	var f := CornerFire.new()
+	f.position = pos
+	add_child(f)
+	f.add_to_group(&"corner_fire")
+	_fires.append(f)
+
+
+func _on_lamp_lit(_lit: int, _total: int) -> void:
+	_sync_braziers()
+
+
+## The theatre answers the player rather than a script: light both lamps that
+## stand by the orchestra and the corners take fire; let them be and it stays
+## dark. Cheap enough to recount on every lamp that goes up.
+func _sync_braziers() -> void:
+	if _fires.is_empty():
+		return
+	var near := 0
+	for l: Lamp in Game.lamps:
+		if l.lit and Vector2(l.global_position.x - CENTER.x, l.global_position.z - CENTER.y).length() <= FIRE_RADIUS:
+			near += 1
+	var want := near >= 2
+	if want == _fires_lit:
+		return
+	_fires_lit = want
+	for f in _fires:
+		f.set_lit(want)
 
 
 ## A ring of pale slabs flush with the paving marks the orchestra.
@@ -117,6 +169,12 @@ func _actor() -> void:
 	a.body_mat = "chiton"
 	a.position = Vector3(ACTOR.x, Topo.HILL_PLATFORM_TOP, ACTOR.y)
 	a.rotation.y = deg_to_rad(90.0)  # faces -x, the seats
+	# Rehearsing is not standing still: he paces the orchestra, stops to think,
+	# then stops to declaim, and breaks off to face whoever comes up to him.
+	a.patrol = PackedVector3Array([Vector3(-0.9, 0, -0.9), Vector3(1.5, 0, -0.2), Vector3(0.3, 0, 1.4)])
+	a.patrol_poses = PackedStringArray(["think", "declaim", "think"])
+	a.patrol_speed = 0.5
+	a.patrol_pause = 3.2
 	add_child(a)
 	# a mask in the left hand, face out
 	var k := MeshKit.new()

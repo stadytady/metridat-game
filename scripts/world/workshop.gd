@@ -75,6 +75,15 @@ func _build_wheel(p: Vector3) -> void:
 	var mi := MeshInstance3D.new()
 	mi.mesh = wk.commit()
 	_wheel.add_child(mi)
+	# the wheel itself: a soft thump each half turn, wet clay slapped on
+	var sound := AudioStreamPlayer3D.new()
+	sound.stream = preload("res://assets/audio/wheel.wav")
+	sound.position = p + Vector3(0, 0.45, 0)
+	sound.volume_db = -27.0
+	sound.unit_size = 1.2
+	sound.max_distance = 9.0
+	sound.autoplay = true
+	add_child(sound)
 
 
 func _kiln_fire(k: Vector3) -> void:

@@ -7,8 +7,16 @@ extends District
 ## Out on the paving by the stoa's west end, clear of its end wall (x 12.6)
 ## and of the raised stylobate (z -4.7).
 const DOG := Vector3(13.6, Topo.AGORA_H, -3.9)
-## The well on the agora, in front of the stoa and off the way across.
-const WELL := Vector3(17.2, Topo.AGORA_H, -3.0)
+## The well used to stand on the square and left the west lane bare; it now waits
+## in the bend where the lane leaves the agora, on the grass by the wall, clear of
+## the way past. The water carrier works there.
+const WELL_X := 5.0
+const WELL_SIDE := -1.0
+const WELL_OFF := 1.1
+
+## A yard on the other side of the same lane: a fence, hay and a mule.
+const YARD_X := 2.6
+const YARD_OFF := 2.2
 const NPC := preload("res://scripts/npc/npc.gd")
 ## Where feet have worn the stone: [centre, size, yaw deg].
 const WORN := [
@@ -42,6 +50,21 @@ static func street_edge(x: float, side: float, inset: float) -> Vector3:
 	return Vector3(x, Topo.street_height(x), Topo.street_z(x)) + out * (Topo.STREET_HALF - inset)
 
 
+## Where the well-head stands: on the grass a metre past the paving, on the ground
+## it actually stands on, so the curb never hangs over a step.
+static func well_pos() -> Vector3:
+	var p := street_edge(WELL_X, WELL_SIDE, -WELL_OFF)
+	p.y = Topo.surface(p.x, p.z)
+	return p
+
+
+## The yard's centre, on the other side of the lane.
+static func yard_pos() -> Vector3:
+	var p := street_edge(YARD_X, -WELL_SIDE, -YARD_OFF)
+	p.y = Topo.surface(p.x, p.z)
+	return p
+
+
 func _ready() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 2511
@@ -58,11 +81,41 @@ func _ready() -> void:
 	add_child(kit.build("Life"))
 	_washing()
 	_well()
+	_yard()
 	var dog := Dog.new()
 	dog.position = DOG
 	dog.scale = Vector3.ONE * 1.3  # a big yard dog, and readable at 640x360
 	dog.rotation.y = deg_to_rad(-100.0)  # along the stoa's end wall, head towards the square
 	add_child(dog)
+	_folk()
+
+
+## People crossing the square on their own business: a porter with a jar, a woman
+## with a basket, a boy who runs. They have no colliders and no lines, so they
+## never stand in the walkthrough's way - they are weather, not furniture.
+const FOLK := [
+	# [from, to, speed, pose, body, scale]
+	[Vector3(30.0, 0, -3.4), Vector3(15.5, 0, -2.2), 0.55, "carry", "chiton_dark", 1.0],
+	[Vector3(14.0, 0, 2.2), Vector3(29.0, 0, 3.6), 0.45, "stand", "chiton", 0.95],
+	[Vector3(18.5, 0, 8.0), Vector3(31.0, 0, 6.4), 1.05, "stand", "chiton_dark", 0.8],
+]
+
+
+func _folk() -> void:
+	for f: Array in FOLK:
+		var n: Npc = NPC.new()
+		n.talkable = false
+		n.stops_for_player = false
+		n.pose = f[3]
+		n.body_mat = f[4]
+		n.figure_scale = f[5]
+		n.patrol = PackedVector3Array([f[1] - f[0], Vector3.ZERO])
+		n.patrol_speed = f[2]
+		n.patrol_pause = 0.6
+		n.patrol_poses = PackedStringArray([f[3], f[3]])
+		n.position = Vector3(f[0].x, Topo.AGORA_H, f[0].z)
+		add_child(n)
+		n.collision_layer = 0
 
 
 ## A broken pot: a scatter of curved red sherds, one with a black-glazed face.
@@ -155,10 +208,42 @@ func _process(delta: float) -> void:
 		_cloths[i].rotation.x = sin(q * 1.3 + i * 1.7) * 0.12
 
 
+## A yard across the lane from the well: a fence with a gate, hay in a manger,
+## and a mule standing in it with nothing to do.
+func _yard() -> void:
+	var c := yard_pos()
+	var kit := MeshKit.new()
+	# fence along the lane, with a gate gap in the middle
+	for i in 6:
+		var x := c.x - 2.5 + i * 1.0
+		if absf(x - c.x) < 0.5:
+			continue  # the gate
+		kit.box("wood", Vector3(x, c.y + 0.55, c.z - 1.6), Vector3(0.09, 1.1, 0.09), [])
+	for seg: Vector2 in [Vector2(c.x - 2.5, c.x - 0.5), Vector2(c.x + 0.5, c.x + 2.5)]:
+		var mid: float = (seg.x + seg.y) / 2.0
+		var length: float = seg.y - seg.x
+		kit.box("wood", Vector3(mid, c.y + 0.95, c.z - 1.6), Vector3(length, 0.08, 0.06), [])
+		kit.box("wood", Vector3(mid, c.y + 0.55, c.z - 1.6), Vector3(length, 0.07, 0.05), [])
+	# side fences running back from the gate towards the wall
+	for sx: float in [-1.0, 1.0]:
+		for i in 3:
+			kit.box("wood", Vector3(c.x + sx * 2.5, c.y + 0.55, c.z - 1.6 + i), Vector3(0.09, 1.1, 0.09), [])
+		kit.box("wood", Vector3(c.x + sx * 2.5, c.y + 0.95, c.z), Vector3(0.06, 0.08, 3.2), [])
+	# manger with hay
+	var m := c + Vector3(-1.1, 0, 0.6)
+	kit.box("wood", m + Vector3(0, 0.35, 0), Vector3(1.6, 0.5, 0.55), [])
+	kit.box("bread", m + Vector3(0, 0.63, 0), Vector3(1.5, 0.22, 0.46), [])
+	add_child(kit.build("Yard"))
+	var mule := Mule.new()
+	mule.position = c + Vector3(0.7, 0, 0.4)
+	mule.rotation.y = deg_to_rad(125.0)  # head down to the manger, three quarters on
+	add_child(mule)
+
+
 ## A stone well-head with a wooden frame and pulley, and a woman drawing water
 ## hand over hand, her hydria waiting by the curb.
 func _well() -> void:
-	var w := WELL
+	var w := well_pos()
 	var kit := MeshKit.new()
 	kit.lathe("limestone", PackedVector2Array([Vector2(0.6, 0.0), Vector2(0.62, 0.12), Vector2(0.54, 0.2), Vector2(0.54, 0.74),
 		Vector2(0.62, 0.8), Vector2(0.6, 0.86)]), 10, w, 2.0, false, "dark", true)
