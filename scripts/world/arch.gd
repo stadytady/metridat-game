@@ -459,16 +459,16 @@ static func statue(kit: MeshKit, xf: Transform3D, opts: Dictionary = {}) -> floa
 		10, Vector3.ZERO, 1.0, true, mat)
 	# chest, then shoulders wider than the waist: the first thing the eye reads
 	kit.box(mat, Vector3(0, y + h * 0.71, 0), Vector3(h * 0.26, h * 0.19, h * 0.19), ["bottom"])
-	kit.box(mat, Vector3(0, y + h * 0.815, 0), Vector3(h * 0.38, h * 0.07, h * 0.21), ["bottom"])
+	kit.box(mat, Vector3(0, y + h * 0.815, 0), Vector3(h * 0.34, h * 0.07, h * 0.21), ["bottom"])
 	# arms: one hangs, the other answers the option
 	var arm := String(opts.get("arm", "down"))
 	for sx: float in [-1.0, 1.0]:
 		if sx > 0.0 and arm == "up":
-			kit.box(mat, Vector3(h * 0.21, y + h * 0.88, 0), Vector3(h * 0.10, h * 0.30, h * 0.12), ["bottom"])
+			kit.box(mat, Vector3(h * 0.16, y + h * 0.88, 0), Vector3(h * 0.10, h * 0.30, h * 0.13), ["bottom"])
 		elif sx > 0.0 and arm == "spear":
-			kit.box(mat, Vector3(h * 0.21, y + h * 0.71, h * 0.03), Vector3(h * 0.09, h * 0.34, h * 0.11), ["bottom"])
+			kit.box(mat, Vector3(h * 0.16, y + h * 0.71, h * 0.03), Vector3(h * 0.10, h * 0.34, h * 0.12), ["bottom"])
 		else:
-			kit.box(mat, Vector3(h * 0.21 * sx, y + h * 0.68, 0), Vector3(h * 0.09, h * 0.36, h * 0.12), ["bottom"])
+			kit.box(mat, Vector3(h * 0.16 * sx, y + h * 0.68, 0), Vector3(h * 0.10, h * 0.36, h * 0.13), ["bottom"])
 	# neck, head, hair: the head is a seventh of the figure, not a tenth
 	kit.box(mat, Vector3(0, y + h * 0.865, 0), Vector3(h * 0.07, h * 0.04, h * 0.07), ["bottom"])
 	kit.box(mat, Vector3(0, y + h * 0.935, h * 0.005), Vector3(h * 0.125, h * 0.13, h * 0.13), ["bottom"])

@@ -81,7 +81,7 @@ func _figure(kit: MeshKit, f: Array, top: float) -> void:
 		"goddess":
 			Arch.statue(kit, xf, {"h": 2.2, "mat": "column", "helmet": true, "plinth": 0.45})
 		"youth":
-			Arch.statue(kit, xf, {"h": 1.7, "mat": "bronze", "arm": "up", "plinth": 0.35})
+			Arch.statue(kit, xf, {"h": 1.7, "mat": "bronze_old", "arm": "up", "plinth": 0.35})
 		"herm":
 			Arch.herm(kit, xf, 1.5)
 
