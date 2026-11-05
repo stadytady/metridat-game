@@ -8,6 +8,11 @@ const SUN_YAW := -100.0
 ## Seconds for the light to catch up with a new target hour.
 const TRANSITION := 12.0
 
+## Render layer for places under the earth (the dream's tomb): sun and moon do
+## not reach it, only the lamps down there. Shadows alone cannot keep them out,
+## the moon casts none.
+const UNDERGROUND := 1 << 10
+
 var sun: DirectionalLight3D
 var moon: DirectionalLight3D
 var env: Environment
@@ -54,6 +59,7 @@ func _ready() -> void:
 	sun.shadow_bias = 0.08
 	sun.shadow_normal_bias = 1.2
 	sun.shadow_opacity = 0.85
+	sun.light_cull_mask = 0xFFFFF & ~UNDERGROUND
 	add_child(sun)
 
 	moon = DirectionalLight3D.new()
@@ -61,6 +67,7 @@ func _ready() -> void:
 	moon.light_color = Color("#8fa4d8")
 	moon.rotation_degrees = Vector3(-38.0, 70.0, 0.0)  # high in the east, over the strait
 	moon.shadow_enabled = false
+	moon.light_cull_mask = 0xFFFFF & ~UNDERGROUND
 	add_child(moon)
 
 	t = Game.time_target()
