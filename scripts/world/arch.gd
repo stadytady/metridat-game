@@ -125,15 +125,18 @@ static func cottage(kit: MeshKit, xf: Transform3D, w: float, d: float, h: float,
 	kit.xform = xf
 	# steps from the sill down to the lane: the front of a house sits on the
 	# highest corner of its plot, so the ground at the door may be lower
-	var sill_y := xf.origin.y + socle + FLOOR_LIFT
+	# heights here are local to the house: a world height would lift the treads into
+	# the sky by the height of the plot
+	var treads: Array[float] = []
 	for i in 4:
 		var local := Vector3(0, 0, 0.5 + i * 0.42)
 		var world := xf * local
-		var ground := Topo.terrain(world.x, world.z)
-		var high := sill_y - (i + 1) * 0.26
+		var ground := Topo.terrain(world.x, world.z) - xf.origin.y
+		var high := socle + FLOOR_LIFT - (i + 1) * 0.26
 		if high <= ground + 0.03:
 			break
 		kit.solid_box("limestone", Vector3(0, high - 0.13, 0.5 + i * 0.42), Vector3(COTTAGE_DOOR + 0.45, 0.26, 0.48), ["bottom", "top"])
+		treads.append(high)
 	# a stone threshold so the step onto the floor reads as intended
 	kit.solid_box("limestone", Vector3(0, socle + FLOOR_LIFT - 0.03, -t * 0.5), Vector3(COTTAGE_DOOR, 0.12, t + 0.18), ["bottom", "top"])
 	# the door: a leaf standing open against the inside wall
@@ -155,6 +158,7 @@ static func cottage(kit: MeshKit, xf: Transform3D, w: float, d: float, h: float,
 		"floor": floor_y,
 		"woman": Vector3(inside.position.x + inside.size.x * 0.35, floor_y, inside.position.y + inside.size.y * 0.45),
 		"inside": inside,
+		"steps": treads,
 	}
 
 

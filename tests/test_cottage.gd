@@ -55,3 +55,13 @@ func test_a_woman_wears_hair_and_a_skirt() -> void:
 	check(head.get_child_count() > head_before, "nothing was added to the head")
 	check(pelvis.get_child_count() > pelvis_before, "nothing was added to the hips")
 	root.free()
+
+## The steps outside the door belong to the house, not to the sky: every tread sits
+## between the threshold and a stride below it.
+func test_the_steps_stay_at_the_door() -> void:
+	var kit := MeshKit.new()
+	var info := ARCH.cottage(kit, Transform3D.IDENTITY, 6.0, 7.0, 3.5, {"drop": 1.0})
+	var floor_y: float = info["floor"]
+	for step: float in info["steps"]:
+		check(step < floor_y, "a tread stands above the floor at %.2f" % step)
+		check(step > floor_y - 1.2, "a tread hangs %.2f below the threshold" % (floor_y - step))
