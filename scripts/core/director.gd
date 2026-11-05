@@ -316,6 +316,7 @@ func _walkthrough() -> void:
 	if items.size() < 5:
 		_fail.append("fewer than 5 inspectables")
 	await _check_title()
+	_check_cicadas()
 	await _check_prologue(player)
 	await _check_journal(Game.total())
 	var min_y := INF
@@ -860,6 +861,28 @@ func _check_language() -> void:
 	print("language: live switch en<->ru ok" if _fail.is_empty() else "language: FAILED")
 
 
+## The cicadas belong to the hill: in the late afternoon all three must be
+## singing. By the night they are gone — _check_audio looks at that side.
+func _check_cicadas() -> void:
+	var amb: Node = _main().world.get_node_or_null("Ambience")
+	if amb == null:
+		_fail.append("no ambience")
+		return
+	var cicadas: Array = amb.find_children("Cicadas*", "AudioStreamPlayer3D", false, false)
+	if cicadas.is_empty():
+		_fail.append("no cicadas on the hill")
+		return
+	var singing := 0
+	for c: AudioStreamPlayer3D in cicadas:
+		if c.playing:
+			singing += 1
+	if singing < cicadas.size():
+		_fail.append("only %d of %d cicadas sing on the hill" % [singing, cicadas.size()])
+	if amb.heat < 0.9:
+		_fail.append("the cicadas are already faded out in the afternoon (%.2f)" % amb.heat)
+	print("cicadas on the hill: %d of %d singing, heat %.2f" % [singing, cicadas.size(), amb.heat])
+
+
 func _check_audio(player: CharacterBody3D) -> void:
 	var amb: Node = _main().world.get_node("Ambience")
 	var wind: AudioStreamPlayer = amb.get_node("Wind")
@@ -870,9 +893,18 @@ func _check_audio(player: CharacterBody3D) -> void:
 		_fail.append("surf is not playing")
 	if player.steps_played < 20:
 		_fail.append("only %d footsteps played" % player.steps_played)
+	# The walk crosses the paving of the hill and the street and the bare ground
+	# of the beach: the two must be heard, or the surface lookup is dead.
+	if player.stone_steps < 5:
+		_fail.append("only %d steps rang on the paving" % player.stone_steps)
+	if player.dirt_steps < 5:
+		_fail.append("only %d steps fell on the earth" % player.dirt_steps)
 	if amb.gulls_played < 1:
 		_fail.append("no gull call during the walk")
-	print("audio: steps=%d gulls=%d" % [player.steps_played, amb.gulls_played])
+	if amb.heat > 0.05:
+		_fail.append("the cicadas still sing at night (%.2f)" % amb.heat)
+	print("audio: steps=%d (paving %d, earth %d) gulls=%d cicadas=%.2f"
+			% [player.steps_played, player.stone_steps, player.dirt_steps, amb.gulls_played, amb.heat])
 	var flew := 0
 	for b: Bird in get_tree().get_nodes_in_group(&"pigeon"):
 		flew += b.took_off
