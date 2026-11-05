@@ -49,9 +49,19 @@ jobs:
       - name: Package like a release
         run: tools/package.sh "ci-${GITHUB_SHA::7}"
       - name: Install Wine (to run the Windows build) and ffmpeg (site poster)
+        # The Ubuntu mirror sometimes stalls for many minutes: give each try a
+        # deadline and try again, rather than hang until the job times out.
+        timeout-minutes: 15
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq --no-install-recommends wine wine64 xvfb ffmpeg
+          for i in 1 2 3; do
+            if timeout 180 sudo apt-get update -qq -o Acquire::Retries=3 &&
+               timeout 300 sudo apt-get install -y -qq --no-install-recommends -o Acquire::Retries=3 wine wine64 xvfb ffmpeg; then
+              break
+            fi
+            echo "apt attempt $i stalled or failed, retrying"
+            sleep 15
+          done
+          command -v wine
       - name: Smoke-test the packages (Linux natively, Windows under Wine)
         run: tools/smoke.sh
       - uses: actions/upload-artifact@v4
