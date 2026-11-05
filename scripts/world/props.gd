@@ -88,7 +88,9 @@ static func column_doric(kit: MeshKit, h: float) -> void:
 	kit.box("limestone", Vector3(0, h - 0.08, 0), Vector3(0.8, 0.16, 0.8), [])
 
 
-static func olive_tree(kit: MeshKit, seed: int) -> void:
+## Olive at the origin, written into the kit. `xf` places (and scales) it, so a
+## whole grove can go into one mesh instead of a node per tree.
+static func olive_tree(kit: MeshKit, seed: int, xf: Transform3D = Transform3D.IDENTITY) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed
 	# Gnarled trunk: stacked, offset frustums.
@@ -97,13 +99,14 @@ static func olive_tree(kit: MeshKit, seed: int) -> void:
 	for i in pts.size() - 1:
 		var a: Vector3 = pts[i]
 		var b: Vector3 = pts[i + 1]
-		kit.xform = align_y(a, b)
+		kit.xform = xf * align_y(a, b)
 		kit.lathe("bark", PackedVector2Array([Vector2(radii[i], 0), Vector2(radii[i + 1], a.distance_to(b))]), 5,
 				Vector3.ZERO, 1.0, false)
-	kit.xform = Transform3D.IDENTITY
+	kit.xform = xf
 	for c: Array in [[Vector3(0.1, 2.3, 0), Vector3(1.3, 0.75, 1.2)], [Vector3(-0.6, 2.0, 0.4), Vector3(0.8, 0.55, 0.8)],
 			[Vector3(0.7, 2.1, -0.5), Vector3(0.85, 0.6, 0.8)], [Vector3(0.0, 2.75, -0.2), Vector3(0.8, 0.5, 0.7)]]:
 		kit.blob("foliage", c[0], c[1], 0.22, rng)
+	kit.xform = Transform3D.IDENTITY
 
 
 static func cypress(kit: MeshKit) -> void:

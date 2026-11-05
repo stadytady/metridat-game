@@ -1,7 +1,10 @@
 extends District
 ## Starting point: a paved lookout terrace on the summit with a broken parapet,
 ## fallen architecture, and two standing columns framing the way down. The
-## west half holds a small theatre (theatre.gd).
+## west half holds a small theatre (theatre.gd). Gates in the north and south
+## parapets open onto the park (park.gd).
+
+const PARK := preload("res://scripts/world/park.gd")
 
 
 func _ready() -> void:
@@ -14,16 +17,37 @@ func _ready() -> void:
 	Arch.path(kit, [Vector3(c.x + h.x - 0.2, top, 0), Vector3(Topo.STREET[0].x, Topo.STREET[0].y, Topo.STREET[0].z)] as Array[Vector3], 2.0)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 11
-	# parapet with gaps; the east side stays open towards the city
 	var x0 := c.x - h.x + 0.3
 	var x1 := c.x + h.x - 0.3
+	# Parapet with gaps; the east side stays open towards the city. Two gates are
+	# left for the park walks, which leave the terrace north and south: any
+	# segment that would close the opening is dropped, the rng is not, so the rest
+	# of the parapet stays exactly as it was.
 	for z: float in [c.y - h.y + 0.3, c.y + h.y - 0.3]:
 		var x := x0
+		var gap_lo := INF
+		var gap_hi := -INF
 		while x < x1:
 			var seg := rng.randf_range(2.0, 4.0)
 			var hh := rng.randf_range(0.35, 0.9)
-			kit.solid_box("limestone", Vector3(minf(x + seg / 2.0, x1), top + hh / 2.0, z), Vector3(minf(seg, x1 - x), hh, 0.55), ["bottom"])
+			var a := x
+			var b := minf(x + seg, x1)
+			if absf((a + b) * 0.5 - PARK.GATE_X) <= (b - a) * 0.5 + PARK.CROSS_HALF:
+				gap_lo = minf(gap_lo, a)
+				gap_hi = maxf(gap_hi, b)
+			else:
+				kit.solid_box("limestone", Vector3((a + b) / 2.0, top + hh / 2.0, z), Vector3(b - a, hh, 0.55), ["bottom"])
 			x += seg + rng.randf_range(0.5, 1.6)
+		# Gate posts at the edges of the opening that was left.
+		if gap_lo < gap_hi:
+			for gx: float in [gap_lo + 0.25, gap_hi - 0.25]:
+				kit.solid_box("limestone", Vector3(gx, top + 0.45, z), Vector3(0.5, 0.9, 0.62), ["bottom"])
+	# Three steps down through each gate: the ground outside the platform sits
+	# about a metre below it, too much to step over and too steep to ramp.
+	for sz: float in [-1.0, 1.0]:
+		for i in 3:
+			kit.solid_box("limestone", Vector3(PARK.GATE_X, top - 0.3 * (i + 1) + 0.15, sz * (h.y - 0.1 + i * 0.42 + 0.21)),
+					Vector3(PARK.CROSS_HALF * 2.0, 0.3, 0.42), ["bottom"])
 	var zz := c.y - h.y + 0.6
 	while zz < c.y + h.y - 0.6:
 		var seg := rng.randf_range(2.0, 3.5)
