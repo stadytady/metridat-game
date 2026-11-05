@@ -19,6 +19,8 @@ const STRIDE := 1.1
 @export var dialogue_start := "start"
 @export var pose := "stand"
 @export var body_mat := "chiton"
+## Overrides Figure.look_for(npc_id) when set.
+@export var look := {}
 @export var figure_scale := 1.0
 @export var talkable := true
 
@@ -53,7 +55,9 @@ func _ready() -> void:
 	body.name = "Body"
 	body.scale = Vector3.ONE * figure_scale
 	add_child(body)
-	joints = Figure.build(body, body_mat)
+	# a look of their own: named people from Figure.LOOKS, passers-by by place
+	var key := npc_id if not npc_id.is_empty() else "%d,%d" % [roundi(position.x * 10.0), roundi(position.z * 10.0)]
+	joints = Figure.build(body, body_mat, look if not look.is_empty() else Figure.look_for(key))
 	Figure.apply_pose(joints, pose)
 	var cs := CollisionShape3D.new()
 	var shape := BoxShape3D.new()

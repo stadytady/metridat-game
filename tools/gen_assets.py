@@ -633,6 +633,16 @@ MATERIALS = {
     "skin": ("psx_lit", "skin", "#ffffff", (2.0, 2.0)),
     "chiton": ("psx_lit", "chiton", "#ffffff", (1.0, 1.0)),
     "chiton_dark": ("psx_lit", "chiton", "#a08a78", (1.0, 1.0)),
+    # dyed cloth for the townspeople: madder, woad, ochre, as the dyers had
+    "chiton_red": ("psx_lit", "chiton", "#c48068", (1.0, 1.0)),
+    "chiton_blue": ("psx_lit", "chiton", "#8c9cb4", (1.0, 1.0)),
+    "chiton_ochre": ("psx_lit", "chiton", "#d0b070", (1.0, 1.0)),
+    "hem": ("psx_lit", "white", "#7c361c", (1.0, 1.0)),
+    "belt": ("psx_lit", "white", "#3a2618", (1.0, 1.0)),
+    "face_bare": ("psx_lit", "face_bare", "#ffffff", (1.0, 1.0)),
+    "face_short": ("psx_lit", "face_short", "#ffffff", (1.0, 1.0)),
+    "face_beard": ("psx_lit", "face_beard", "#ffffff", (1.0, 1.0)),
+    "face_woman": ("psx_lit", "face_woman", "#ffffff", (1.0, 1.0)),
     "hair": ("psx_lit", "hair", "#ffffff", (2.0, 2.0)),
     "mud": ("psx_lit", "mud", "#ffffff", (0.5, 0.5)),
     "sand": ("psx_lit", "sand", "#ffffff", (0.25, 0.25)),
@@ -964,6 +974,54 @@ def door_creak(rng):
     write_wav("door_creak", norm(reverb(bandpass(x, 120, 3200), rng, 2.6, 0.45), 0.6))
 
 
+def faces(rng):
+    """Four 32x32 faces for the figures' heads, front on: clean-shaven, a short
+    beard, a full beard, a woman. Brows, eyes with a dark pupil, the shadow down
+    one side of the nose, a mouth; beards in the hair's colours with a little
+    stubble noise. Same skin ramp as the body, so the face sits on the head."""
+    s = 32
+    skin = ["#6e4630", "#8a5a3c", "#a2704c", "#b8865e"]
+    hair = ["#140e0a", "#22180f", "#33241a"]
+    for name in ["face_bare", "face_short", "face_beard", "face_woman"]:
+        field = 0.62 + (vnoise(s, 4, rng) - 0.5) * 0.2
+        rgb = ramp(field, skin)
+        dark = hexc("#2a1a12")
+        hair_field = ramp(0.5 + (vnoise(s, 6, rng) - 0.5) * 0.6, hair)
+        if name != "face_woman":
+            rgb[0:4, :] = hair_field[0:4, :]  # a fringe under the hair block
+        else:
+            rgb[0:3, :] = hair_field[0:3, :]
+            for x0, x1 in ((0, 3), (29, 32)):
+                rgb[0:22, x0:x1] = hair_field[0:22, x0:x1]  # hair down the sides
+        rgb[10:12, 7:13] = dark  # brows
+        rgb[10:12, 19:25] = dark
+        for cx in (10, 21):
+            rgb[13:15, cx - 2:cx + 3] = hexc("#d8ccb8")
+            rgb[13:15, cx:cx + 1] = hexc("#1a120c")
+        if name == "face_woman":
+            rgb[12, 7:13] = dark  # lashes
+            rgb[12, 19:25] = dark
+        rgb[14:21, 16:18] = ramp(np.full((7, 2), 0.15), skin)  # the nose's shadow side
+        rgb[20, 14:18] = hexc("#5a3424")
+        lips = "#8a3a2c" if name == "face_woman" else "#5a2a20"
+        rgb[24, 12:20] = hexc(lips)
+        if name == "face_woman":
+            rgb[25, 13:19] = hexc("#a04a38")
+        if name in ("face_short", "face_beard"):
+            top = 22 if name == "face_short" else 18
+            beard = hair_field.copy()
+            mask = np.zeros((s, s), bool)
+            mask[top:, 4:28] = True
+            if name == "face_beard":
+                mask[13:, 1:6] = True
+                mask[13:, 26:31] = True
+            mask[23:26, 12:20] = False  # the mouth shows through
+            stubble = rng.random((s, s)) < 0.15
+            rgb[mask & ~stubble] = beard[mask & ~stubble]
+            rgb[24, 12:20] = hexc("#3a1a14")
+        save(name, rgb)
+
+
 def achievement(rng):
     """A soft two-note chime for an unlocked achievement: G5 then D6, with the
     bell's overtones and a short tail."""
@@ -1108,6 +1166,7 @@ def main() -> None:
     achievement(np.random.default_rng(524))
     sheep(np.random.default_rng(525))
     door_creak(np.random.default_rng(526))
+    faces(np.random.default_rng(527))
     print(f"textures: {len(TEXTURES)}, materials: {len(MATERIALS)}, audio: {len(list(AUD.glob('*.wav')))}")
 
 

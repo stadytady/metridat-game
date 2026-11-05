@@ -33,6 +33,21 @@ func test_tessellated_box_faces_outward() -> void:
 	check(mesh.surface_get_array_len(0) > 36, "big box was not tessellated")
 
 
+func test_frustum_faces_outward() -> void:
+	# narrow at the bottom, wide at the top (a torso) and the other way (a hem)
+	for sizes: Array in [[Vector2(0.3, 0.2), Vector2(0.45, 0.25)], [Vector2(0.5, 0.4), Vector2(0.3, 0.2)]]:
+		var kit := MeshKit.new()
+		kit.frustum("chiton", Vector3(1, 0, -2), sizes[0], sizes[1], 0.6, [], 3)
+		var mesh := kit.commit()
+		_faces_outward(mesh, Vector3(1, 0.3, -2), "frustum %s" % [sizes])
+		# six faces, the four sides in three fold strips each: 2 + 4 * 3 quads
+		check(mesh.surface_get_array_len(0) == (2 + 4 * 3) * 6, "frustum: %d vertices" % mesh.surface_get_array_len(0))
+		var shades := {}
+		for c: Color in mesh.surface_get_arrays(0)[Mesh.ARRAY_COLOR]:
+			shades[snappedf(c.r, 0.01)] = true
+		check(shades.size() >= 2, "frustum: the folds are not shaded")
+
+
 func test_lathe_faces_outward() -> void:
 	var kit := MeshKit.new()
 	kit.lathe("clay", PackedVector2Array([Vector2(0.2, 0), Vector2(0.5, 0.5), Vector2(0.3, 1.0)]), 8,

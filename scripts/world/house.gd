@@ -243,14 +243,7 @@ func _baker(y: float) -> void:
 	b.position = Vector3(OVEN.x - 0.95, y, OVEN.y)
 	b.rotation.y = deg_to_rad(-90.0)  # faces +x, the oven
 	add_child(b)
-	var head: Node3D = b.joints["head"]
-	var hk := MeshKit.new()
-	hk.box("hair", Vector3(0, 0.02, 0.12), Vector3(0.18, 0.3, 0.06), [])  # down the back
-	hk.box("cloth", Vector3(0, 0.25, 0.02), Vector3(0.23, 0.06, 0.25), [])  # kerchief
-	hk.box("cloth", Vector3(0, 0.17, 0.11), Vector3(0.23, 0.14, 0.05), [])
-	var hm := MeshInstance3D.new()
-	hm.mesh = hk.commit()
-	head.add_child(hm)
+	# hair and kerchief: Figure.LOOKS["baker"]; the skirt is hers, over kneeling legs
 	var pelvis: Node3D = b.joints["pelvis"]
 	var sk := MeshKit.new()
 	sk.box("chiton_dark", Vector3(0, -0.22, 0.05), Vector3(0.42, 0.42, 0.5), [])  # skirt over the kneeling legs
