@@ -38,3 +38,25 @@ func test_waterline_is_where_land_meets_sea() -> void:
 		check(x > 30.0 and x < 200.0, "no waterline found at z=%d" % z)
 		check(absf(Topo.terrain(x, z) - Topo.SEA_LEVEL) < 0.1, "terrain at waterline z=%d is %.2f" % [z, Topo.terrain(x, z)])
 		check(Topo.terrain(x - 2.0, z) > Topo.SEA_LEVEL, "land side is wet at z=%d" % z)
+
+
+func test_forecourt_meets_the_street_and_the_agora_flush() -> void:
+	# at the agora's west edge the forecourt is the agora's height
+	check(absf(Topo.forecourt_height(Topo.AGORA_CENTER.x - Topo.AGORA_HALF.x) - Topo.AGORA_H) < 0.01, "a step from the forecourt up to the agora")
+	# along the street's edge it is the street's height at every x
+	var x := Topo.FORECOURTS[0].position.x
+	while x <= Topo.FORECOURTS[0].end.x:
+		var edge := Topo.street_z(x) - Topo.STREET_HALF - 0.05
+		check(absf(Topo.surface(x, edge) - Topo.street_height(x)) < 0.01, "a step from the street to the forecourt at x %.1f" % x)
+		x += 0.5
+
+
+func test_forecourt_paving_stands_above_the_earth() -> void:
+	for r: Rect2 in Topo.FORECOURTS:
+		for i in 7:
+			for j in 7:
+				# a hair inside the edges: 5.8 + 3.2 is not quite 9.0 in floats
+				var x := r.position.x + 0.01 + (r.size.x - 0.02) * i / 6.0
+				var z := r.position.y + 0.01 + (r.size.y - 0.02) * j / 6.0
+				check(Topo.in_forecourt(x, z), "not in the forecourt at %.1f, %.1f" % [x, z])
+				check(Topo.terrain(x, z) < Topo.surface(x, z) - 0.1, "the earth breaks through the forecourt at %.1f, %.1f" % [x, z])

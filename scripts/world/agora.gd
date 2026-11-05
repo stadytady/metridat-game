@@ -49,6 +49,7 @@ func _ready() -> void:
 	for i in 3:
 		# east side: the south-west corner belongs to the potter's workshop
 		kit.solid_box("limestone", Vector3(c.x + 11.6, y + 0.25 + i * 0.5, 9.0 - i * 0.1), Vector3(1.2 - i * 0.2, 0.5, 0.8), ["bottom"])
+	_forecourt(kit)
 	add_child(kit.build("Agora"))
 	for p: Vector3 in cols:
 		var wp := stoa_xf * p
@@ -63,6 +64,52 @@ func _ready() -> void:
 	spawn_inspectable("inscription_stele", Vector3(c.x, y, -2.6), 0.0)
 	spawn_inspectable("coin_stater", stall_pos + Vector3(0.4, 0.89, -0.1), 180.0)
 	spawn_inspectable("grain_pithos", Vector3(c.x + 2.3, y, 7.6), 200.0)
+
+
+## The forecourt before the agora (Topo.FORECOURTS): paving at the street's
+## height in one-metre strips along x (the street falls 0.4 m over the six), a
+## kerb down to the earth on the open sides, a collider a little wider than the
+## stone so its edge is no trap. The street's own band is left to the street:
+## two pavements at one height would flicker.
+func _forecourt(kit: MeshKit) -> void:
+	var band := Topo.STREET_HALF
+	for r: Rect2 in Topo.FORECOURTS:
+		# the part of the rect off the street, north or south of it
+		var z0 := r.position.y
+		var z1 := r.end.y
+		if z0 < 0.0 and z1 > -band:
+			z1 = -band
+		if z0 < band and z1 > 0.0:
+			z0 = band
+		var x := r.position.x
+		while x < r.end.x - 0.001:
+			var x1 := minf(x + 1.0, r.end.x)
+			var h0 := Topo.forecourt_height(x)
+			var h1 := Topo.forecourt_height(x1)
+			kit.quad("paving", Vector3(x, h0, z1), Vector3(x1, h1, z1), Vector3(x1, h1, z0), Vector3(x, h0, z0))
+			var hm := (h0 + h1) / 2.0
+			kit.add_collider(Vector3((x + x1) / 2.0, hm - 0.15, (z0 + z1) / 2.0), Vector3(x1 - x, 0.3, z1 - z0 + 0.6))
+			# kerbs where the stone meets the earth: the far edge, and the west end
+			var far := z0 if z0 < 0.0 else z1
+			var drop := 0.45
+			# counter-clockwise from outside: north faces -z, south faces +z
+			if z0 < 0.0:
+				kit.quad("limestone", Vector3(x, h0, far), Vector3(x1, h1, far), Vector3(x1, h1 - drop, far), Vector3(x, h0 - drop, far))
+			else:
+				kit.quad("limestone", Vector3(x1, h1, far), Vector3(x, h0, far), Vector3(x, h0 - drop, far), Vector3(x1, h1 - drop, far))
+			x = x1
+		var w := r.position.x
+		var hw := Topo.forecourt_height(w)
+		kit.quad("limestone", Vector3(w, hw, z1), Vector3(w, hw, z0), Vector3(w, hw - 0.45, z0), Vector3(w, hw - 0.45, z1))  # faces -x
+		kit.add_collider(Vector3(w - 0.3, hw - 0.15, (z0 + z1) / 2.0), Vector3(0.6, 0.3, z1 - z0))
+	# a stone bench under the stoa's west end, an olive in a ring of stone
+	var by := Topo.forecourt_height(6.0)
+	Arch.bench(kit, Arch.frame(Vector3(6.0, by, -9.6), Vector3.BACK), 2.6)
+	kit.xform = Transform3D.IDENTITY
+	var ty := Topo.forecourt_height(7.4)
+	kit.lathe("limestone", PackedVector2Array([Vector2(0.75, 0.0), Vector2(0.75, 0.3)]), 10, Vector3(7.4, ty, 8.6), 2.0, false, "earth", true)
+	kit.add_collider(Vector3(7.4, ty + 0.15, 8.6), Vector3(1.5, 0.3, 1.5))
+	place("olive_tree", Vector3(7.4, ty + 0.3, 8.6), 40.0, Vector3(1.1, 1.0, 1.1))
 
 
 ## Ribbons off the column capitals and a cloth hung between two of them: the
