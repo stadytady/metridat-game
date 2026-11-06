@@ -42,3 +42,21 @@ func test_dream_key() -> void:
 	check(fog.get_luminance() < 0.2, "the dream's fog is night fog, not a grey day: %.2f" % fog.get_luminance())
 	check(DayCycle.sample(DayCycle.DREAM + 1.0).fog_end == dream.fog_end, "nothing past the dream")
 	check(DayCycle.sample(0.5).fog_end == night.fog_end, "the waking day keeps its far fog")
+
+
+## The town's lamps come on at the eighth of the city's finds, not before.
+func test_the_lamps_come_on_at_the_eighth_find() -> void:
+	var total := 0
+	for f: String in DirAccess.get_files_at("res://data/discoveries"):
+		if f.ends_with(".tres"):
+			var d: Discovery = load("res://data/discoveries/" + f)
+			if not d.epilogue:
+				total += 1
+	var at := DayCycle.LAMPS_ON_AT_FIND
+	check(DayCycle.target_for(at, total) >= DayCycle.LAMPS_ON, "the lamps are still dark at find %d of %d" % [at, total])
+	check(DayCycle.target_for(at - 1, total) < DayCycle.LAMPS_ON, "the lamps are already lit at find %d of %d" % [at - 1, total])
+	for lamp: float in [WallLamp.DUSK, load("res://scripts/world/agora.gd").DUSK, load("res://scripts/world/backdrop.gd").GLOW_FROM,
+			load("res://scripts/world/harbour.gd").LANTERN_FROM]:
+		check(is_equal_approx(lamp, DayCycle.LAMPS_ON), "a light keeps its own hour: %.2f" % lamp)
+	# and the prologue's dusk has them lit
+	check(DayCycle.PROLOGUE >= DayCycle.LAMPS_ON, "the prologue's dusk is too early for the lamps")

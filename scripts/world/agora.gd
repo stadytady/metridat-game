@@ -8,8 +8,8 @@ const COL_H := 3.6
 const BANNER_INSET := 0.35
 const BANNER_DROP := 1.25
 const BANNER_OUT := 0.42
-## Braziers at the corners and lamps by the columns light when the sun is down.
-const DUSK := 0.78
+## Braziers at the corners and lamps by the columns light with the town's lamps.
+const DUSK := DayCycle.LAMPS_ON
 
 ## Cloth and flies move on their own clock; everything here is stepped to 15 fps.
 var _sway: Array[Node3D] = []

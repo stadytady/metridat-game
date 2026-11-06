@@ -23,6 +23,9 @@ const STRIDE := 1.1
 @export var look := {}
 @export var figure_scale := 1.0
 @export var talkable := true
+## Without a body to bump into: for someone working right beside the way people
+## walk (the carrier on the pier), who would otherwise shove the player aside.
+@export var solid := true
 
 ## Local offsets from the spawn that this person walks between, in order.
 @export var patrol := PackedVector3Array()
@@ -79,6 +82,8 @@ func _ready() -> void:
 	var key := npc_id if not npc_id.is_empty() else "%d,%d" % [roundi(position.x * 10.0), roundi(position.z * 10.0)]
 	joints = Figure.build(body, body_mat, look if not look.is_empty() else Figure.look_for(key))
 	Figure.apply_pose(joints, pose)
+	if not solid:
+		collision_layer = 0
 	var cs := CollisionShape3D.new()
 	var shape := BoxShape3D.new()
 	shape.size = Vector3(0.6, 1.3 if pose != "stand" else 1.75, 0.7) * figure_scale

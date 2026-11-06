@@ -25,8 +25,8 @@ const LANE_HALF := 0.9
 const LANE_SEG := 1.5
 ## Hearths smoking: one roof in this many.
 const SMOKE_EVERY := 7
-## Windows lit from this hour (dusk).
-const GLOW_FROM := 0.75
+## Windows lit from this hour, with the town's lamps.
+const GLOW_FROM := DayCycle.LAMPS_ON
 
 var _glow: Node3D
 ## The one house you can walk into, and the lamp beside its door.

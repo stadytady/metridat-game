@@ -102,4 +102,4 @@ func _furnish(rng: RandomNumberGenerator) -> void:
 
 
 func _process(_delta: float) -> void:
-	_glow.visible = _atm != null and _atm.t >= 0.75
+	_glow.visible = _atm != null and _atm.t >= DayCycle.LAMPS_ON
