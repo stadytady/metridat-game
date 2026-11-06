@@ -61,11 +61,16 @@ const POSES := {
 	# stopped and thinking about the part: chin on the hand, eyes on the stones
 	"think": {"chest": Vector3(-6, 0, 0), "head": Vector3(-14, 0, 0),
 		"r_shoulder": Vector3(42, 0, -12), "r_elbow": Vector3(105, 0, 0), "l_shoulder": Vector3(8, 0, 6)},
+	# sitting on the ground with the knees up and splayed, hands free in the lap:
+	# the children in the square, and anyone else who sits down to play
+	"sit": {"chest": Vector3(-10, 0, 0), "head": Vector3(-14, 0, 0),
+		"l_hip": Vector3(78, 0, 20), "r_hip": Vector3(78, 0, -20), "l_knee": Vector3(-104, 0, 0), "r_knee": Vector3(-104, 0, 0),
+		"l_shoulder": Vector3(26, 0, 12), "r_shoulder": Vector3(26, 0, -12), "l_elbow": Vector3(58, 0, 0), "r_elbow": Vector3(58, 0, 0)},
 }
 
 ## Pelvis height for a pose (seated figures sit on something low).
 const SEAT := {"stand": 0.92, "potter": 0.46, "turner": 0.32, "mender": 0.4, "sleep": 0.12, "baker": 0.5, "carry": 0.92, "declaim": 0.92, "draw": 0.92,
-	"walk": 0.92, "think": 0.92, "spin": 0.92}
+	"walk": 0.92, "think": 0.92, "spin": 0.92, "sit": 0.3}
 
 
 ## How a person looks: "woman", "beard" (0 none, 1 short, 2 full), "hair"
