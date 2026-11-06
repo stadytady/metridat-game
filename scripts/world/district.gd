@@ -100,6 +100,17 @@ func place(model: String, pos: Vector3, yaw_deg: float = 0.0, scale: Vector3 = V
 	return n
 
 
+## Something lost for an errand: hidden until the quest is taken (QuestItem).
+func spawn_quest_item(quest: String, pos: Vector3, yaw_deg: float = 0.0) -> QuestItem:
+	var q := QuestItem.new()
+	q.name = "Quest_" + quest
+	q.quest = quest
+	q.position = pos
+	q.rotation.y = deg_to_rad(yaw_deg)
+	add_child(q)
+	return q
+
+
 func spawn_inspectable(id: String, pos: Vector3, yaw_deg: float = 0.0) -> Node3D:
 	var path := "res://scenes/interactables/%s.tscn" % id
 	if not ResourceLoader.exists(path):

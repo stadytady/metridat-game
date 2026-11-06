@@ -1,9 +1,14 @@
 # Myrto, baking in her yard. Three questions, three conversations: her house,
-# her mother's counting, and the quarrel with the potter over smoke.
+# her mother's counting, and the quarrel with the potter over smoke; and an
+# errand (Quests): a loom weight gone missing, thanked for when it comes back.
 # Text is a key: the panel translates it, so EN/RU stay in strings.csv.
 # Indent with tabs: DM's INDENT_REGEX is ^\t+.
 
 ~ start
+if Game.quest_ready("loom_weight")
+	Myrto: LOC_Q_LOOM_DONE
+	do Game.complete_quest("loom_weight")
+	=> END
 Myrto: NPC_BAKER_1
 - LOC_BAKER_CHOICE_1
 	Myrto: NPC_BAKER_3
@@ -15,4 +20,8 @@ Myrto: NPC_BAKER_1
 - LOC_BAKER_CHOICE_3
 	Myrto: LOC_BAKER_SMOKE_1
 	Myrto: LOC_BAKER_SMOKE_2
+- LOC_Q_LOOM_ASK [if Game.quest_offered("loom_weight")]
+	Myrto: LOC_Q_LOOM_1
+	Myrto: LOC_Q_LOOM_2
+	do Game.take_quest("loom_weight")
 => END

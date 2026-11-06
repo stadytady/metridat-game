@@ -4,6 +4,10 @@
 # Indent with tabs: DM's INDENT_REGEX is ^\t+.
 
 ~ start
+if Game.quest_ready("hook")
+	Glaukos: LOC_Q_HOOK_DONE
+	do Game.complete_quest("hook")
+	=> END
 Glaukos: NPC_FISHER_1
 Glaukos: NPC_FISHER_2
 - LOC_FISHER_CHOICE_1
@@ -16,4 +20,8 @@ Glaukos: NPC_FISHER_2
 - LOC_FISHER_CHOICE_3
 	Glaukos: NPC_FISHER_5
 	Glaukos: LOC_FISHER_OMEN_1
+- LOC_Q_HOOK_ASK [if Game.quest_offered("hook")]
+	Glaukos: LOC_Q_HOOK_1
+	Glaukos: LOC_Q_HOOK_2
+	do Game.take_quest("hook")
 => END

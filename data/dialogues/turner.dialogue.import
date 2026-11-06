@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=15
+type="Resource"
+uid="uid://ckpa0ajm2tu48"
+path="res://.godot/imported/turner.dialogue-58ad9488664e1fd379544b76a1b78aee.tres"
+
+[deps]
+
+source_file="res://data/dialogues/turner.dialogue"
+dest_files=["res://.godot/imported/turner.dialogue-58ad9488664e1fd379544b76a1b78aee.tres"]
+
+[params]
+
+defaults=true

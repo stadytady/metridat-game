@@ -5,7 +5,7 @@ extends RefCounted
 
 ## Baked to GLB. EXTRA kinds are small one-off models built at runtime.
 const MODELS := ["amphora", "pithos", "krater", "column_doric", "olive_tree", "cypress", "ship", "tripod", "figurine"]
-const EXTRA := ["coins", "sherds", "stele", "grain", "votive", "lampstand", "torch_post", "mould", "boat", "sinkers", "hekataion", "mirror", "marble_head", "loom_weights", "oil_lamp", "anchor_stock"]
+const EXTRA := ["coins", "sherds", "stele", "grain", "votive", "lampstand", "torch_post", "mould", "boat", "sinkers", "hekataion", "mirror", "marble_head", "loom_weights", "oil_lamp", "anchor_stock", "loom_weight", "fish_hook", "astragal"]
 
 
 static func build(name: String) -> MeshKit:
@@ -59,6 +59,15 @@ static func build(name: String) -> MeshKit:
 			oil_lamp(kit)
 		"anchor_stock":
 			anchor_stock(kit)
+		"loom_weight":
+			kit.xform = Transform3D(Basis(Vector3.RIGHT, PI / 2.0), Vector3(0, 0.032, 0))  # fallen on its side
+			kit.frustum("clay", Vector3.ZERO, Vector2(0.064, 0.064), Vector2(0.028, 0.028), 0.1, ["bottom"])
+			kit.box("dark", Vector3(0, 0.078, -0.02), Vector3(0.012, 0.012, 0.004), [])
+			kit.xform = Transform3D.IDENTITY
+		"fish_hook":
+			fish_hook(kit)
+		"astragal":
+			astragal(kit)
 		"lampstand":
 			lampstand(kit)
 		"torch_post":
@@ -365,6 +374,21 @@ static func sinkers(kit: MeshKit) -> void:
 	for x: float in [-0.08, 0.1]:
 		var p := Vector3(x, 0.0, 0.11 * signf(x))
 		kit.lathe("clay", PackedVector2Array([Vector2(0.035, 0.0), Vector2(0.015, 0.07)]), 4, p, 1.0, true, "clay", true)
+
+
+## A bronze fish hook on a scrap of line, lying on the ground.
+static func fish_hook(kit: MeshKit) -> void:
+	kit.box("bronze", Vector3(0, 0.006, 0), Vector3(0.008, 0.008, 0.06), [])  # shank
+	kit.box("bronze", Vector3(0, 0.006, 0.033), Vector3(0.03, 0.008, 0.008), [])  # the bend
+	kit.box("bronze", Vector3(0.014, 0.006, 0.022), Vector3(0.008, 0.008, 0.02), [])  # point
+	kit.box("cloth", Vector3(0, 0.004, -0.09), Vector3(0.004, 0.004, 0.13), [])  # the line
+
+
+## A knucklebone (astragalos) for the game of fives: a knobbly little bone.
+static func astragal(kit: MeshKit) -> void:
+	kit.box("column", Vector3(0, 0.014, 0), Vector3(0.03, 0.026, 0.045), [])
+	kit.box("column", Vector3(0, 0.016, 0.026), Vector3(0.022, 0.02, 0.012), [])
+	kit.box("dark", Vector3(0, 0.0275, 0), Vector3(0.012, 0.001, 0.02), [])  # the hollow on top
 
 
 ## A marble head of a goddess, larger than life, broken at the neck, in a

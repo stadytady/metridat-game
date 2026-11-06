@@ -48,6 +48,9 @@ const CARRIER_SET_DOWN := 7
 ## The hydria by the curb and the storage jar she fills, from the well's centre.
 const HYDRIA_AT := Vector3(0.75, 0, 0.75)
 const STORE_AT := Vector3(-1.0, 0, -6.45)
+## The water carrier's errand: the lamp her boy left on the grass by the well,
+## on the west side of the curb, away from her round (offset from the well).
+const LOST_LAMP := Vector3(-1.2, 0, -0.2)
 ## Where feet have worn the stone: [centre, size, yaw deg].
 const WORN := [
 	[Vector3(9.6, Topo.AGORA_H, 0.0), Vector2(2.6, 3.4), 0.0],  # where the street enters the agora
@@ -420,10 +423,10 @@ func _well() -> void:
 			Vector3.ONE * 0.7, 0.3, 0.9)
 	var woman: Npc = NPC.new()
 	woman.npc_id = "water_carrier"
-	woman.name_key = "NPC_SAILOR_NAME"
+	woman.name_key = "NPC_CARRIER_NAME"
+	woman.dialogue = load("res://data/dialogues/water_carrier.dialogue") as DialogueResource
 	woman.pose = "draw"
 	woman.body_mat = "chiton"
-	woman.talkable = false
 	woman.position = w + Vector3(0, 0, 1.0)  # faces -z, the well
 	set_carrier_round(woman, w)
 	add_child(woman)  # hair, kerchief and the long chiton: Figure.LOOKS["water_carrier"]
@@ -441,6 +444,9 @@ func _well() -> void:
 	_hand_jar.visible = false
 	(woman.joints["chest"] as Node3D).add_child(_hand_jar)
 	woman.reached.connect(_on_carrier_reached)
+	var lamp_at := well_pos() + LOST_LAMP
+	lamp_at.y = Topo.surface(lamp_at.x, lamp_at.z)
+	spawn_quest_item("lamp", lamp_at, 200.0)
 	woman.departed.connect(_on_carrier_departed)
 
 
@@ -463,7 +469,8 @@ static func set_carrier_round(woman: Npc, well: Vector3) -> void:
 	woman.patrol_speed = 0.6
 	woman.carry_pose = "head_carry"
 	woman.follow_ground = true
-	woman.stops_for_player = false
+	# she stops for whoever comes up: she has a lamp to ask about
+	woman.stops_for_player = true
 
 
 func _on_carrier_reached(i: int) -> void:

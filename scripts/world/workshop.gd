@@ -156,7 +156,7 @@ func _people(y: float) -> void:
 	boy.pose = "turner"
 	boy.body_mat = "chiton_dark"
 	boy.figure_scale = 0.72
-	boy.talkable = false
+	boy.dialogue = load("res://data/dialogues/turner.dialogue") as DialogueResource
 	boy.position = Vector3(BOY_HOME.x, y, BOY_HOME.y)
 	boy.rotation.y = deg_to_rad(-90.0)
 	set_round(boy)
@@ -198,8 +198,8 @@ static func set_round(boy: Npc) -> void:
 	boy.patrol_pauses = pauses
 	boy.patrol_faces = faces
 	boy.patrol_speed = 0.75
-	# he has work to do: he walks on past the player instead of stopping to stare
-	boy.stops_for_player = false
+	# he has work to do, but stops when spoken to: he has an errand to ask
+	boy.stops_for_player = true
 
 
 func _on_boy_reached(i: int) -> void:
