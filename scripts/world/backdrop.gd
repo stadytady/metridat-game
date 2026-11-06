@@ -241,6 +241,56 @@ static func lanes(houses: Array) -> Array:
 	return out
 
 
+## The herms at the corners where a terrace street meets a stepped lane. Herms
+## stood at Greek street corners; here they are what tells the eye that a side
+## street is a street and not a gap between two walls. Each stands clear of both
+## lanes - a lane is 1.8 m wide and a herm 1.35 m off its centre leaves room to
+## pass with a jar on your head. [{pos, dir}]
+static func crossing_herms(houses: Array) -> Array:
+	var out := []
+	var stair_runs := stairs()
+	var street_runs := streets()
+	for sx: float in TERRACES_X:
+		for sz: float in STAIRS_Z:
+			var at := Vector2(sx + 1.35, sz + 1.6)
+			if Topo.terrain(at.x, at.y) < 2.4 or absf(at.y) > WALL_Z - 6.0:
+				continue
+			if Topo.is_reserved(at.x, at.y, 1.2) or Topo.in_house(at.x, at.y, 1.0):
+				continue
+			if on_house(houses, at.x, at.y, 0.5):
+				continue
+			# the streets are contours, not straight lines: the corner has to be
+			# measured against where they actually run
+			if _dist_to(stair_runs, at) < LANE_HALF + 0.45 or _dist_to(street_runs, at) < LANE_HALF + 0.45:
+				continue
+			out.append({"pos": Vector3(at.x, Topo.terrain(at.x, at.y), at.y),
+					"dir": Vector3(-1.0, 0.0, -1.0).normalized()})
+	return out
+
+
+## What stands by the walls of the side streets: one house in three has something
+## left beside its door - a pithos, a basket, a stack of firewood, an amphora, a
+## quern, a bench. It is the cheapest way to stop a terrace of walls reading as
+## scenery: somebody lives here, and put their jar down by the door.
+## [{pos, kind, dir}]
+const PROP_KINDS := ["pithos", "basket", "woodpile", "amphora", "quern", "bench"]
+
+static func wall_props(houses: Array) -> Array:
+	var out := []
+	for hs: Dictionary in houses:
+		var seed := hash(int(hs.opts.get("seed", 0)) * 7 + 11)
+		if posmod(seed, 3) != 0:
+			continue
+		var basis := Basis.from_euler(Vector3(0, hs.yaw, 0))
+		var front := Vector3(hs.pos.x, 0, hs.pos.y) + basis * Vector3(0, 0, hs.d / 2.0)
+		var dx: float = hs.opts.get("door_x", 0.0) + (1.05 if posmod(seed >> 6, 2) == 0 else -1.05)
+		dx = clampf(dx, -hs.w / 2.0 + 0.7, hs.w / 2.0 - 0.7)
+		var at := front + basis * Vector3(dx, 0, 0.42)
+		at.y = Topo.terrain(at.x, at.z)
+		out.append({"pos": at, "kind": PROP_KINDS[posmod(seed >> 3, PROP_KINDS.size())], "dir": basis.z})
+	return out
+
+
 func _ready() -> void:
 	_atm = get_parent().get_node_or_null("Atmosphere")
 	var kit := MeshKit.new()
@@ -252,6 +302,8 @@ func _ready() -> void:
 	for hs: Dictionary in houses:
 		_house(kit, glow, hs)
 	_walls(kit)
+	_herms(kit, houses)
+	_wall_props(kit, houses)
 	add_child(kit.build("Backdrop"))
 	_glow = glow.build("WindowGlow")
 	add_child(_glow)
@@ -274,9 +326,24 @@ func _house(kit: MeshKit, glow: MeshKit, hs: Dictionary) -> void:
 			lo = minf(lo, t)
 			hi = maxf(hi, t)
 	var front := center + basis * Vector3(0, 0, hs.d / 2.0)
-	front.y = hi
+	# The house stands on its street, not on the highest corner of its plot: a
+	# door hanging a metre over the lane is what makes a row of houses read as a
+	# film set. The slope behind the house is taken up by the foundation, the way
+	# a terraced town is cut into its hill.
+	front.y = Topo.terrain(front.x, front.z)
 	var opts: Dictionary = hs.opts.duplicate()
-	opts["drop"] = hi - lo + 1.0
+	# Facade detail is derived from the house's own seed and not drawn from
+	# plan()'s sequence: the city must not shift by a metre because a door got a
+	# frame. Two doors in five sit in a stone reveal, one in five stands open, and
+	# most windows get a sill and shutters.
+	var ds := hash(int(opts.get("seed", 0)))
+	opts["recess"] = posmod(ds, 5) < 2
+	opts["ajar"] = opts.get("door", false) and posmod(ds >> 2, 5) == 0
+	opts["frames"] = posmod(ds >> 5, 3) != 0
+	# the ground along the front is not flat either: a step or two by the door
+	var door_at := front + basis * Vector3(float(opts.get("door_x", 0.0)), 0, 0.3)
+	opts["steps"] = clampi(roundi((front.y - Topo.terrain(door_at.x, door_at.z)) / Arch.FLOOR_STEP), 0, 2)
+	opts["drop"] = maxf(front.y - lo, 0.0) + 1.0
 	opts["glow"] = glow
 	hs["front"] = front
 	var xf := Transform3D(basis, front)
@@ -324,6 +391,48 @@ func _place_woman(xf: Transform3D, info: Dictionary, yaw: float) -> void:
 	spindle.hand = Spindle.right_hand(woman.joints)
 	add_child(spindle)
 	_woman = woman
+
+## The corner herms, batched into the city mesh: four boxes each.
+func _herms(kit: MeshKit, houses: Array) -> void:
+	for h: Dictionary in crossing_herms(houses):
+		Arch.herm(kit, Arch.frame(h.pos, h.dir), 1.35)
+	kit.xform = Transform3D.IDENTITY
+
+
+## What the neighbours left by their walls, batched into the same mesh.
+func _wall_props(kit: MeshKit, houses: Array) -> void:
+	for p: Dictionary in wall_props(houses):
+		var at: Vector3 = p.pos
+		var xf := Transform3D(Basis(Vector3.UP, atan2(p.dir.x, p.dir.z)), at)
+		kit.xform = xf
+		match String(p.kind):
+			"pithos":
+				kit.lathe("clay", PackedVector2Array([Vector2(0.12, 0.0), Vector2(0.26, 0.18), Vector2(0.28, 0.4),
+						Vector2(0.22, 0.56), Vector2(0.17, 0.6)]), 8, Vector3.ZERO, 1.0, true)
+			"basket":
+				kit.lathe("basket", PackedVector2Array([Vector2(0.14, 0.0), Vector2(0.2, 0.2), Vector2(0.21, 0.26)]), 8,
+						Vector3.ZERO, 2.0, true, "basket")
+			"woodpile":
+				for i in 4:
+					kit.box("wood", Vector3(-0.42 + i * 0.28, 0.1, 0), Vector3(0.22, 0.2, 0.5), [])
+				for i in 3:
+					kit.box("wood", Vector3(-0.28 + i * 0.28, 0.3, 0), Vector3(0.22, 0.2, 0.5), [])
+			"amphora":
+				Props.amphora(kit)
+			"quern":
+				kit.box("limestone", Vector3(0, 0.06, 0), Vector3(0.56, 0.12, 0.44), [])
+				kit.lathe("limestone", PackedVector2Array([Vector2(0.22, 0.12), Vector2(0.24, 0.2), Vector2(0.12, 0.24)]),
+						10, Vector3.ZERO, 1.0, true)
+				kit.box("wood", Vector3(0.28, 0.2, 0), Vector3(0.26, 0.04, 0.04), [])
+			_:
+				# a bench, built without a collider like the rest of the goods: the
+				# streets of the backdrop are walked by the scripted route, and a
+				# bench with a body in it stopped the bot dead on its way to the beach
+				kit.box("limestone", Vector3(0, 0.42, 0), Vector3(1.2, 0.14, 0.5), ["bottom"])
+				for sx: float in [1.0, -1.0]:
+					kit.box("limestone", Vector3(sx * 0.3, 0.18, 0), Vector3(0.3, 0.36, 0.42), ["bottom"])
+	kit.xform = Transform3D.IDENTITY
+
 
 ## Trodden earth between the rows, hugging the ground.
 func _lanes(houses: Array) -> void:
