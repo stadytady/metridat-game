@@ -937,6 +937,22 @@ func _check_night() -> void:
 		if not f.lit:
 			_fail.append("agora: a brazier stayed dark after dusk")
 			break
+	# The children on the square went home at dusk and sit by Myrto's hearth.
+	var kb: Knucklebones = _main().world.find_child("Knucklebones", true, false)
+	if kb == null:
+		_fail.append("no children on the square")
+	else:
+		var home := kb.walkers()
+		if home.size() != 2:
+			_fail.append("%d children went home at dusk, expected 2" % home.size())
+		for i in home.size():
+			var n: Npc = home[i]
+			var d := Vector2(n.global_position.x, n.global_position.z).distance_to(Knucklebones.HOME_SEATS[i])
+			if n.patrol.is_empty():
+				_fail.append("child %d was put home, not walked there: dusk came unseen" % i)
+			if d > 0.1 or n.pose_now() != "sit":
+				_fail.append("child %d not sitting at home: %.2f m off, pose %s" % [i, d, n.pose_now()])
+		print("children: %d home by the hearth" % home.size())
 	# The lamp beside the cottage door follows the same dusk.
 	var wall_lamps := get_tree().get_nodes_in_group(&"wall_lamp")
 	for w: Node in wall_lamps:
