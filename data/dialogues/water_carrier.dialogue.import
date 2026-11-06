@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=15
+type="Resource"
+uid="uid://cgaqti7mwivbk"
+path="res://.godot/imported/water_carrier.dialogue-e3a9b3dfda5a3c6b1d451a6794086a72.tres"
+
+[deps]
+
+source_file="res://data/dialogues/water_carrier.dialogue"
+dest_files=["res://.godot/imported/water_carrier.dialogue-e3a9b3dfda5a3c6b1d451a6794086a72.tres"]
+
+[params]
+
+defaults=true

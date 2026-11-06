@@ -29,6 +29,9 @@ signal dialogue_requested(npc: Node)
 var talked := {}
 ## How many times each Npc has been talked to: the second visit has its own line.
 var talks := {}
+## Errands (Quests): id -> Quests.NONE / TAKEN / FOUND / DONE.
+var quests := {}
+signal quest_changed(id: String, state: int)
 ## True from lying down in the abaton until waking: the hour is DayCycle.DREAM.
 var dreaming := false
 ## The arrival at the pier the evening before, until the morning on the hill.
@@ -92,6 +95,39 @@ func time_target() -> float:
 	if prologue:
 		return DayCycle.PROLOGUE
 	return DayCycle.target_for(found_count(), total())
+
+
+func quest_state(id: String) -> int:
+	return int(quests.get(id, Quests.NONE))
+
+
+## For the dialogues: may the giver ask, has the player found it.
+func quest_offered(id: String) -> bool:
+	return quest_state(id) == Quests.NONE
+
+
+func quest_ready(id: String) -> bool:
+	return quest_state(id) == Quests.FOUND
+
+
+func take_quest(id: String) -> void:
+	_quest_step(id, "take")
+
+
+func pick_quest_item(id: String) -> void:
+	_quest_step(id, "pick")
+
+
+func complete_quest(id: String) -> void:
+	_quest_step(id, "give")
+
+
+func _quest_step(id: String, step: String) -> void:
+	var was := quest_state(id)
+	var now: int = Quests.next_state(was, step)
+	if now != was:
+		quests[id] = now
+		quest_changed.emit(id, now)
 
 
 func lamps_lit() -> int:

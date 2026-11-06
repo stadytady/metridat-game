@@ -14,11 +14,40 @@ const SHIP_GAP := 3.7  # the hull is 2.4 m either side of the keel, the yard abo
 ## DECK_Y: the boat sits in the water and still stays dry inside.
 const WATERLINE := 0.0
 const DECK_Y := 0.9
+## The mooring lines hang slack: this much below the straight line at the middle.
+const MOORING_SAG := 0.45
+const MOORING_SEGMENTS := 10
 ## The model's keel, from its mesh bounds: the test keeps it under the sea.
 const HULL_BOTTOM := -0.67
-const LANTERN_FROM := 0.8
+const LANTERN_FROM := DayCycle.LAMPS_ON
+## The carrier's round: [x, z, pose, pause s, facing yaw deg or NAN]. He takes
+## an amphora from the cargo, goes along the pier round the skipper, up the
+## gangway, hands it over the ship's rail, and comes back for the next.
+const CARRIER_ROUTE := [
+	[81.0, -5.9, "pick", 2.0, 180.0],
+	[84.4, -5.95, "walk", 0.0, NAN],
+	[87.2, -5.75, "walk", 0.0, NAN],
+	[87.86, -6.9, "walk", 0.0, NAN],
+	[87.86, -8.7, "pick", 1.6, 0.0],
+	[87.86, -6.9, "walk", 0.0, NAN],
+	[87.2, -5.75, "walk", 0.0, NAN],
+	[84.4, -5.95, "walk", 0.0, NAN],
+]
+const CARRIER_TAKE := 0
+const CARRIER_HAND := 4
+
+var _carrier: Npc
+var _carrier_jar: Node3D
+
+## Where the anchor stock lies (a find): on the planks by the pier's north edge.
+const ANCHOR_FIND := Vector2(76.0, -6.95)
 
 var _ship: Node3D
+var _lines: MeshInstance3D
+var _line_step := -1
+var _gangway_node: Node3D
+## While the prologue sails her in, she is out at sea: [position, yaw in radians].
+var _under_way: Array = []
 var _lantern: OmniLight3D
 var _flame: MeshInstance3D
 var _atm: Node
@@ -35,6 +64,7 @@ static func skipper_pos() -> Vector3:
 
 
 func _ready() -> void:
+	add_to_group(&"harbour")
 	_atm = get_parent().get_node_or_null("Atmosphere")
 	var kit := MeshKit.new()
 	_pier(kit)
@@ -44,9 +74,15 @@ func _ready() -> void:
 	for g: GeometryInstance3D in _ship.find_children("*", "GeometryInstance3D", true, false):
 		g.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	laid_ship_deck(_ship)
+	_lines = MeshInstance3D.new()
+	_lines.name = "MooringLines"
+	_lines.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(_lines)
 	_gangway()
 	_crew()
 	_end_lantern()
+	# the lead stock of an anchor on the planks by the north edge, clear of the way along
+	spawn_inspectable("anchor_stock", Vector3(ANCHOR_FIND.x, Topo.PIER_H, ANCHOR_FIND.y), 0.0)
 
 
 
@@ -73,12 +109,9 @@ func _pier(kit: MeshKit) -> void:
 		kit.lathe("wood", PackedVector2Array([Vector2(0.14, 0.0), Vector2(0.12, 0.35), Vector2(0.17, 0.42)]), 7,
 				Vector3(bx, y, z - h + 0.25), 1.0, false, "wood", true)
 		kit.add_collider(Vector3(bx, y + 0.2, z - h + 0.25), Vector3(0.34, 0.4, 0.34))
-		# the mooring line down to the ship's rail
-		var a := Vector3(bx, y + 0.35, z - h + 0.25)
-		var b := Vector3(bx + (0.8 if bx > ship_pos().x else -0.8), ship_pos().y + 2.4, ship_pos().z + 0.9)
-		kit.xform = Transform3D(Basis.looking_at(b - a, Vector3.UP), (a + b) / 2.0)
-		kit.box("cloth", Vector3.ZERO, Vector3(0.04, 0.04, a.distance_to(b)), [])
-		kit.xform = Transform3D.IDENTITY
+		# the line made fast: a few turns round the bollard's head
+		kit.lathe("basket", PackedVector2Array([Vector2(0.15, 0.24), Vector2(0.155, 0.33)]), 7,
+				Vector3(bx, y, z - h + 0.25), 1.0, false, "basket", true)
 
 
 ## Cargo waiting on the planks: a rack of amphorae, sacks of grain, a coil of rope.
@@ -116,7 +149,8 @@ func _gangway() -> void:
 	for i in 4:
 		kit.box("bark", Vector3(0, 0.04, -a.distance_to(b) / 2.0 + 0.3 + i * 0.45), Vector3(0.55, 0.03, 0.05), [])  # cleats
 	kit.xform = Transform3D.IDENTITY
-	add_child(kit.build("Gangway"))
+	_gangway_node = kit.build("Gangway")
+	add_child(_gangway_node)
 
 
 func _crew() -> void:
@@ -135,20 +169,33 @@ func _crew() -> void:
 	var cm := MeshInstance3D.new()
 	cm.mesh = cap.commit()
 	(skipper.joints["head"] as Node3D).add_child(cm)
-	# carrying an amphora to the gangway
+	# carrying amphorae aboard, one at a time
 	var carrier: Npc = NPC.new()
 	carrier.npc_id = "carrier"
 	carrier.name_key = "NPC_SAILOR_NAME"
-	carrier.pose = "carry"
+	carrier.pose = "pick"
 	carrier.body_mat = "chiton_dark"
 	carrier.talkable = false
-	carrier.position = Vector3(ship_pos().x + 5.4, Topo.PIER_H, Topo.PIER_Z + 0.2)
-	carrier.rotation.y = 0.0  # faces -z, the ship
+	carrier.solid = false
+	carrier.position = Vector3(CARRIER_ROUTE[0][0], Topo.PIER_H, CARRIER_ROUTE[0][1])
+	carrier.rotation.y = PI  # faces +z, the cargo
+	set_carrier_round(carrier)
 	add_child(carrier)
 	var jar := Props.instance("amphora")
 	jar.position = Vector3(0, 0.05, -0.32)
 	jar.scale = Vector3.ONE * 0.75
+	jar.visible = false
 	(carrier.joints["chest"] as Node3D).add_child(jar)
+	_carrier = carrier
+	_carrier_jar = jar
+	carrier.reached.connect(func(i: int) -> void:
+		if i == CARRIER_TAKE:
+			_carrier_jar.visible = true
+			_carrier.carrying = true
+		elif i == CARRIER_HAND:
+			# over the rail into the hold
+			_carrier_jar.visible = false
+			_carrier.carrying = false)
 	# sitting on the edge, legs over the water, splicing a rope
 	var splicer: Npc = NPC.new()
 	splicer.npc_id = "splicer"
@@ -159,6 +206,26 @@ func _crew() -> void:
 	splicer.position = Vector3(ship_pos().x + 1.5, Topo.PIER_H - Figure.SEAT["mender"] + 0.05, Topo.PIER_Z + Topo.PIER_HALF - 0.1)
 	splicer.rotation.y = PI  # faces +z, the open water
 	add_child(splicer)
+
+
+## The carrier's round as a patrol. Static so the test can walk it.
+static func set_carrier_round(c: Npc) -> void:
+	var home := Vector3(CARRIER_ROUTE[0][0], 0, CARRIER_ROUTE[0][1])
+	var pts := PackedVector3Array()
+	var poses := PackedStringArray()
+	var pauses := PackedFloat32Array()
+	var faces := PackedFloat32Array()
+	for r: Array in CARRIER_ROUTE:
+		pts.append(Vector3(r[0], 0, r[1]) - home)
+		poses.append(r[2])
+		pauses.append(r[3])
+		faces.append(r[4])
+	c.patrol = pts
+	c.patrol_poses = poses
+	c.patrol_pauses = pauses
+	c.patrol_faces = faces
+	c.patrol_speed = 0.7
+	c.stops_for_player = false
 
 
 func _end_lantern() -> void:
@@ -183,11 +250,84 @@ func _end_lantern() -> void:
 	_lantern.add_child(_flame)
 
 
+## The Swallow out at sea, for the prologue's voyage in: the same ship that lies
+## at the pier, so there are never two of her. The gangway waits ashore.
+func sail(pos: Vector3, yaw: float) -> void:
+	_under_way = [pos, yaw]
+	_gangway_node.visible = false
+
+
+func moor() -> void:
+	_under_way = []
+	_ship.position = ship_pos()
+	_gangway_node.visible = true
+
+
+func ship() -> Node3D:
+	return _ship
+
+
+## Where each mooring line is made fast: [on the bollard (world), on the ship's
+## rail (in the ship's own frame)]. The ship end rides with her on the swell.
+static func mooring_ends() -> Array:
+	var y := Topo.PIER_H
+	var z := Topo.PIER_Z
+	var h := Topo.PIER_HALF
+	var out := []
+	for bx: float in [ship_pos().x - 5.5, ship_pos().x + 6.0]:
+		var a := Vector3(bx, y + 0.3, z - h + 0.25)
+		# on the rail at her pier side, a little in from where the hull narrows
+		var lx := bx - ship_pos().x + (0.8 if bx > ship_pos().x else -0.8)
+		var rail := Vector3(lx, 2.25, ship_hull_half_beam(lx) - 0.05)
+		out.append([a, rail])
+	return out
+
+
+## A line hanging between two points: a parabola that sags by `sag` at its
+## middle, in `n` segments. Close enough to a catenary for a slack hawser.
+static func mooring_line(a: Vector3, b: Vector3, sag := MOORING_SAG, n := MOORING_SEGMENTS) -> PackedVector3Array:
+	var pts := PackedVector3Array()
+	for i in n + 1:
+		var t := float(i) / n
+		pts.append(a.lerp(b, t) - Vector3(0, 4.0 * sag * t * (1.0 - t), 0))
+	return pts
+
+
+## Re-lays both lines between the bollards and the rail as she moves, on the
+## 15 fps clock the rest of the harbour keeps.
+func _lay_lines() -> void:
+	var kit := MeshKit.new()
+	for e: Array in mooring_ends():
+		var b: Vector3 = _ship.global_transform * (e[1] as Vector3)
+		var pts := mooring_line(e[0], b)
+		for i in pts.size() - 1:
+			var p := pts[i]
+			var q := pts[i + 1]
+			kit.xform = Transform3D(Basis.looking_at(q - p, Vector3.UP), (p + q) / 2.0)
+			kit.box("basket", Vector3.ZERO, Vector3(0.035, 0.035, p.distance_to(q) + 0.02), [])
+	kit.xform = Transform3D.IDENTITY
+	_lines.mesh = kit.commit()
+
+
 func _process(delta: float) -> void:
 	_t += delta
-	# moored, she still rides the swell: heave in full, her lines check the rolling
-	var f := Sea.float_pose(ship_pos(), 0.0, 7.0, 2.2)
-	_ship.position.y = WATERLINE + f.x
-	_ship.rotation = Vector3(f.y * 0.5, 0.0, f.z * 0.5)
+	if not _under_way.is_empty():
+		# under sail she rolls freely with the sea
+		var p: Vector3 = _under_way[0]
+		var yaw: float = _under_way[1]
+		var u := Sea.float_pose(p, yaw, 7.0, 2.2)
+		_ship.position = Vector3(p.x, WATERLINE + u.x, p.z)
+		_ship.rotation = Vector3(u.y, yaw, u.z)
+	else:
+		# moored, she still rides the swell: heave in full, her lines check the rolling
+		var f := Sea.float_pose(ship_pos(), 0.0, 7.0, 2.2)
+		_ship.position.y = WATERLINE + f.x
+		_ship.rotation = Vector3(f.y * 0.5, 0.0, f.z * 0.5)
+	# the lines only while she lies alongside, and only re-laid on a new frame
+	_lines.visible = _under_way.is_empty()
+	var step := floori(_t * 15.0)
+	if _lines.visible and step != _line_step:
+		_line_step = step
+		_lay_lines()
 	var hour: float = _atm.t if _atm else 0.0
 	_lantern.visible = hour >= LANTERN_FROM

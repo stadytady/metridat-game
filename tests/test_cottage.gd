@@ -42,19 +42,29 @@ func test_the_householder_stands_inside_on_the_floor() -> void:
 	check(is_equal_approx(woman.y, info["floor"]), "the woman stands at %.2f, the floor at %.2f" % [woman.y, info["floor"]])
 	check(inside.has_point(Vector2(woman.x, woman.z)), "the woman stands in the wall at %s" % woman)
 
-## The householder reads as a woman from behind as well as from the front: hair
-## down the back under a kerchief, and a skirt over the legs.
+## The householder reads as a woman from behind as well as from the front: her
+## look puts hair and a kerchief on the head and a chiton to the ground on the
+## hips, built with the figure, not boxes stuck on afterwards.
 func test_a_woman_wears_hair_and_a_skirt() -> void:
 	var root := Node3D.new()
-	var joints := Figure.build(root, "chiton_dark")
-	var head: Node3D = joints["head"]
-	var pelvis: Node3D = joints["pelvis"]
-	var head_before := head.get_child_count()
-	var pelvis_before := pelvis.get_child_count()
-	Figure.dress_woman(joints)
-	check(head.get_child_count() > head_before, "nothing was added to the head")
-	check(pelvis.get_child_count() > pelvis_before, "nothing was added to the hips")
+	var joints := Figure.build(root, "chiton", Figure.look_for("cottage_woman"))
+	var head := _materials(joints["head"])
+	var hips := _materials(joints["pelvis"])
+	check(head.has("hair"), "she has no hair: %s" % [head])
+	check(head.has("chiton_dark"), "she has no kerchief: %s" % [head])
+	check(hips.has("hem"), "her chiton does not reach a hem: %s" % [hips])
+	for j: Node3D in [joints["head"], joints["pelvis"]]:
+		check(j.find_children("*", "MeshInstance3D", false, false).size() == 1, "%s carries extra pieces stuck on" % j.name)
 	root.free()
+
+
+func _materials(joint: Node3D) -> Array[String]:
+	var out: Array[String] = []
+	for mi: MeshInstance3D in joint.find_children("*", "MeshInstance3D", false, false):
+		for i in mi.mesh.get_surface_count():
+			out.append(mi.mesh.surface_get_material(i).resource_name)
+	return out
+
 
 ## The steps outside the door belong to the house, not to the sky: every tread sits
 ## between the threshold and a stride below it.

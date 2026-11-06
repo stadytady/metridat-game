@@ -58,6 +58,27 @@ const POSES := {
 	# shoulder; the right hand before the belly, twirling the thread
 	"spin": {"head": Vector3(-12, 0, 0), "l_shoulder": Vector3(30, 0, 12), "l_elbow": Vector3(100, 0, 0),
 		"r_shoulder": Vector3(28, 0, -10), "r_elbow": Vector3(45, 0, 0)},
+	# bent over the woodpile, gathering an armful of split logs
+	"pick": {"chest": Vector3(-55, 0, 0), "head": Vector3(10, 0, 0),
+		"l_shoulder": Vector3(70, 0, 8), "r_shoulder": Vector3(70, 0, -8), "l_elbow": Vector3(10, 0, 0), "r_elbow": Vector3(10, 0, 0),
+		"l_hip": Vector3(25, 0, 0), "r_hip": Vector3(25, 0, 0), "l_knee": Vector3(-30, 0, 0), "r_knee": Vector3(-30, 0, 0)},
+	# kneeling at the kiln's stoking mouth, pushing the logs in with both hands
+	"stoke": {"chest": Vector3(-35, 0, 0), "head": Vector3(-10, 0, 0),
+		"l_shoulder": Vector3(80, 0, 6), "r_shoulder": Vector3(80, 0, -6), "l_elbow": Vector3(15, 0, 0), "r_elbow": Vector3(15, 0, 0),
+		"l_hip": Vector3(25, 0, 6), "r_hip": Vector3(25, 0, -6), "l_knee": Vector3(-115, 0, 0), "r_knee": Vector3(-115, 0, 0)},
+	# sitting on the edge of a low seat, chin on one hand, the other forearm on
+	# the knee: the thigh rises 110 deg to a knee above the seat, the shin drops
+	# forward to the floor
+	"sit_think": {"chest": Vector3(-22, 0, 0), "head": Vector3(-8, 0, 0),
+		"r_shoulder": Vector3(75, 0, -8), "r_elbow": Vector3(115, 0, 0), "l_shoulder": Vector3(40, 0, 8), "l_elbow": Vector3(35, 0, 0),
+		"l_hip": Vector3(110, 0, 6), "r_hip": Vector3(110, 0, -6), "l_knee": Vector3(-80, 0, 0), "r_knee": Vector3(-80, 0, 0)},
+	# walking with a hydria on the head, steadied by the raised left hand, as on
+	# the fountain-house vases
+	"head_carry": {"head": Vector3(-2, 0, 0), "l_shoulder": Vector3(165, 0, -14), "l_elbow": Vector3(35, 0, 0),
+		"r_shoulder": Vector3(4, 0, -4)},
+	# tipping the hydria into a storage jar, both hands on it, leaning over
+	"pour": {"chest": Vector3(-25, 0, 0), "head": Vector3(-15, 0, 0),
+		"l_shoulder": Vector3(60, 0, 10), "r_shoulder": Vector3(60, 0, -10), "l_elbow": Vector3(40, 0, 0), "r_elbow": Vector3(40, 0, 0)},
 	# stopped and thinking about the part: chin on the hand, eyes on the stones
 	"think": {"chest": Vector3(-6, 0, 0), "head": Vector3(-14, 0, 0),
 		"r_shoulder": Vector3(42, 0, -12), "r_elbow": Vector3(105, 0, 0), "l_shoulder": Vector3(8, 0, 6)},
@@ -70,7 +91,8 @@ const POSES := {
 
 ## Pelvis height for a pose (seated figures sit on something low).
 const SEAT := {"stand": 0.92, "potter": 0.46, "turner": 0.32, "mender": 0.4, "sleep": 0.12, "baker": 0.5, "carry": 0.92, "declaim": 0.92, "draw": 0.92,
-	"walk": 0.92, "think": 0.92, "spin": 0.92, "sit": 0.3}
+	"walk": 0.92, "think": 0.92, "spin": 0.92, "pick": 0.86, "stoke": 0.5, "sit_think": 0.34,
+	"head_carry": 0.92, "pour": 0.92, "sit": 0.3}
 
 
 ## How a person looks: "woman", "beard" (0 none, 1 short, 2 full), "hair"
@@ -86,10 +108,9 @@ const LOOKS := {
 	"carrier": {"beard": 1, "hair": 1},
 	"splicer": {"beard": 0, "hair": 1},
 	"actor": {"beard": 0, "hair": 1, "cloth": "chiton_red"},
-	"baker": {"woman": true, "kerchief": "cloth", "skirt": "none"},
+	"baker": {"woman": true, "kerchief": "cloth", "skirt": "long", "cloth": "chiton_dark"},
 	"water_carrier": {"woman": true, "kerchief": "chiton_dark", "skirt": "long", "cloth": "chiton_blue"},
-	# dress_woman() gives her the kerchief and the skirt: the look only makes her a woman
-	"cottage_woman": {"woman": true, "skirt": "none", "cloth": "chiton_dark"},
+	"cottage_woman": {"woman": true, "kerchief": "chiton_dark", "skirt": "long", "cloth": "chiton_red"},
 }
 const DYES := ["chiton", "chiton_red", "chiton_blue", "chiton_ochre"]
 const FACES := ["face_bare", "face_short", "face_beard", "face_woman"]
@@ -179,12 +200,19 @@ static func _segment(kit: MeshKit, name: String, cloth: String, look: Dictionary
 
 static func _hair(kit: MeshKit, look: Dictionary) -> void:
 	if look.get("woman", false):
-		kit.box("hair", Vector3(0, 0.25, 0.02), Vector3(0.21, 0.07, 0.23), [])
-		kit.box("hair", Vector3(0, 0.02, 0.12), Vector3(0.18, 0.3, 0.06), [])  # down the back
 		var kerchief: String = look.get("kerchief", "")
-		if not kerchief.is_empty():
-			kit.box(kerchief, Vector3(0, 0.26, 0.02), Vector3(0.23, 0.06, 0.25), [])
-			kit.box(kerchief, Vector3(0, 0.18, 0.11), Vector3(0.23, 0.14, 0.05), [])
+		if kerchief.is_empty():
+			# hair parted over the crown and falling down the back to the shoulders
+			kit.box("hair", Vector3(0, 0.25, 0.015), Vector3(0.205, 0.06, 0.225), [])
+			kit.box("hair", Vector3(0, 0.08, 0.112), Vector3(0.19, 0.3, 0.05), [])
+			return
+		# A kerchief tied close over the head, as on the vases: a cap just over the
+		# skull from the hairline back, a fold hanging over the nape, and the hair
+		# showing below it. Kept to the head's own width, so it reads as cloth on
+		# a head and not as a box sat on top of one.
+		kit.box(kerchief, Vector3(0, 0.235, 0.012), Vector3(0.2, 0.075, 0.22), [])
+		kit.box(kerchief, Vector3(0, 0.16, 0.108), Vector3(0.198, 0.13, 0.04), [])
+		kit.box("hair", Vector3(0, 0.03, 0.11), Vector3(0.15, 0.13, 0.045), [])
 		return
 	match int(look.get("hair", 0)):
 		1:  # curly: fuller on top and over the ears
@@ -247,22 +275,6 @@ static func _attach(joint: Node3D, kit: MeshKit) -> void:
 	joint.add_child(mi)
 
 
-## A woman's figure: hair down the back under a kerchief, and a long chiton over
-## the legs. The same recipe as Myrto at her oven, kept here so any NPC can wear it.
-static func dress_woman(joints: Dictionary) -> void:
-	var head: Node3D = joints.get("head")
-	if head != null:
-		var hk := MeshKit.new()
-		hk.box("hair", Vector3(0, 0.02, 0.12), Vector3(0.18, 0.3, 0.06), [])  # down the back
-		hk.box("cloth", Vector3(0, 0.25, 0.02), Vector3(0.23, 0.06, 0.25), [])  # kerchief
-		hk.box("cloth", Vector3(0, 0.17, 0.11), Vector3(0.23, 0.14, 0.05), [])
-		_attach(head, hk)
-	var pelvis: Node3D = joints.get("pelvis")
-	if pelvis != null:
-		var sk := MeshKit.new()
-		sk.box("chiton_dark", Vector3(0, -0.22, 0.05), Vector3(0.42, 0.42, 0.5), [])  # skirt
-		_attach(pelvis, sk)
-
 static func apply_pose(joints: Dictionary, pose: String, extra: Dictionary = {}) -> void:
 	var p: Dictionary = POSES.get(pose, {})
 	for name: String in joints:
@@ -307,6 +319,18 @@ static func motion(pose: String, t: float) -> Dictionary:
 			# the fingers twirl the thread; now and then she glances down at the spindle
 			return {"r_elbow": Vector3(sin(q * 6.0) * 6.0, 0, 0), "r_shoulder": Vector3(0, sin(q * 6.0) * 4.0, 0),
 				"head": Vector3(sin(q * 0.4) * 5.0, sin(q * 0.25) * 8.0, 0)}
+		"stoke":
+			# push the logs in, sit back, push again
+			var push := maxf(0.0, sin(q * 2.2))
+			return {"l_shoulder": Vector3(push * 12, 0, 0), "r_shoulder": Vector3(push * 12, 0, 0), "chest": Vector3(-push * 8, 0, 0)}
+		"pick":
+			# reach down, straighten a little with each log
+			var lift := absf(sin(q * 1.8))
+			return {"chest": Vector3(lift * 10, 0, 0), "l_elbow": Vector3(lift * 25, 0, 0), "r_elbow": Vector3(lift * 25, 0, 0)}
+		"sit_think":
+			# slow breathing; now and then the head lifts to the empty orchestra
+			var look := maxf(0.0, sin(q * 0.35))
+			return {"chest": Vector3(sin(q * 1.2) * 1.5, 0, 0), "head": Vector3(look * 12, sin(q * 0.2) * 10, 0)}
 		"sleep":
 			# slow breathing
 			return {"chest": Vector3(sin(q * 1.4) * 2.0, 0, 0)}

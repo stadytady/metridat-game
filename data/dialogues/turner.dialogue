@@ -1,0 +1,19 @@
+# The potter's boy at the wheel. One question about his work, and an errand
+# (Quests): a knucklebone lost on the stoa's steps, thanked for when found.
+# Text is a key: the panel translates it, so EN/RU stay in strings.csv.
+# Indent with tabs: DM's INDENT_REGEX is ^\t+.
+
+~ start
+if Game.quest_ready("astragal")
+	Boy: LOC_Q_ASTRA_DONE
+	do Game.complete_quest("astragal")
+	=> END
+Boy: NPC_BOY_1
+- LOC_BOY_CHOICE_WOOD
+	Boy: LOC_BOY_WOOD_1
+	Boy: LOC_BOY_WOOD_2
+- LOC_Q_ASTRA_ASK [if Game.quest_offered("astragal")]
+	Boy: LOC_Q_ASTRA_1
+	Boy: LOC_Q_ASTRA_2
+	do Game.take_quest("astragal")
+=> END

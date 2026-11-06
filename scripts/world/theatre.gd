@@ -17,6 +17,10 @@ const ORCHESTRA_R := 3.0
 const STAND := Vector2(-88.6, 3.9)
 ## The actor rehearses in the orchestra, facing the empty seats.
 const ACTOR := Vector2(-90.6, 0.3)
+## Where he sits down to think it over: on the front edge of the lowest tier,
+## in the middle of the ring, looking east across the orchestra to the strait.
+const ACTOR_SEAT := Vector2(-95.1, 0.0)
+const ACTOR_SIT_FOR := 14.0
 const NPC := preload("res://scripts/npc/npc.gd")
 ## Two lamps of the hill lit within this radius and fire answers at the corners.
 const FIRE_RADIUS := 12.0
@@ -171,8 +175,13 @@ func _actor() -> void:
 	a.rotation.y = deg_to_rad(90.0)  # faces -x, the seats
 	# Rehearsing is not standing still: he paces the orchestra, stops to think,
 	# then stops to declaim, and breaks off to face whoever comes up to him.
-	a.patrol = PackedVector3Array([Vector3(-0.9, 0, -0.9), Vector3(1.5, 0, -0.2), Vector3(0.3, 0, 1.4)])
-	a.patrol_poses = PackedStringArray(["think", "declaim", "think"])
+	# Now and then he goes and sits on the front row, chin on his hand, as if
+	# watching someone else play it.
+	var seat := Vector3(ACTOR_SEAT.x - ACTOR.x, 0, ACTOR_SEAT.y - ACTOR.y)
+	a.patrol = PackedVector3Array([Vector3(-0.9, 0, -0.9), Vector3(1.5, 0, -0.2), Vector3(0.3, 0, 1.4), seat])
+	a.patrol_poses = PackedStringArray(["think", "declaim", "think", "sit_think"])
+	a.patrol_pauses = PackedFloat32Array([3.2, 3.2, 3.2, ACTOR_SIT_FOR])
+	a.patrol_faces = PackedFloat32Array([NAN, NAN, NAN, -90.0])  # facing +x, the orchestra
 	a.patrol_speed = 0.5
 	a.patrol_pause = 3.2
 	add_child(a)

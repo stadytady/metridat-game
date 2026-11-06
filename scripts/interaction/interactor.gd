@@ -8,6 +8,12 @@ signal target_changed(target: Node)
 var current: Node
 
 
+func _ready() -> void:
+	# layer 2 is the ray's own: things that can be used but not bumped into
+	# (an errand's lost thing on the ground, QuestItem)
+	collision_mask |= 2
+
+
 func _physics_process(_delta: float) -> void:
 	var hit := _find(get_collider()) if is_colliding() else null
 	if hit != current:

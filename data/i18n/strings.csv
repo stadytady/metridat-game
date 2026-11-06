@@ -220,3 +220,66 @@ LOC_PRO_CHOICE_NIGHT,Where do I sleep tonight?,Где мне переночев�
 LOC_PRO_NIGHT_1,"Sleep at the stern, it's out of the wind under the sail. In the morning climb the hill: everyone new here starts there.","Ночуй на корме, под парусом не дует. А утром поднимись на холм: оттуда начинают все, кто тут впервые."
 LOC_PRO_END,"Go on, then. And don't linger by the water after dark.","Ну, ступай. И не задерживайся у воды, когда стемнеет."
 UI_PROLOGUE_MORNING,Morning,Утро
+UI_LEGEND_1,"They say a cow once swam this strait: Io, driven by Hera's gadfly. So the Greeks named it the Cow's Ford, the Bosporus.","Говорят, когда-то этот пролив переплыла корова — Ио, гонимая оводом Геры. Оттого греки и назвали его Коровьим бродом, Боспором."
+UI_LEGEND_2,"On its western shore, on a hill above the water, settlers from Miletus built a city and called it Panticapaeum.","На его западном берегу, на горе над водой, переселенцы из Милета поставили город и назвали его Пантикапеем."
+UI_LEGEND_3,"Grain, fish and the gold of the steppe go out from here across the sea. All summer the ships come in.","Отсюда за море уходят хлеб, рыба и степное золото. Всё лето сюда идут корабли."
+UI_LEGEND_4,And sometimes they bring someone who dreamed of this city before ever seeing it.,"А иногда привозят того, кому этот город снился раньше, чем он его увидел."
+UI_VOYAGE_SKIP,E — skip,E — пропустить
+D_GODDESS_HEAD_TITLE,Marble head of a goddess,Мраморная голова богини
+D_GODDESS_HEAD_DESCRIPTION,"A marble head, larger than life, broken off at the neck: a calm face, the hair drawn back under a helmet carved in the same stone, its crest knocked away. It rests in the grass by the walk on a bed of straw.","Мраморная голова больше натуральной величины, отбитая по шее: спокойное лицо, волосы убраны под шлем, высеченный из того же камня, гребень сбит. Лежит в траве у дорожки на подстилке из соломы."
+D_GODDESS_HEAD_HISTORY,"In the fill of a well by the palace on the acropolis of Panticapaeum, excavators found the marble head of a female deity from a statue at least 2.5 m tall, carved in the middle of the 4th century BC in the manner of the school of Polykleitos. The head first wore a metal wreath. Later a Corinthian helmet of stone was set in its place, and the goddess became Athena, protectress of the ruling house.","В засыпи колодца у дворца на акрополе Пантикапея археологи нашли мраморную голову женского божества от статуи высотой не менее 2,5 м. Её изваяли в середине IV в. до н. э. в манере школы Поликлета. Сначала голову венчал металлический венок. Позже его заменили каменным коринфским шлемом, и богиня стала Афиной — покровительницей царского дома."
+D_GODDESS_HEAD_NARRATIVE,"That the head waits in the park for a new body, on straw a gardener keeps fresh under it, is the game's invention.","То, что голова ждёт в парке нового тела, а садовник подстилает под неё свежую солому, придумано для игры."
+D_GODDESS_HEAD_HINT,"In the park on the north side of the theatre, beside the walk that comes down from the terrace gate.","В парке к северу от театра, у дорожки, что спускается от калитки террасы."
+D_LOOM_WEIGHTS_TITLE,Loom weights,Грузила ткацкого станка
+D_LOOM_WEIGHTS_DESCRIPTION,"A dozen pyramidal clay weights, each pierced near the top, one or two with a small stamped mark, heaped on the floor at the foot of the loom: spares for the warp.","Дюжина пирамидальных глиняных грузил, у каждого отверстие под вершиной, на одном-двух оттиснут маленький знак. Сложены на полу у подножия станка — запас для нитей основы."
+D_LOOM_WEIGHTS_HISTORY,"Greek women wove at home on the warp-weighted loom: the warp threads hung from the upper beam in bundles, each pulled taut by a clay weight. Pyramidal and conical loom weights, pierced for the string, are among the commonest finds in Greek houses, sometimes still lying in a row where a loom stood. Some carry a stamped or incised mark.","Гречанки ткали дома на вертикальном станке с грузилами: нити основы свисали с верхнего навоя пучками, и каждый пучок натягивало глиняное грузило. Пирамидальные и конические грузила с отверстием для шнура — одна из самых частых находок в греческих домах; иногда они так и лежат рядом там, где стоял станок. На некоторых есть оттиснутый или процарапанный знак."
+D_LOOM_WEIGHTS_NARRATIVE,"Myrto's loom, the cloth on it and whose mark is on the weights are the game's invention.","Станок Мирто, ткань на нём и то, чей знак стоит на грузилах, придуманы для игры."
+D_LOOM_WEIGHTS_HINT,"In the workroom of Myrto's house, on the floor by the loom.","В мастерской дома Мирто, на полу у ткацкого станка."
+D_OIL_LAMP_TITLE,Black-glazed oil lamp,Чернолаковый светильник
+D_OIL_LAMP_DESCRIPTION,"A small clay lamp, thrown on the wheel and dipped in glossy black glaze: a round body with a filling hole on top and a short nozzle, its tip sooted by the flame.","Небольшой глиняный светильник, сделанный на гончарном круге и покрытый блестящим чёрным лаком: круглое тулово с отверстием для масла сверху и короткий носик, закопчённый пламенем."
+D_OIL_LAMP_HISTORY,"Greek houses were lit by clay lamps burning olive oil, with a wick of linen or plant fibre laid in the nozzle. Wheel-made lamps coated in black glaze were made in Athens in the 5th and 4th centuries BC and traded across the Greek world. In the Bosporan cities they are found with the other Attic pottery that came in by sea.","Греческие дома освещали глиняные светильники с оливковым маслом и фитилём из льна или растительного волокна, положенным в носик. Сделанные на круге светильники, покрытые чёрным лаком, изготовляли в Афинах в V–IV вв. до н. э. и развозили по всему греческому миру. В боспорских городах их находят вместе с остальной аттической посудой, приходившей морем."
+D_OIL_LAMP_NARRATIVE,"Which lamp lights Myrto's evenings, and that she keeps it by the hearth, is the game's invention.","Какой светильник горит у Мирто по вечерам и то, что она держит его у очага, придумано для игры."
+D_OIL_LAMP_HINT,"In the living room of Myrto's house, on the stool by the hearth.","В жилой комнате дома Мирто, на табурете у очага."
+D_ANCHOR_STOCK_TITLE,Lead anchor stock,Свинцовый шток якоря
+D_ANCHOR_STOCK_DESCRIPTION,"A long bar of grey lead, thickest in the middle where a slot runs through it: the stock of a ship's anchor, lying on the planks without the wooden shank and arms it was cast onto.","Длинный брусок серого свинца, толще всего посередине, где сквозь него проходит прорезь: шток корабельного якоря. Он лежит на настиле без деревянного веретена и лап, на которые его когда-то отлили."
+D_ANCHOR_STOCK_HISTORY,"Greek ships of the Classical period carried wooden anchors: a shank with arms, weighted by a stock of lead set across the shank so that, as the anchor dragged, an arm turned down and bit into the sea floor. The wood seldom survives, but the lead stocks do, and they are frequent finds in the Mediterranean and the Black Sea, many of them where ships anchored or were lost.","На греческих кораблях классической эпохи были деревянные якоря: веретено с лапами и свинцовый шток поперёк веретена. Когда якорь тянуло по дну, шток разворачивал его так, что одна из лап впивалась в грунт. Дерево сохраняется редко, а свинцовые штоки — часто: их находят в Средиземном и Чёрном морях, многие там, где корабли стояли на якоре или погибли."
+D_ANCHOR_STOCK_NARRATIVE,"That the stock came off the Swallow, and that Damon is waiting for a carpenter to fit it to a new shank, is the game's invention.","То, что шток сняли с «Ласточки» и Дамон ждёт плотника, чтобы насадить его на новое веретено, придумано для игры."
+D_ANCHOR_STOCK_HINT,"On the pier, on the planks by its north edge, before you reach the ship.","На пристани, на настиле у северного края, не доходя до корабля."
+UI_PICK_UP,[E] Pick up %s,[E] Поднять: %s
+UI_QUEST_TAKEN,Errand: %s,Поручение: %s
+UI_QUEST_FOUND,Found — take it back: %s,"Найдено, верни хозяину: %s"
+UI_QUEST_DONE,Errand done: %s,Поручение выполнено: %s
+UI_GOALS_ERRANDS,Errands,Поручения
+Q_LOOM_TITLE,Myrto's lost loom weight,Потерянный грузик Мирто
+Q_LOOM_ITEM,loom weight,грузик
+Q_LAMP_TITLE,A lamp for the house,Светильник для дома
+Q_LAMP_ITEM,clay lamp,глиняный светильник
+Q_HOOK_TITLE,Glaukos's fish hook,Рыболовный крючок Главка
+Q_HOOK_ITEM,bronze hook,бронзовый крючок
+Q_ASTRA_TITLE,The lost knucklebone,Пропавшая косточка
+Q_ASTRA_ITEM,knucklebone,астрагал
+LOC_Q_LOOM_ASK,Is something wrong?,Что-то случилось?
+LOC_Q_LOOM_1,"A weight has gone from my loom. One bundle of the warp hangs slack, and the cloth goes crooked.","С моего станка пропал грузик. Один пучок основы провис, и полотно идёт криво."
+LOC_Q_LOOM_2,"The little one plays with them. Look outside the street door, on the path: it will be there somewhere.","Малыш вечно ими играет. Посмотри за уличной дверью, на тропинке: где-то там."
+LOC_Q_LOOM_DONE,My weight! Now the warp hangs straight again. Thank you.,Мой грузик! Теперь основа снова висит ровно. Спасибо.
+LOC_Q_HOOK_ASK,Can I help with anything?,Могу чем-нибудь помочь?
+LOC_Q_HOOK_1,"I've lost a hook. Good bronze, the best I had.","Я потерял крючок. Хорошая бронза, лучший из всех."
+LOC_Q_HOOK_2,"It will be over by the nets and the baskets, under the rack. My eyes are not what they were.","Он где-то у сетей и корзин, под вешалами. Глаза у меня уже не те."
+LOC_Q_HOOK_DONE,"That's it, that's my hook. Tomorrow it goes back on the line.","Он самый, мой крючок. Завтра снова на леску."
+NPC_CARRIER_NAME,Agathe the water carrier,Водоноска Агата
+NPC_CARRIER_1,"The water in this well is sweet, not like the one down by the harbour.","Вода в этом колодце сладкая, не то что у гавани."
+LOC_CARRIER_CHOICE_WATER,Do you carry it far?,Далеко носишь?
+LOC_CARRIER_WATER_1,"To the big jar under the stoa, then home. Ten times a day, more in summer.","До большого пифоса под стоей, потом домой. Раз десять на дню, летом больше."
+LOC_CARRIER_WATER_2,My mother carried it before me. Her neck was as straight as a column.,"До меня носила мать. Шея у неё была прямая, как колонна."
+LOC_Q_LAMP_ASK,You look worried.,Ты чем-то встревожена.
+LOC_Q_LAMP_1,My boy took our lamp out to play and came back without it. And night is coming.,Мой мальчишка унёс светильник играть и вернулся без него. А скоро ночь.
+LOC_Q_LAMP_2,"He was playing by the well, on the grass behind the curb. It must be lying there.","Он играл у колодца, на траве за срубом. Там, наверное, и бросил."
+LOC_Q_LAMP_DONE,"There it is, and not even cracked. We'll have light tonight.","Вот он, даже не треснул. Сегодня будет свет."
+NPC_BOY_1,"Shh, don't tell Kallias I stopped. The wheel is heavy, but I'm getting stronger.","Тсс, не говори Каллию, что я остановился. Круг тяжёлый, но я становлюсь сильнее."
+LOC_BOY_CHOICE_WOOD,And the wood for the kiln?,А дрова для печи?
+LOC_BOY_WOOD_1,That's me too. The kiln eats more than the mule does.,"Тоже я. Печь ест больше, чем мул."
+LOC_BOY_WOOD_2,"When the pots come out whole, Kallias gives me an obol. When they crack, he doesn't.","Когда горшки выходят целыми, Каллий даёт мне обол. Когда трескаются — нет."
+LOC_Q_ASTRA_ASK,Why so glum?,Ты чего такой грустный?
+LOC_Q_ASTRA_1,I've lost a knucklebone! One of my five. You can't play with four.,Я потерял астрагал! Один из пяти. С четырьмя не поиграешь.
+LOC_Q_ASTRA_2,We were playing on the steps of the stoa. It must have rolled off somewhere there.,"Мы играли на ступенях стои. Наверное, он там куда-то укатился."
+LOC_Q_ASTRA_DONE,My knucklebone! All five again. Thank you!,Мой астрагал! Снова все пять. Спасибо!

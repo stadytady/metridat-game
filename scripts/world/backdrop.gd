@@ -25,8 +25,8 @@ const LANE_HALF := 0.9
 const LANE_SEG := 1.5
 ## Hearths smoking: one roof in this many.
 const SMOKE_EVERY := 7
-## Windows lit from this hour (dusk).
-const GLOW_FROM := 0.75
+## Windows lit from this hour, with the town's lamps.
+const GLOW_FROM := DayCycle.LAMPS_ON
 
 var _glow: Node3D
 ## The one house you can walk into, and the lamp beside its door.
@@ -304,8 +304,8 @@ func _house(kit: MeshKit, glow: MeshKit, hs: Dictionary) -> void:
 
 
 ## The woman of the house, standing on the new floor between the bench and the
-## shelf, spinning wool. Dressed as a woman — hair, kerchief, long chiton — because an empty room
-## with a bench in it could be anyone's.
+## shelf, spinning wool. Her look (Figure.LOOKS) dresses her as a woman: hair,
+## kerchief, long chiton, because an empty room with a bench in it could be anyone's.
 func _place_woman(xf: Transform3D, info: Dictionary, yaw: float) -> void:
 	var woman := Npc.new()
 	woman.name = "CottageWoman"
@@ -313,11 +313,10 @@ func _place_woman(xf: Transform3D, info: Dictionary, yaw: float) -> void:
 	woman.talkable = false
 	woman.stops_for_player = false
 	woman.pose = "spin"
-	woman.body_mat = "chiton_dark"
+	woman.body_mat = "chiton"  # her own dye from Figure.LOOKS
 	woman.position = xf * (info["woman"] as Vector3)
 	woman.rotation.y = yaw
 	add_child(woman)
-	Figure.dress_woman(woman.joints)
 	# she spins: distaff in the left hand, the spindle hanging from the right
 	Spindle.hold_distaff(woman.joints)
 	var spindle := Spindle.new()

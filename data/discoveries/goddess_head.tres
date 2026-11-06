@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="Discovery" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/interaction/discovery.gd" id="1_d"]
+[ext_resource type="PackedScene" path="res://scenes/interactables/models/marble_head.tscn" id="2_m"]
+
+[resource]
+script = ExtResource("1_d")
+id = &"goddess_head"
+title = "D_GODDESS_HEAD_TITLE"
+location = "LOC_HILL"
+description = "D_GODDESS_HEAD_DESCRIPTION"
+history = "D_GODDESS_HEAD_HISTORY"
+sources = "Pushkin State Museum of Fine Arts, 'Panticapaeum, capital of the Cimmerian Bosporus' (arts-museum.ru/museum/articles/pantikapey, p. 3)."
+narrative = "D_GODDESS_HEAD_NARRATIVE"
+hint = "D_GODDESS_HEAD_HINT"
+model = ExtResource("2_m")

@@ -22,6 +22,28 @@ const ROOM_DOORS := [22.9, 29.1]
 const DIVIDE_X := 26.2
 const OVEN := Vector2(29.6, 18.6)
 const HEARTH := Vector2(23.0, 24.7)
+## Two finds: the loom weights on the workroom floor, the lamp on the living
+## room's stool (its top is 0.44 m up).
+const LOOM_WEIGHTS := Vector2(28.6, 24.4)
+const LAMP_STOOL := Vector2(24.9, 23.3)
+## Where Myrto's lost loom weight lies (an errand): on the path outside the street door.
+const LOST_WEIGHT := Vector2(26.6, 15.3)
+## Myrto's round: kneeling at the oven she bakes; when a bread is done she
+## gets up with it and lays it on the stack on the board behind her, then
+## kneels again. [x, z, pose, pause s, facing yaw deg].
+const BAKER_ROUTE := [
+	[28.65, 18.6, "baker", 14.0, -90.0],
+	[28.15, 19.45, "pick", 2.0, -90.0],
+]
+## Where the board's stack of finished bread tops out, and how many she adds
+## before the household takes them in.
+const STACK_TOP := Vector3(29.17, 0.36, 19.45)
+const STACK_MAX := 4
+
+var _baker_npc: Npc
+var _bread: Node3D
+var _stack: Array[Node3D] = []
+var _stacked := 0
 
 
 static func bounds() -> Rect2:
@@ -78,6 +100,11 @@ func _ready() -> void:
 	add_child(kit.build("House"))
 	_oven_fire(y)
 	_baker(y)
+	# spare weights at the foot of the loom; the lamp on the stool by the hearth
+	spawn_inspectable("loom_weights", Vector3(LOOM_WEIGHTS.x, y + 0.01, LOOM_WEIGHTS.y), 0.0)
+	spawn_inspectable("oil_lamp", Vector3(LAMP_STOOL.x, y + 0.44, LAMP_STOOL.y), 120.0)
+	# Myrto's errand: a loom weight the little one took out, on the path by the street door
+	spawn_quest_item("loom_weight", Vector3(LOST_WEIGHT.x, Topo.surface(LOST_WEIGHT.x, LOST_WEIGHT.y), LOST_WEIGHT.y), 30.0)
 	place("pithos", Vector3(20.5, y, 17.2), 30.0, Vector3.ONE * 0.9, 0.45, 1.2)
 	place("pithos", Vector3(21.4, y, 16.9), 110.0, Vector3.ONE * 0.75, 0.38, 1.0)
 	place("amphora", Vector3(31.8, y, 17.0), 20.0, Vector3.ONE, 0.17, 0.8)
@@ -231,6 +258,35 @@ func _oven_fire(y: float) -> void:
 	add_child(fk.build("Fires"))
 
 
+## Myrto's round as a patrol. Static so the test can walk it.
+static func set_baker_round(b: Npc) -> void:
+	var home := Vector3(BAKER_ROUTE[0][0], 0, BAKER_ROUTE[0][1])
+	var pts := PackedVector3Array()
+	var poses := PackedStringArray()
+	var pauses := PackedFloat32Array()
+	var faces := PackedFloat32Array()
+	for r: Array in BAKER_ROUTE:
+		pts.append(Vector3(r[0], 0, r[1]) - home)
+		poses.append(r[2])
+		pauses.append(r[3])
+		faces.append(r[4])
+	b.patrol = pts
+	b.patrol_poses = poses
+	b.patrol_pauses = pauses
+	b.patrol_faces = faces
+	b.patrol_speed = 0.45
+	# she keeps baking while she is watched; a talk holds the world anyway
+	b.stops_for_player = false
+
+
+static func _loaf() -> MeshInstance3D:
+	var k := MeshKit.new()
+	k.lathe("bread", PackedVector2Array([Vector2(0.15, 0.0), Vector2(0.15, 0.018)]), 8, Vector3.ZERO, 1.0, false, "bread", true)
+	var mi := MeshInstance3D.new()
+	mi.mesh = k.commit()
+	return mi
+
+
 ## Myrto, kneeling at the oven. A woman's figure: hair long down the back
 ## under a kerchief, and a long chiton over the knees.
 func _baker(y: float) -> void:
@@ -242,11 +298,33 @@ func _baker(y: float) -> void:
 	b.body_mat = "chiton_dark"
 	b.position = Vector3(OVEN.x - 0.95, y, OVEN.y)
 	b.rotation.y = deg_to_rad(-90.0)  # faces +x, the oven
+	set_baker_round(b)
 	add_child(b)
-	# hair and kerchief: Figure.LOOKS["baker"]; the skirt is hers, over kneeling legs
-	var pelvis: Node3D = b.joints["pelvis"]
-	var sk := MeshKit.new()
-	sk.box("chiton_dark", Vector3(0, -0.22, 0.05), Vector3(0.42, 0.42, 0.5), [])  # skirt over the kneeling legs
-	var sm := MeshInstance3D.new()
-	sm.mesh = sk.commit()
-	pelvis.add_child(sm)
+	_baker_npc = b
+	# the bread she carries, flat against her chest, and the ones she adds to the stack
+	_bread = _loaf()
+	_bread.position = Vector3(0, 0.3, -0.38)  # on the palms, the forearms raised under it
+	_bread.visible = false
+	(b.joints["chest"] as Node3D).add_child(_bread)
+	for i in STACK_MAX:
+		var l := _loaf()
+		l.position = STACK_TOP + Vector3(0.01 * (i % 2), y + 0.02 * i, 0)
+		l.visible = false
+		add_child(l)
+		_stack.append(l)
+	b.departed.connect(func(i: int) -> void:
+		if i == 0:
+			_bread.visible = true
+			_baker_npc.carrying = true)
+	b.reached.connect(func(i: int) -> void:
+		if i == 1:
+			_bread.visible = false
+			_baker_npc.carrying = false
+			# the household takes a full stack in, and she starts another
+			if _stacked == STACK_MAX:
+				_stacked = 0
+				for l: Node3D in _stack:
+					l.visible = false
+			_stack[_stacked].visible = true
+			_stacked += 1)
+	# kerchief, hair and the long chiton to the ground: Figure.LOOKS["baker"]
