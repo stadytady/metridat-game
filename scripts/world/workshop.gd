@@ -1,12 +1,39 @@
 extends District
 ## Potter's workshop in the agora's south-west corner: lean-to shed, a wheel
-## spun by hand by a boy while the potter shapes (as on Corinthian plaques and
+## spun by hand by a boy (who now and then goes to feed the kiln, and the wheel
+## runs down while he is away) while the potter shapes (as on Corinthian plaques and
 ## Attic vase paintings), an updraft kiln with smoke and a glowing firebox,
 ## shelves of drying pots, a heap of clay.
 
 const NPC := preload("res://scripts/npc/npc.gd")
 
+## The boy's round, on the agora floor: [x, z, pose, pause s, facing yaw deg or
+## NAN]. He turns the wheel, goes out along the front of the shed (clear of the
+## path people take to the potter), gathers an armful at the woodpile behind
+## the kiln, kneels at the stoking mouth to feed it, and comes back to the wheel.
+const BOY_HOME := Vector2(12.75, 8.75)
+const BOY_ROUTE := [
+	[12.75, 8.75, "turner", 16.0, -90.0],
+	[12.75, 8.0, "walk", 0.0, NAN],
+	[14.4, 7.85, "walk", 0.0, NAN],
+	[18.95, 7.55, "walk", 0.0, NAN],
+	[19.3, 9.05, "pick", 2.5, 180.0],
+	[18.95, 7.55, "walk", 0.0, NAN],
+	[17.7, 7.45, "stoke", 3.5, 180.0],
+	[14.4, 7.85, "walk", 0.0, NAN],
+	[12.75, 8.0, "walk", 0.0, NAN],
+]
+const PICK := 4
+const STOKE := 6
+## The logs go into the fire this long after he kneels.
+const FEED_AFTER := 1.3
+const WHEEL_SPEED := 5.5
+
 var _wheel: Node3D
+var _wheel_sound: AudioStreamPlayer3D
+var _wheel_speed := WHEEL_SPEED
+var _boy: Npc
+var _logs: Node3D
 
 
 func _ready() -> void:
@@ -77,6 +104,7 @@ func _build_wheel(p: Vector3) -> void:
 	_wheel.add_child(mi)
 	# the wheel itself: a soft thump each half turn, wet clay slapped on
 	var sound := AudioStreamPlayer3D.new()
+	_wheel_sound = sound
 	sound.stream = preload("res://assets/audio/wheel.wav")
 	sound.position = p + Vector3(0, 0.45, 0)
 	sound.volume_db = -27.0
@@ -129,11 +157,68 @@ func _people(y: float) -> void:
 	boy.body_mat = "chiton_dark"
 	boy.figure_scale = 0.72
 	boy.talkable = false
-	boy.position = Vector3(12.75, y, 8.75)
+	boy.position = Vector3(BOY_HOME.x, y, BOY_HOME.y)
 	boy.rotation.y = deg_to_rad(-90.0)
+	set_round(boy)
 	add_child(boy)
+	_boy = boy
+	# an armful of split logs, held against the chest on the way to the kiln
+	_logs = Node3D.new()
+	_logs.name = "Logs"
+	_logs.position = Vector3(0, 0.1, -0.26)
+	_logs.visible = false
+	var lk := MeshKit.new()
+	# four split logs across the forearms, the top two a little further out
+	for i in 4:
+		var at := Vector3(-0.07 + (i % 2) * 0.14, -0.04 + (i / 2) * 0.12, -0.04 * (i / 2))
+		lk.xform = Transform3D(Basis(Vector3.FORWARD, PI / 2.0), at)
+		lk.lathe("bark", PackedVector2Array([Vector2(0.075, -0.32), Vector2(0.075, 0.32)]), 5, Vector3.ZERO, 1.0, false, "wood", true)
+	var lm := MeshInstance3D.new()
+	lm.mesh = lk.commit()
+	_logs.add_child(lm)
+	(boy.joints["chest"] as Node3D).add_child(_logs)
+	boy.reached.connect(_on_boy_reached)
+
+
+## Gives a Npc the boy's round: waypoints as offsets from his home, with the
+## pose, pause and facing of each. Static so the test can walk it without the
+## workshop.
+static func set_round(boy: Npc) -> void:
+	var pts := PackedVector3Array()
+	var poses := PackedStringArray()
+	var pauses := PackedFloat32Array()
+	var faces := PackedFloat32Array()
+	for w: Array in BOY_ROUTE:
+		pts.append(Vector3(float(w[0]) - BOY_HOME.x, 0, float(w[1]) - BOY_HOME.y))
+		poses.append(w[2])
+		pauses.append(w[3])
+		faces.append(w[4])
+	boy.patrol = pts
+	boy.patrol_poses = poses
+	boy.patrol_pauses = pauses
+	boy.patrol_faces = faces
+	boy.patrol_speed = 0.75
+	# he has work to do: he walks on past the player instead of stopping to stare
+	boy.stops_for_player = false
+
+
+func _on_boy_reached(i: int) -> void:
+	if i == PICK:
+		_logs.visible = true
+		_boy.carrying = true
+	elif i == STOKE:
+		_boy.carrying = false
+		await get_tree().create_timer(FEED_AFTER).timeout
+		_logs.visible = false
 
 
 func _process(delta: float) -> void:
-	# a hand-turned wheel: fast, a little uneven
-	_wheel.rotation.y += delta * (5.5 + sin(Time.get_ticks_msec() / 400.0) * 1.2)
+	# A hand-turned wheel: fast and a little uneven while the boy turns it; when
+	# he goes for wood it runs down on its own weight and stands.
+	var turning := _boy.pose_now() == "turner"
+	var want := WHEEL_SPEED + sin(Time.get_ticks_msec() / 400.0) * 1.2 if turning else 0.0
+	_wheel_speed = lerpf(_wheel_speed, want, 1.0 - exp(-(2.5 if turning else 0.45) * delta))
+	_wheel.rotation.y += delta * _wheel_speed
+	var quiet := _wheel_speed < 0.6
+	if _wheel_sound.stream_paused != quiet:
+		_wheel_sound.stream_paused = quiet

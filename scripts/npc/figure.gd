@@ -58,6 +58,20 @@ const POSES := {
 	# shoulder; the right hand before the belly, twirling the thread
 	"spin": {"head": Vector3(-12, 0, 0), "l_shoulder": Vector3(30, 0, 12), "l_elbow": Vector3(100, 0, 0),
 		"r_shoulder": Vector3(28, 0, -10), "r_elbow": Vector3(45, 0, 0)},
+	# bent over the woodpile, gathering an armful of split logs
+	"pick": {"chest": Vector3(-55, 0, 0), "head": Vector3(10, 0, 0),
+		"l_shoulder": Vector3(70, 0, 8), "r_shoulder": Vector3(70, 0, -8), "l_elbow": Vector3(10, 0, 0), "r_elbow": Vector3(10, 0, 0),
+		"l_hip": Vector3(25, 0, 0), "r_hip": Vector3(25, 0, 0), "l_knee": Vector3(-30, 0, 0), "r_knee": Vector3(-30, 0, 0)},
+	# kneeling at the kiln's stoking mouth, pushing the logs in with both hands
+	"stoke": {"chest": Vector3(-35, 0, 0), "head": Vector3(-10, 0, 0),
+		"l_shoulder": Vector3(80, 0, 6), "r_shoulder": Vector3(80, 0, -6), "l_elbow": Vector3(15, 0, 0), "r_elbow": Vector3(15, 0, 0),
+		"l_hip": Vector3(25, 0, 6), "r_hip": Vector3(25, 0, -6), "l_knee": Vector3(-115, 0, 0), "r_knee": Vector3(-115, 0, 0)},
+	# sitting on the edge of a low seat, chin on one hand, the other forearm on
+	# the knee: the thigh rises 110 deg to a knee above the seat, the shin drops
+	# forward to the floor
+	"sit_think": {"chest": Vector3(-22, 0, 0), "head": Vector3(-8, 0, 0),
+		"r_shoulder": Vector3(75, 0, -8), "r_elbow": Vector3(115, 0, 0), "l_shoulder": Vector3(40, 0, 8), "l_elbow": Vector3(35, 0, 0),
+		"l_hip": Vector3(110, 0, 6), "r_hip": Vector3(110, 0, -6), "l_knee": Vector3(-80, 0, 0), "r_knee": Vector3(-80, 0, 0)},
 	# stopped and thinking about the part: chin on the hand, eyes on the stones
 	"think": {"chest": Vector3(-6, 0, 0), "head": Vector3(-14, 0, 0),
 		"r_shoulder": Vector3(42, 0, -12), "r_elbow": Vector3(105, 0, 0), "l_shoulder": Vector3(8, 0, 6)},
@@ -65,7 +79,7 @@ const POSES := {
 
 ## Pelvis height for a pose (seated figures sit on something low).
 const SEAT := {"stand": 0.92, "potter": 0.46, "turner": 0.32, "mender": 0.4, "sleep": 0.12, "baker": 0.5, "carry": 0.92, "declaim": 0.92, "draw": 0.92,
-	"walk": 0.92, "think": 0.92, "spin": 0.92}
+	"walk": 0.92, "think": 0.92, "spin": 0.92, "pick": 0.86, "stoke": 0.5, "sit_think": 0.34}
 
 
 ## How a person looks: "woman", "beard" (0 none, 1 short, 2 full), "hair"
@@ -302,6 +316,18 @@ static func motion(pose: String, t: float) -> Dictionary:
 			# the fingers twirl the thread; now and then she glances down at the spindle
 			return {"r_elbow": Vector3(sin(q * 6.0) * 6.0, 0, 0), "r_shoulder": Vector3(0, sin(q * 6.0) * 4.0, 0),
 				"head": Vector3(sin(q * 0.4) * 5.0, sin(q * 0.25) * 8.0, 0)}
+		"stoke":
+			# push the logs in, sit back, push again
+			var push := maxf(0.0, sin(q * 2.2))
+			return {"l_shoulder": Vector3(push * 12, 0, 0), "r_shoulder": Vector3(push * 12, 0, 0), "chest": Vector3(-push * 8, 0, 0)}
+		"pick":
+			# reach down, straighten a little with each log
+			var lift := absf(sin(q * 1.8))
+			return {"chest": Vector3(lift * 10, 0, 0), "l_elbow": Vector3(lift * 25, 0, 0), "r_elbow": Vector3(lift * 25, 0, 0)}
+		"sit_think":
+			# slow breathing; now and then the head lifts to the empty orchestra
+			var look := maxf(0.0, sin(q * 0.35))
+			return {"chest": Vector3(sin(q * 1.2) * 1.5, 0, 0), "head": Vector3(look * 12, sin(q * 0.2) * 10, 0)}
 		"sleep":
 			# slow breathing
 			return {"chest": Vector3(sin(q * 1.4) * 2.0, 0, 0)}

@@ -30,10 +30,22 @@ const STRIDE := 1.1
 @export var patrol_pause := 2.6
 ## Pose taken at each waypoint, cycled: the actor thinks, then rehearses.
 @export var patrol_poses := PackedStringArray(["think", "declaim"])
+## Seconds at each waypoint, in order; missing entries take patrol_pause. A
+## zero walks straight on: a corner to turn on the way somewhere.
+@export var patrol_pauses := PackedFloat32Array()
+## Which way to face at each waypoint (yaw in degrees, as rotation.y); NAN or a
+## missing entry keeps the heading he arrived with. Sitting down needs it.
+@export var patrol_faces := PackedFloat32Array()
 ## Background folk keep walking past the player instead of stopping to face them.
 @export var stops_for_player := true
 
+## Emitted on arriving at a waypoint, before its pause: the scene hangs props
+## on it (an armful of logs picked up here, put down there).
+signal reached(index: int)
+
 var joints := {}
+## Walking with the arms full: the arms stay in the carry pose, only the legs stride.
+var carrying := false
 var marker: TalkMarker
 var _t := 0.0
 var _head_yaw := 0.0
@@ -100,7 +112,12 @@ func interact() -> void:
 
 func _process(delta: float) -> void:
 	_t += delta
-	var extra := Figure.step_motion(_stride) if _pace(delta) else Figure.motion(_pose_now, _t)
+	var walking := _pace(delta)
+	var extra := Figure.step_motion(_stride) if walking else Figure.motion(_pose_now, _t)
+	if walking and carrying:
+		_pose_now = "carry"
+		extra.erase("l_shoulder")
+		extra.erase("r_shoulder")
 	# Turn the head to a nearby player, within what a neck allows.
 	var cam := get_viewport().get_camera_3d()
 	var want := 0.0
@@ -122,12 +139,18 @@ func _pace(delta: float) -> bool:
 		return false
 	var player := _player()
 	if stops_for_player and player != null and global_position.distance_to(player.global_position) < ATTENTION:
-		_face_towards(global_position.direction_to(player.global_position), delta)
+		# someone sitting down only turns the head: swinging the whole seated
+		# body round would put the legs through the seat
+		if not seated():
+			_face_towards(global_position.direction_to(player.global_position), delta)
 		if _pose_now == "walk":
 			_pose_now = pose
 		return false
 	if _pause_left > 0.0:
 		_pause_left = maxf(0.0, _pause_left - delta)
+		var yaw := face_at(_waypoint)
+		if not is_nan(yaw):
+			_face_towards(Vector3(-sin(yaw), 0, -cos(yaw)), delta)
 		if _pause_left == 0.0:
 			_waypoint = (_waypoint + 1) % patrol.size()
 		return false
@@ -135,13 +158,17 @@ func _pace(delta: float) -> bool:
 	to.y = 0.0
 	var dist := to.length()
 	if dist < 0.06:
-		_pause_left = patrol_pause
+		_pause_left = pause_at(_waypoint)
 		_pose_now = patrol_poses[_waypoint % patrol_poses.size()]
+		reached.emit(_waypoint)
+		if _pause_left <= 0.0:
+			_waypoint = (_waypoint + 1) % patrol.size()
 		return false
 	var step := minf(patrol_speed * delta, dist)
 	position += to / dist * step
 	var before := _stride
-	_stride = fposmod(_stride + step / STRIDE, 1.0)
+	# a boy's stride is shorter than a man's
+	_stride = fposmod(_stride + step / (STRIDE * figure_scale), 1.0)
 	# two steps per stride: at the half, and at the wrap
 	if _step != null and ((before < 0.5 and _stride >= 0.5) or before > _stride):
 		_step.pitch_scale = randf_range(0.9, 1.1)
@@ -149,6 +176,23 @@ func _pace(delta: float) -> bool:
 	_face_towards(to / dist, delta)
 	_pose_now = "walk"
 	return true
+
+
+func pause_at(i: int) -> float:
+	return patrol_pauses[i] if i < patrol_pauses.size() else patrol_pause
+
+
+func face_at(i: int) -> float:
+	return deg_to_rad(patrol_faces[i]) if i < patrol_faces.size() and not is_nan(patrol_faces[i]) else NAN
+
+
+func pose_now() -> String:
+	return _pose_now
+
+
+## True in a pose that rests the hips on something (Figure.SEAT well under standing).
+func seated() -> bool:
+	return float(Figure.SEAT.get(_pose_now, 0.92)) < 0.7
 
 
 func _face_towards(dir: Vector3, delta: float) -> void:
