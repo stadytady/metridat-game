@@ -9,6 +9,9 @@ const TREE_SPOTS := [
 ]
 
 
+const FISHING := preload("res://scripts/world/fishing.gd")
+
+
 func _ready() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 99
@@ -60,7 +63,8 @@ func _shore(rng: RandomNumberGenerator) -> void:
 		# Rocks on the camp are built into a scratch kit: the rng sequence, and
 		# with it every other rock, stays as it was.
 		var k := MeshKit.new() if Topo.in_rect(x, z, Topo.CAMP_CENTER, Topo.CAMP_HALF, r) \
-				or Topo.in_house(x, z, r + 1.0) or Topo.on_pier(x, z, r + 1.0) else kit
+				or Topo.in_house(x, z, r + 1.0) or Topo.on_pier(x, z, r + 1.0) \
+				or Vector2(x, z).distance_to(FISHING.CORMORANT_SAND) < FISHING.CORMORANT_CLEAR + r else kit
 		if t >= 0.0:
 			k.blob("rock", Vector3(x, t + r * 0.3, z), Vector3(r * 1.3, r * 0.8, r), 0.3, rng)
 		else:
