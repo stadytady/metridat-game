@@ -3,7 +3,7 @@ extends Node3D
 ## An oil lamp on a bracket beside a door: dark by day, lit when the sun is down.
 ## Same flame and flicker as the street lamps, so the town looks one piece at night.
 
-const DUSK := 0.78
+const DUSK := DayCycle.LAMPS_ON
 
 var lit := false
 var _light: OmniLight3D

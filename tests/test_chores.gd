@@ -238,3 +238,59 @@ func test_myrto_lays_the_bread_on_the_board() -> void:
 		if events[j] == "at1":
 			check(j > 0 and events[j - 1] == "up0", "she reaches the board without getting up from the oven: %s" % [events])
 	b.queue_free()
+
+
+const HARBOUR := preload("res://scripts/world/harbour.gd")
+
+
+func _pier_points() -> Array[Vector2]:
+	var pts: Array[Vector2] = []
+	for r: Array in HARBOUR.CARRIER_ROUTE:
+		pts.append(Vector2(r[0], r[1]))
+	return pts
+
+
+## The sailor carrying amphorae aboard keeps to the planks and the gangway,
+## goes round the skipper, the coil of rope and the cargo, and never steps off
+## into the sea.
+func test_the_pier_carrier_keeps_to_planks_and_gangway() -> void:
+	var ship: Vector3 = HARBOUR.ship_pos()
+	var gang_x := ship.x + 5.4
+	var skipper := HARBOUR.skipper_pos()
+	var coil := Vector2(ship.x - 2.0 + 3.0, Topo.PIER_Z + 0.7)
+	var cargo := Rect2(ship.x - 2.0 - 3.05 - 0.2, Topo.PIER_Z + Topo.PIER_HALF - 0.75, 5.5, 0.6)
+	for p: Vector2 in _round_points(_pier_points(), 0.1):
+		var on_gangway := absf(p.x - gang_x) < 0.2 and p.y <= Topo.PIER_Z - Topo.PIER_HALF + 0.3 and p.y > ship.z + 2.0
+		check(Topo.on_pier(p.x, p.y, -0.2) or on_gangway, "the carrier steps into the sea at %s" % p)
+		check(p.distance_to(Vector2(skipper.x, skipper.z)) > 0.6, "the carrier walks through the skipper at %s" % p)
+		check(p.distance_to(coil) > 0.5, "the carrier walks through the coil of rope at %s" % p)
+		check(not cargo.has_point(p), "the carrier walks into the cargo at %s" % p)
+
+
+## Ninety seconds of his work: an amphora taken, an amphora handed over, in
+## turn, with his arms full between.
+func test_the_pier_carrier_takes_and_hands_over() -> void:
+	var c: Npc = load("res://scripts/npc/npc.gd").new()
+	c.npc_id = "carrier"
+	c.pose = "pick"
+	c.talkable = false
+	c.solid = false
+	c.position = Vector3(HARBOUR.CARRIER_ROUTE[0][0], Topo.PIER_H, HARBOUR.CARRIER_ROUTE[0][1])
+	HARBOUR.set_carrier_round(c)
+	var seen: Array[int] = []
+	c.reached.connect(func(i: int) -> void:
+		if i == HARBOUR.CARRIER_TAKE or i == HARBOUR.CARRIER_HAND:
+			seen.append(i)
+		c.carrying = i == HARBOUR.CARRIER_TAKE or (c.carrying and i != HARBOUR.CARRIER_HAND))
+	Engine.get_main_loop().root.add_child(c)
+	var loaded_walk := false
+	for k in 900:
+		c._process(0.1)
+		if c.carrying and c.pose_now() == "carry":
+			loaded_walk = true
+	check(seen.count(HARBOUR.CARRIER_HAND) >= 2, "in 90 s he took %d amphorae aboard" % seen.count(HARBOUR.CARRIER_HAND))
+	for j in seen.size():
+		check(seen[j] == (HARBOUR.CARRIER_TAKE if j % 2 == 0 else HARBOUR.CARRIER_HAND), "he hands over what he never took: %s" % [seen])
+	check(loaded_walk, "he never walks with an amphora")
+	check(c.collision_layer == 0, "the carrier would shove the player aside on the pier")
+	c.queue_free()

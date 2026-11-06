@@ -24,6 +24,11 @@ const KEYS := [
 const DREAM := 1.25
 ## The prologue's hour: dusk the day before, the sun just down, lamps coming on.
 const PROLOGUE := 0.82
+## The town's own lights (door lamps, braziers, lit windows, the pier's lantern)
+## come on from this hour: with twelve finds, at the eighth (8/12 = 0.67), when
+## it is already getting dark; not at the seventh (0.58). Ships keep their own.
+const LAMPS_ON := 0.65
+const LAMPS_ON_AT_FIND := 8
 
 
 static func sample(t: float) -> Dictionary:

@@ -16,7 +16,26 @@ const WATERLINE := 0.0
 const DECK_Y := 0.9
 ## The model's keel, from its mesh bounds: the test keeps it under the sea.
 const HULL_BOTTOM := -0.67
-const LANTERN_FROM := 0.8
+const LANTERN_FROM := DayCycle.LAMPS_ON
+## The carrier's round: [x, z, pose, pause s, facing yaw deg or NAN]. He takes
+## an amphora from the cargo, goes along the pier round the skipper, up the
+## gangway, hands it over the ship's rail, and comes back for the next.
+const CARRIER_ROUTE := [
+	[81.0, -5.9, "pick", 2.0, 180.0],
+	[84.4, -5.95, "walk", 0.0, NAN],
+	[87.2, -5.75, "walk", 0.0, NAN],
+	[87.86, -6.9, "walk", 0.0, NAN],
+	[87.86, -8.7, "pick", 1.6, 0.0],
+	[87.86, -6.9, "walk", 0.0, NAN],
+	[87.2, -5.75, "walk", 0.0, NAN],
+	[84.4, -5.95, "walk", 0.0, NAN],
+]
+const CARRIER_TAKE := 0
+const CARRIER_HAND := 4
+
+var _carrier: Npc
+var _carrier_jar: Node3D
+
 ## Where the anchor stock lies (a find): on the planks by the pier's north edge.
 const ANCHOR_FIND := Vector2(76.0, -6.95)
 
@@ -144,20 +163,33 @@ func _crew() -> void:
 	var cm := MeshInstance3D.new()
 	cm.mesh = cap.commit()
 	(skipper.joints["head"] as Node3D).add_child(cm)
-	# carrying an amphora to the gangway
+	# carrying amphorae aboard, one at a time
 	var carrier: Npc = NPC.new()
 	carrier.npc_id = "carrier"
 	carrier.name_key = "NPC_SAILOR_NAME"
-	carrier.pose = "carry"
+	carrier.pose = "pick"
 	carrier.body_mat = "chiton_dark"
 	carrier.talkable = false
-	carrier.position = Vector3(ship_pos().x + 5.4, Topo.PIER_H, Topo.PIER_Z + 0.2)
-	carrier.rotation.y = 0.0  # faces -z, the ship
+	carrier.solid = false
+	carrier.position = Vector3(CARRIER_ROUTE[0][0], Topo.PIER_H, CARRIER_ROUTE[0][1])
+	carrier.rotation.y = PI  # faces +z, the cargo
+	set_carrier_round(carrier)
 	add_child(carrier)
 	var jar := Props.instance("amphora")
 	jar.position = Vector3(0, 0.05, -0.32)
 	jar.scale = Vector3.ONE * 0.75
+	jar.visible = false
 	(carrier.joints["chest"] as Node3D).add_child(jar)
+	_carrier = carrier
+	_carrier_jar = jar
+	carrier.reached.connect(func(i: int) -> void:
+		if i == CARRIER_TAKE:
+			_carrier_jar.visible = true
+			_carrier.carrying = true
+		elif i == CARRIER_HAND:
+			# over the rail into the hold
+			_carrier_jar.visible = false
+			_carrier.carrying = false)
 	# sitting on the edge, legs over the water, splicing a rope
 	var splicer: Npc = NPC.new()
 	splicer.npc_id = "splicer"
@@ -168,6 +200,26 @@ func _crew() -> void:
 	splicer.position = Vector3(ship_pos().x + 1.5, Topo.PIER_H - Figure.SEAT["mender"] + 0.05, Topo.PIER_Z + Topo.PIER_HALF - 0.1)
 	splicer.rotation.y = PI  # faces +z, the open water
 	add_child(splicer)
+
+
+## The carrier's round as a patrol. Static so the test can walk it.
+static func set_carrier_round(c: Npc) -> void:
+	var home := Vector3(CARRIER_ROUTE[0][0], 0, CARRIER_ROUTE[0][1])
+	var pts := PackedVector3Array()
+	var poses := PackedStringArray()
+	var pauses := PackedFloat32Array()
+	var faces := PackedFloat32Array()
+	for r: Array in CARRIER_ROUTE:
+		pts.append(Vector3(r[0], 0, r[1]) - home)
+		poses.append(r[2])
+		pauses.append(r[3])
+		faces.append(r[4])
+	c.patrol = pts
+	c.patrol_poses = poses
+	c.patrol_pauses = pauses
+	c.patrol_faces = faces
+	c.patrol_speed = 0.7
+	c.stops_for_player = false
 
 
 func _end_lantern() -> void:
