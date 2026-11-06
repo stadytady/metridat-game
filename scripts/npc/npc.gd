@@ -42,10 +42,18 @@ const STRIDE := 1.1
 ## Emitted on arriving at a waypoint, before its pause: the scene hangs props
 ## on it (an armful of logs picked up here, put down there).
 signal reached(index: int)
+## Emitted when the pause at a waypoint runs out and he sets off again (at
+## once for a zero pause): the bread comes off the oven wall here.
+signal departed(index: int)
 
 var joints := {}
 ## Walking with the arms full: the arms stay in the carry pose, only the legs stride.
 var carrying := false
+## The pose the arms keep while carrying: hugging a load, or a jar on the head.
+@export var carry_pose := "carry"
+## Walk on the ground's own height (Topo.surface) instead of the spawn's: for a
+## round over paving that falls with the street.
+@export var follow_ground := false
 var marker: TalkMarker
 var _t := 0.0
 var _head_yaw := 0.0
@@ -115,7 +123,7 @@ func _process(delta: float) -> void:
 	var walking := _pace(delta)
 	var extra := Figure.step_motion(_stride) if walking else Figure.motion(_pose_now, _t)
 	if walking and carrying:
-		_pose_now = "carry"
+		_pose_now = carry_pose
 		extra.erase("l_shoulder")
 		extra.erase("r_shoulder")
 	# Turn the head to a nearby player, within what a neck allows.
@@ -139,12 +147,16 @@ func _pace(delta: float) -> bool:
 		return false
 	var player := _player()
 	if stops_for_player and player != null and global_position.distance_to(player.global_position) < ATTENTION:
-		# someone sitting down only turns the head: swinging the whole seated
-		# body round would put the legs through the seat
-		if not seated():
+		# Someone sitting down only turns the head: swinging the whole seated
+		# body round would put the legs through the seat. Nor does anyone turn
+		# their back on the work they are facing at a waypoint.
+		var busy := _pause_left > 0.0 and not is_nan(face_at(_waypoint))
+		if not seated() and not busy:
 			_face_towards(global_position.direction_to(player.global_position), delta)
-		if _pose_now == "walk":
-			_pose_now = pose
+		# stopped mid-stride: stand, or keep holding the load, never drop into
+		# the home pose (a baker would kneel in the middle of the yard)
+		if _pose_now == "walk" or (carrying and _pose_now == carry_pose):
+			_pose_now = carry_pose if carrying else "stand"
 		return false
 	if _pause_left > 0.0:
 		_pause_left = maxf(0.0, _pause_left - delta)
@@ -152,6 +164,7 @@ func _pace(delta: float) -> bool:
 		if not is_nan(yaw):
 			_face_towards(Vector3(-sin(yaw), 0, -cos(yaw)), delta)
 		if _pause_left == 0.0:
+			departed.emit(_waypoint)
 			_waypoint = (_waypoint + 1) % patrol.size()
 		return false
 	var to := _home + patrol[_waypoint] - position
@@ -162,10 +175,13 @@ func _pace(delta: float) -> bool:
 		_pose_now = patrol_poses[_waypoint % patrol_poses.size()]
 		reached.emit(_waypoint)
 		if _pause_left <= 0.0:
+			departed.emit(_waypoint)
 			_waypoint = (_waypoint + 1) % patrol.size()
 		return false
 	var step := minf(patrol_speed * delta, dist)
 	position += to / dist * step
+	if follow_ground:
+		global_position.y = Topo.surface(global_position.x, global_position.z)
 	var before := _stride
 	# a boy's stride is shorter than a man's
 	_stride = fposmod(_stride + step / (STRIDE * figure_scale), 1.0)

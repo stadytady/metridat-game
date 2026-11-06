@@ -133,3 +133,108 @@ func test_sit_think_puts_hips_on_the_seat_and_feet_on_the_floor() -> void:
 		check(fr < THEATRE.INNER_R - 0.05, "the %s foot is in the tier (%.2f m from the centre)" % [side, fr])
 		check(knee.global_position.y > THEATRE.TIER_RISE, "the %s knee is below the seat" % side)
 	root.queue_free()
+
+
+const LIFE := preload("res://scripts/world/life.gd")
+const HOUSE := preload("res://scripts/world/house.gd")
+
+
+func _round_points(pts: Array[Vector2], step: float) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	for i in pts.size():
+		var a := pts[i]
+		var b := pts[(i + 1) % pts.size()]
+		var n := maxi(1, ceili(a.distance_to(b) / step))
+		for k in n:
+			out.append(a.lerp(b, float(k) / n))
+	return out
+
+
+func _carrier_points() -> Array[Vector2]:
+	var w: Vector3 = LIFE.well_pos()
+	var pts: Array[Vector2] = []
+	for r: Array in LIFE.CARRIER_ROUTE:
+		pts.append(Vector2(w.x + float(r[0]), w.z + float(r[1])))
+	return pts
+
+
+## Her round stays on the forecourt's paving, off the street, and goes round
+## the well-head, its frame, the jar by the curb, the storage jar and the bench.
+func test_the_water_carrier_walks_round_things() -> void:
+	var w: Vector3 = LIFE.well_pos()
+	var well := Vector2(w.x, w.z)
+	var hydria := Vector2(w.x + LIFE.HYDRIA_AT.x, w.z + LIFE.HYDRIA_AT.z)
+	var store := Vector2(w.x + LIFE.STORE_AT.x, w.z + LIFE.STORE_AT.z)
+	for p: Vector2 in _round_points(_carrier_points(), 0.1):
+		check(Topo.in_forecourt(p.x, p.y, 0.0), "the water carrier leaves the paving at %s" % p)
+		check(absf(p.y - Topo.street_z(p.x)) > 1.4, "the water carrier walks in the street at %s" % p)
+		check(p.distance_to(well) > 0.62 + 0.2, "she walks through the well-head at %s" % p)
+		for sx: float in [-0.78, 0.78]:
+			check(p.distance_to(well + Vector2(sx, 0)) > 0.3, "she walks through the well frame at %s" % p)
+		check(p.distance_to(hydria) > 0.45, "she walks over the jar by the curb at %s" % p)
+		check(p.distance_to(store) > 0.6, "she walks into the storage jar at %s" % p)
+		check(not Rect2(4.5, -10.05, 3.0, 0.9).has_point(p), "she walks into the bench at %s" % p)
+
+
+## Ninety seconds of her day: she lifts the jar, pours it, sets it down, in
+## that order, walks the paving with it on her head, at the paving's height.
+func test_the_water_carrier_goes_and_comes_back() -> void:
+	var w: Vector3 = LIFE.well_pos()
+	var woman: Npc = load("res://scripts/npc/npc.gd").new()
+	woman.npc_id = "water_carrier"
+	woman.pose = "draw"
+	woman.talkable = false
+	woman.position = w + Vector3(0, 0, 1.0)
+	LIFE.set_carrier_round(woman, w)
+	var seen: Array[int] = []
+	woman.reached.connect(func(i: int) -> void:
+		seen.append(i)
+		if i == LIFE.CARRIER_LIFT:
+			woman.carrying = true
+		elif i == LIFE.CARRIER_SET_DOWN:
+			woman.carrying = false)
+	Engine.get_main_loop().root.add_child(woman)
+	var on_head := false
+	var worst := 0.0
+	for k in 900:
+		woman._process(0.1)
+		if woman.pose_now() == "head_carry":
+			on_head = true
+			var p := woman.global_position
+			worst = maxf(worst, absf(p.y - Topo.surface(p.x, p.z)))
+	var order: Array[int] = seen.filter(func(i: int) -> bool:
+		return i in [LIFE.CARRIER_LIFT, LIFE.CARRIER_POUR, LIFE.CARRIER_SET_DOWN])
+	check(order.count(LIFE.CARRIER_POUR) >= 2, "in 90 s she poured %d times" % order.count(LIFE.CARRIER_POUR))
+	for j in order.size():
+		var want: int = [LIFE.CARRIER_LIFT, LIFE.CARRIER_POUR, LIFE.CARRIER_SET_DOWN][j % 3]
+		check(order[j] == want, "she does things out of order: %s" % [order])
+	check(on_head, "she never walks with the jar on her head")
+	check(worst < 0.02, "she walks %.2f m off the paving" % worst)
+	woman.queue_free()
+
+
+## Myrto gets up with the bread and lays it on the board, and kneels again;
+## her two steps go round the oven and do not stand in the board.
+func test_myrto_lays_the_bread_on_the_board() -> void:
+	var oven := HOUSE.OVEN
+	for r: Array in HOUSE.BAKER_ROUTE:
+		var p := Vector2(r[0], r[1])
+		check(absf(p.x - oven.x) > 0.45 + 0.2 or absf(p.y - oven.y) > 0.45 + 0.2, "Myrto stands in the oven at %s" % p)
+		check(not Rect2(28.7, 19.22, 0.7, 0.46).has_point(p), "Myrto stands in the board at %s" % p)
+	var b: Npc = load("res://scripts/npc/npc.gd").new()
+	b.npc_id = "baker"
+	b.pose = "baker"
+	b.talkable = false
+	b.position = Vector3(HOUSE.BAKER_ROUTE[0][0], 0, HOUSE.BAKER_ROUTE[0][1])
+	HOUSE.set_baker_round(b)
+	var events: Array[String] = []
+	b.departed.connect(func(i: int) -> void: events.append("up%d" % i))
+	b.reached.connect(func(i: int) -> void: events.append("at%d" % i))
+	Engine.get_main_loop().root.add_child(b)
+	for k in 900:
+		b._process(0.1)
+	check(events.count("at1") >= 3, "in 90 s she laid %d breads" % events.count("at1"))
+	for j in events.size():
+		if events[j] == "at1":
+			check(j > 0 and events[j - 1] == "up0", "she reaches the board without getting up from the oven: %s" % [events])
+	b.queue_free()
