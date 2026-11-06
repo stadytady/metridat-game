@@ -238,6 +238,11 @@ func _route() -> Array:
 	# the actor rehearsing in the theatre, a few steps from the start
 	r.append(Vector2(-88.4, -0.8))
 	r.append("talk:actor")
+	# out through the north gate into the park, to the marble head by the walk
+	r.append(Vector2(-86.0, 6.6))
+	r.append(Vector2(-86.0, 10.4))
+	r.append("goddess_head")
+	r.append(Vector2(-86.0, 6.6))
 	r.append(Vector2(c.x + 3.0, -4.6))
 	r.append("sherd_kerch")
 	r.append(Vector2(c.x + Topo.HILL_HALF.x - 1.0, 0.0))
@@ -279,6 +284,12 @@ func _route() -> Array:
 	for door: float in [22.9, 29.1]:
 		r.append(Vector2(door, 20.7))
 		r.append(Vector2(door, 23.4))
+		# the lamp on the stool by the hearth, the weights at the foot of the loom
+		if door < 26.0:
+			r.append(Vector2(23.7, 23.2))
+			r.append("oil_lamp")
+		else:
+			r.append("loom_weights")
 		r.append(Vector2(door, 20.7))
 	r.append(Vector2(26.0, 17.4))
 	r.append(Vector2(26.0, 9.6))
@@ -295,6 +306,9 @@ func _route() -> Array:
 	# along the beach to the pier, out to the skipper by the gangway, and back
 	var px0 := Topo.pier_x0()
 	r.append(Vector2(px0 - 1.0, Topo.PIER_Z))
+	# the anchor stock on the planks by the north edge, on the way out
+	r.append(Vector2(76.0, Topo.PIER_Z - 0.2))
+	r.append("anchor_stock")
 	r.append(Vector2(Topo.pier_x1() - 7.0, Topo.PIER_Z - 0.4))
 	r.append("talk:sailor")
 	r.append(Vector2(px0 - 1.0, Topo.PIER_Z))

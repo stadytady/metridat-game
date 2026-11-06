@@ -141,3 +141,16 @@ func test_cypresses_keep_off_the_walks() -> void:
 	for c: Vector2 in PARK.cypress_spots():
 		check(PARK.walk_clearance(c) > 0.8, "a cypress stands on a walk at %s" % c)
 		check(absf(c.y) > Topo.HILL_HALF.y + 1.5, "a cypress grew on the terrace at %s" % c)
+
+
+## The marble head (a find) lies beside the north gate walk: off the stone,
+## clear of every crown, and close enough to the walk to be seen from it.
+func test_the_marble_head_lies_by_the_walk() -> void:
+	var p: Vector2 = PARK.HEAD_FIND
+	var edge := PARK.walk_clearance(p)
+	check(edge > 0.3, "the head lies on the walk (%.2f m from its edge)" % edge)
+	check(edge < 1.5, "the head is %.2f m from the walk, lost in the grove" % edge)
+	var trees := PARK.tree_spots()
+	trees.append_array(PARK.cypress_spots())
+	for t: Vector2 in trees:
+		check(t.distance_to(p) > 1.2, "a tree grows %.2f m from the head" % t.distance_to(p))

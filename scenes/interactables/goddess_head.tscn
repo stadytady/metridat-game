@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/interaction/inspectable.gd" id="1_insp"]
+[ext_resource type="Resource" path="res://data/discoveries/goddess_head.tres" id="2_disc"]
+
+[node name="GoddessHead" type="StaticBody3D"]
+script = ExtResource("1_insp")
+discovery = ExtResource("2_disc")
+box_size = Vector3(0.6, 0.5, 0.5)
+marker_height = 0.9

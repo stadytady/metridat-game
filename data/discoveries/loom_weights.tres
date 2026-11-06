@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="Discovery" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/interaction/discovery.gd" id="1_d"]
+[ext_resource type="PackedScene" path="res://scenes/interactables/models/loom_weights.tscn" id="2_m"]
+
+[resource]
+script = ExtResource("1_d")
+id = &"loom_weights"
+title = "D_LOOM_WEIGHTS_TITLE"
+location = "LOC_AGORA"
+description = "D_LOOM_WEIGHTS_DESCRIPTION"
+history = "D_LOOM_WEIGHTS_HISTORY"
+sources = "E. J. W. Barber, Prehistoric Textiles (1991); E. J. W. Barber, Women's Work: The First 20,000 Years (1994)."
+narrative = "D_LOOM_WEIGHTS_NARRATIVE"
+hint = "D_LOOM_WEIGHTS_HINT"
+model = ExtResource("2_m")

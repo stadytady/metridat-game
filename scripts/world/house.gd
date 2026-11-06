@@ -22,6 +22,10 @@ const ROOM_DOORS := [22.9, 29.1]
 const DIVIDE_X := 26.2
 const OVEN := Vector2(29.6, 18.6)
 const HEARTH := Vector2(23.0, 24.7)
+## Two finds: the loom weights on the workroom floor, the lamp on the living
+## room's stool (its top is 0.44 m up).
+const LOOM_WEIGHTS := Vector2(28.6, 24.4)
+const LAMP_STOOL := Vector2(24.9, 23.3)
 ## Myrto's round: kneeling at the oven she bakes; when a bread is done she
 ## gets up with it and lays it on the stack on the board behind her, then
 ## kneels again. [x, z, pose, pause s, facing yaw deg].
@@ -94,6 +98,9 @@ func _ready() -> void:
 	add_child(kit.build("House"))
 	_oven_fire(y)
 	_baker(y)
+	# spare weights at the foot of the loom; the lamp on the stool by the hearth
+	spawn_inspectable("loom_weights", Vector3(LOOM_WEIGHTS.x, y + 0.01, LOOM_WEIGHTS.y), 0.0)
+	spawn_inspectable("oil_lamp", Vector3(LAMP_STOOL.x, y + 0.44, LAMP_STOOL.y), 120.0)
 	place("pithos", Vector3(20.5, y, 17.2), 30.0, Vector3.ONE * 0.9, 0.45, 1.2)
 	place("pithos", Vector3(21.4, y, 16.9), 110.0, Vector3.ONE * 0.75, 0.38, 1.0)
 	place("amphora", Vector3(31.8, y, 17.0), 20.0, Vector3.ONE, 0.17, 0.8)

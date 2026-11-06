@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="Discovery" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/interaction/discovery.gd" id="1_d"]
+[ext_resource type="PackedScene" path="res://scenes/interactables/models/oil_lamp.tscn" id="2_m"]
+
+[resource]
+script = ExtResource("1_d")
+id = &"oil_lamp"
+title = "D_OIL_LAMP_TITLE"
+location = "LOC_AGORA"
+description = "D_OIL_LAMP_DESCRIPTION"
+history = "D_OIL_LAMP_HISTORY"
+sources = "R. H. Howland, Greek Lamps and Their Survivals, The Athenian Agora IV (1958); V. F. Gajdukevic, Das Bosporanische Reich (1971)."
+narrative = "D_OIL_LAMP_NARRATIVE"
+hint = "D_OIL_LAMP_HINT"
+model = ExtResource("2_m")

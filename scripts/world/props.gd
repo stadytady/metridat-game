@@ -5,7 +5,7 @@ extends RefCounted
 
 ## Baked to GLB. EXTRA kinds are small one-off models built at runtime.
 const MODELS := ["amphora", "pithos", "krater", "column_doric", "olive_tree", "cypress", "ship", "tripod", "figurine"]
-const EXTRA := ["coins", "sherds", "stele", "grain", "votive", "lampstand", "torch_post", "mould", "boat", "sinkers", "hekataion", "mirror"]
+const EXTRA := ["coins", "sherds", "stele", "grain", "votive", "lampstand", "torch_post", "mould", "boat", "sinkers", "hekataion", "mirror", "marble_head", "loom_weights", "oil_lamp", "anchor_stock"]
 
 
 static func build(name: String) -> MeshKit:
@@ -51,6 +51,14 @@ static func build(name: String) -> MeshKit:
 			hekataion(kit)
 		"mirror":
 			mirror(kit)
+		"marble_head":
+			marble_head(kit)
+		"loom_weights":
+			loom_weights(kit)
+		"oil_lamp":
+			oil_lamp(kit)
+		"anchor_stock":
+			anchor_stock(kit)
 		"lampstand":
 			lampstand(kit)
 		"torch_post":
@@ -357,6 +365,65 @@ static func sinkers(kit: MeshKit) -> void:
 	for x: float in [-0.08, 0.1]:
 		var p := Vector3(x, 0.0, 0.11 * signf(x))
 		kit.lathe("clay", PackedVector2Array([Vector2(0.035, 0.0), Vector2(0.015, 0.07)]), 4, p, 1.0, true, "clay", true)
+
+
+## A marble head of a goddess, larger than life, broken at the neck, in a
+## Corinthian helmet pushed up on the brow, its crest knocked off; on straw.
+## Faces +z (towards the ItemViewer's camera), origin on the ground.
+static func marble_head(kit: MeshKit) -> void:
+	kit.box("steppe", Vector3(0, 0.015, 0), Vector3(0.62, 0.03, 0.5), [])  # the straw
+	kit.lathe("column", PackedVector2Array([Vector2(0.075, 0.03), Vector2(0.07, 0.11)]), 8, Vector3.ZERO, 1.0, false, "column", true)  # neck, broken flat
+	kit.box("column", Vector3(0, 0.25, 0), Vector3(0.22, 0.3, 0.25), [])  # head
+	kit.box("column", Vector3(0, 0.22, 0.135), Vector3(0.04, 0.08, 0.035), [])  # nose
+	kit.box("column", Vector3(0, 0.13, 0.1), Vector3(0.13, 0.06, 0.06), [])  # chin
+	kit.box("column", Vector3(0, 0.27, -0.09), Vector3(0.2, 0.22, 0.1), [])  # hair drawn back
+	# the helmet sits high, its face-guard tipped up over the brow
+	kit.box("column", Vector3(0, 0.43, 0.01), Vector3(0.25, 0.08, 0.29), [])
+	kit.box("column", Vector3(0, 0.4, 0.14), Vector3(0.24, 0.05, 0.06), [])
+	kit.box("column", Vector3(0, 0.48, 0.0), Vector3(0.05, 0.03, 0.08), [])  # stump of the crest
+	for sx: float in [-1.0, 1.0]:
+		kit.box("dark", Vector3(0.055 * sx, 0.285, 0.127), Vector3(0.05, 0.016, 0.004), [])  # eyes, carved deep
+	kit.box("dark", Vector3(0, 0.165, 0.127), Vector3(0.05, 0.01, 0.004), [])  # the line of the lips
+
+
+## Pyramidal clay loom weights, pierced near the top, a dozen heaped by the
+## loom: some standing, some on their sides, one with a stamp.
+static func loom_weights(kit: MeshKit) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 11
+	for i in 12:
+		var a := TAU * i / 12.0 + rng.randf_range(-0.2, 0.2)
+		var r := 0.06 + 0.07 * float(i % 3)
+		var p := Vector3(cos(a) * r, 0.0, sin(a) * r)
+		var lying := i % 4 == 3
+		kit.xform = Transform3D(Basis(Vector3.UP, rng.randf_range(0, TAU)) * (Basis(Vector3.RIGHT, PI / 2.0) if lying else Basis.IDENTITY),
+				p + Vector3(0, 0.032 if lying else 0.0, 0))
+		kit.frustum("clay", Vector3.ZERO, Vector2(0.064, 0.064), Vector2(0.028, 0.028), 0.1, ["bottom"])
+		kit.box("dark", Vector3(0, 0.078, -0.02), Vector3(0.012, 0.012, 0.004), [])  # the hole for the string
+		if i == 4:
+			kit.box("dark", Vector3(0, 0.1005, 0), Vector3(0.014, 0.002, 0.014), [])  # a stamp on the top
+	kit.xform = Transform3D.IDENTITY
+
+
+## A wheel-made lamp in black glaze: round body, filling hole, short nozzle
+## sooted at the tip. Nozzle along -z, origin on the surface it stands on.
+static func oil_lamp(kit: MeshKit) -> void:
+	kit.lathe("dark", PackedVector2Array([Vector2(0.035, 0.0), Vector2(0.05, 0.015), Vector2(0.045, 0.03), Vector2(0.02, 0.036)]), 10,
+			Vector3.ZERO, 1.0, true, "dark", false)
+	kit.box("dark", Vector3(0, 0.017, -0.07), Vector3(0.03, 0.022, 0.06), ["bottom"])  # nozzle
+	kit.box("hair", Vector3(0, 0.029, -0.099), Vector3(0.02, 0.003, 0.008), ["bottom"])  # the soot at the wick hole
+	kit.box("clay", Vector3(0, 0.0365, 0), Vector3(0.014, 0.001, 0.014), ["bottom"])  # filling hole, clay showing
+
+
+## The lead stock of an anchor: a bar tapering to both ends, a slot through
+## its thick middle where the wooden shank went. Along x, origin on the ground.
+static func anchor_stock(kit: MeshKit) -> void:
+	for sx: float in [-1.0, 1.0]:
+		kit.xform = Transform3D(Basis(Vector3.FORWARD, -sx * PI / 2.0), Vector3(0.06 * sx, 0.055, 0))
+		kit.frustum("lead", Vector3.ZERO, Vector2(0.11, 0.1), Vector2(0.05, 0.05), 0.5, ["bottom"])
+	kit.xform = Transform3D.IDENTITY
+	kit.box("lead", Vector3(0, 0.055, 0), Vector3(0.14, 0.11, 0.1), ["bottom"])
+	kit.box("dark", Vector3(0, 0.111, 0), Vector3(0.07, 0.002, 0.05), ["bottom"])  # the slot for the shank
 
 
 ## Hekataion: Hecate in triple form, three standing maidens back to back
