@@ -96,3 +96,21 @@ func test_herms_stand_at_the_crossings() -> void:
 		check(not B.on_house(houses, at.x, at.z, 0.3), "a herm stands in a wall at %s" % at)
 		check(B._dist_to(B.stairs(), Vector2(at.x, at.z)) > B.LANE_HALF + 0.3, "a herm blocks a stepped lane at %s" % at)
 		check(B._dist_to(B.streets(), Vector2(at.x, at.z)) > B.LANE_HALF + 0.2, "a herm blocks a street at %s" % at)
+
+## What is heard behind the walls comes from the walls: a voice stands at window
+## height on a house front, there are several kinds of them, and not every house
+## has one - a city where every wall sings is a haunted city.
+func test_the_voices_stand_at_the_walls() -> void:
+	var houses: Array = B.plan()
+	var voices: Array = StreetVoices.placements(houses)
+	check(voices.size() >= 8, "only %d voices in the back streets" % voices.size())
+	check(voices.size() < houses.size() / 2, "%d voices for %d houses" % [voices.size(), houses.size()])
+	var kinds := {}
+	for v: Dictionary in voices:
+		var at: Vector3 = v.pos
+		var up := at.y - Topo.terrain(at.x, at.z)
+		check(up > 1.0 and up < 2.2, "a %s hangs %.2f m up the wall at %s" % [v.kind, up, at])
+		check(B.on_house(houses, at.x, at.z, StreetVoices.OUT + 0.4), "a %s is not at a wall (%s)" % [v.kind, at])
+		check(StreetVoices.SOUNDS.has(v.kind), "a voice of kind %s has no sound" % v.kind)
+		kinds[v.kind] = true
+	check(kinds.size() >= 4, "only %d kinds of voice behind the walls" % kinds.size())
