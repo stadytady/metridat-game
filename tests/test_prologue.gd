@@ -108,3 +108,24 @@ func test_the_anchor_stock_lies_on_the_planks() -> void:
 		check(Topo.on_pier(a.x + dx, a.y, 0.0), "the stock hangs off the pier at x %.2f" % (a.x + dx))
 	check(a.y < Topo.PIER_Z - 0.6, "the stock lies in the middle of the way at z %.2f" % a.y)
 	check(a.x < Topo.pier_x1() - 9.0, "the stock lies among the crew by the gangway")
+
+
+## The mooring lines hang slack from the bollards to the ship's rail: they
+## meet both ends, sag in the middle, stay well clear of the water, and the
+## ship end sits on her rail, not out in the air beside it.
+func test_the_mooring_lines_hang_from_bollard_to_rail() -> void:
+	var harbour: Script = load("res://scripts/world/harbour.gd")
+	var ship: Vector3 = harbour.ship_pos()
+	for e: Array in harbour.mooring_ends():
+		var a: Vector3 = e[0]
+		var rail: Vector3 = e[1]
+		check(absf(rail.z) <= District.ship_hull_half_beam(rail.x) + 0.001, "a line is made fast in the air beside the hull at %s" % rail)
+		check(Topo.on_pier(a.x, a.z, 0.0), "a line is made fast off the pier at %s" % a)
+		var b := ship + rail
+		var pts: PackedVector3Array = harbour.mooring_line(a, b)
+		check(pts[0].is_equal_approx(a) and pts[pts.size() - 1].is_equal_approx(b), "a line does not reach its ends")
+		var mid := pts[pts.size() / 2]
+		var straight := (a + b) / 2.0
+		check(straight.y - mid.y > 0.3, "a line hangs like a stick: sag %.2f m" % (straight.y - mid.y))
+		for p: Vector3 in pts:
+			check(p.y > 0.8, "a line dips into the sea at %s" % p)
