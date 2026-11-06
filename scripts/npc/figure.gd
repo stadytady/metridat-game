@@ -72,6 +72,13 @@ const POSES := {
 	"sit_think": {"chest": Vector3(-22, 0, 0), "head": Vector3(-8, 0, 0),
 		"r_shoulder": Vector3(75, 0, -8), "r_elbow": Vector3(115, 0, 0), "l_shoulder": Vector3(40, 0, 8), "l_elbow": Vector3(35, 0, 0),
 		"l_hip": Vector3(110, 0, 6), "r_hip": Vector3(110, 0, -6), "l_knee": Vector3(-80, 0, 0), "r_knee": Vector3(-80, 0, 0)},
+	# walking with a hydria on the head, steadied by the raised left hand, as on
+	# the fountain-house vases
+	"head_carry": {"head": Vector3(-2, 0, 0), "l_shoulder": Vector3(165, 0, -14), "l_elbow": Vector3(35, 0, 0),
+		"r_shoulder": Vector3(4, 0, -4)},
+	# tipping the hydria into a storage jar, both hands on it, leaning over
+	"pour": {"chest": Vector3(-25, 0, 0), "head": Vector3(-15, 0, 0),
+		"l_shoulder": Vector3(60, 0, 10), "r_shoulder": Vector3(60, 0, -10), "l_elbow": Vector3(40, 0, 0), "r_elbow": Vector3(40, 0, 0)},
 	# stopped and thinking about the part: chin on the hand, eyes on the stones
 	"think": {"chest": Vector3(-6, 0, 0), "head": Vector3(-14, 0, 0),
 		"r_shoulder": Vector3(42, 0, -12), "r_elbow": Vector3(105, 0, 0), "l_shoulder": Vector3(8, 0, 6)},
@@ -79,7 +86,8 @@ const POSES := {
 
 ## Pelvis height for a pose (seated figures sit on something low).
 const SEAT := {"stand": 0.92, "potter": 0.46, "turner": 0.32, "mender": 0.4, "sleep": 0.12, "baker": 0.5, "carry": 0.92, "declaim": 0.92, "draw": 0.92,
-	"walk": 0.92, "think": 0.92, "spin": 0.92, "pick": 0.86, "stoke": 0.5, "sit_think": 0.34}
+	"walk": 0.92, "think": 0.92, "spin": 0.92, "pick": 0.86, "stoke": 0.5, "sit_think": 0.34,
+	"head_carry": 0.92, "pour": 0.92}
 
 
 ## How a person looks: "woman", "beard" (0 none, 1 short, 2 full), "hair"

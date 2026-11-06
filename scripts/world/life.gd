@@ -28,6 +28,26 @@ const TUFTS: Array[Vector2] = [Vector2(-1.4, -0.6), Vector2(0.2, 0.9), Vector2(1
 const GATE_LEAF := 1.05
 const GATE_SWING_DEG := 8.0
 const NPC := preload("res://scripts/npc/npc.gd")
+## The water carrier's round, offsets from the well's centre: [dx, dz, pose,
+## pause s, facing yaw deg or NAN]. She draws, lifts the hydria from beside the
+## curb onto her head, goes round the east side of the well-head to the storage
+## jar by the bench under the stoa's end, tips it in, and brings it back empty.
+const CARRIER_ROUTE := [
+	[0.0, 1.0, "draw", 12.0, 0.0],
+	[0.95, 1.4, "pick", 1.5, 17.0],
+	[1.7, 0.4, "walk", 0.0, NAN],
+	[1.7, -1.3, "walk", 0.0, NAN],
+	[-1.0, -5.5, "pour", 4.5, 0.0],
+	[1.7, -1.3, "walk", 0.0, NAN],
+	[1.7, 0.4, "walk", 0.0, NAN],
+	[0.95, 1.4, "pick", 1.2, 17.0],
+]
+const CARRIER_LIFT := 1
+const CARRIER_POUR := 4
+const CARRIER_SET_DOWN := 7
+## The hydria by the curb and the storage jar she fills, from the well's centre.
+const HYDRIA_AT := Vector3(0.75, 0, 0.75)
+const STORE_AT := Vector3(-1.0, 0, -6.45)
 ## Where feet have worn the stone: [centre, size, yaw deg].
 const WORN := [
 	[Vector3(9.6, Topo.AGORA_H, 0.0), Vector2(2.6, 3.4), 0.0],  # where the street enters the agora
@@ -37,6 +57,11 @@ const WORN := [
 
 var _cloths: Array[Node3D] = []
 var _t := 0.0
+var _carrier: Npc
+var _rope: MeshInstance3D
+var _hydria: Node3D
+var _head_jar: Node3D
+var _hand_jar: Node3D
 
 
 ## Stretches of the street paved as a smooth ramp (Arch.path builds stairs
@@ -213,6 +238,8 @@ func _washing() -> void:
 
 func _process(delta: float) -> void:
 	_t += delta
+	if _rope != null:
+		_rope.visible = _carrier.pose_now() == "draw"
 	var q := floorf(_t * 15.0) / 15.0
 	for i in _cloths.size():
 		_cloths[i].rotation.x = sin(q * 1.3 + i * 1.7) * 0.12
@@ -379,11 +406,18 @@ func _well() -> void:
 	kit.lathe("wood", PackedVector2Array([Vector2(0.14, -0.04), Vector2(0.14, 0.04)]), 8, Vector3.ZERO, 1.0, false, "wood", true)  # pulley
 	kit.xform = Transform3D.IDENTITY
 	kit.box("cloth", w + Vector3(0, 1.4, -0.12), Vector3(0.03, 1.2, 0.03), [])  # the rope down into the shaft
-	kit.xform = Transform3D(Basis(Vector3.RIGHT, -0.62), w + Vector3(0, 1.5, 0.32))
-	kit.box("cloth", Vector3.ZERO, Vector3(0.03, 0.03, 0.95), [])  # and over to her hands
-	kit.xform = Transform3D.IDENTITY
 	add_child(kit.build("Well"))
-	place("amphora", w + Vector3(0.75, 0, 0.75), 30.0, Vector3.ONE * 0.75)
+	# the rope over to her hands: only while she is at it
+	var rk := MeshKit.new()
+	rk.xform = Transform3D(Basis(Vector3.RIGHT, -0.62), w + Vector3(0, 1.5, 0.32))
+	rk.box("cloth", Vector3.ZERO, Vector3(0.03, 0.03, 0.95), [])
+	_rope = MeshInstance3D.new()
+	_rope.name = "RopeToHands"
+	_rope.mesh = rk.commit()
+	add_child(_rope)
+	_hydria = place("amphora", w + HYDRIA_AT, 30.0, Vector3.ONE * 0.75)
+	place("pithos", Vector3(w.x + STORE_AT.x, Topo.surface(w.x + STORE_AT.x, w.z + STORE_AT.z), w.z + STORE_AT.z), 40.0,
+			Vector3.ONE * 0.7, 0.3, 0.9)
 	var woman: Npc = NPC.new()
 	woman.npc_id = "water_carrier"
 	woman.name_key = "NPC_SAILOR_NAME"
@@ -391,4 +425,64 @@ func _well() -> void:
 	woman.body_mat = "chiton"
 	woman.talkable = false
 	woman.position = w + Vector3(0, 0, 1.0)  # faces -z, the well
+	set_carrier_round(woman, w)
 	add_child(woman)  # hair, kerchief and the long chiton: Figure.LOOKS["water_carrier"]
+	_carrier = woman
+	# the hydria on her head, and the same jar tipped in her hands when she pours
+	_head_jar = Props.instance("amphora")
+	_head_jar.scale = Vector3.ONE * 0.55
+	_head_jar.position = Vector3(0, 0.27, 0.02)
+	_head_jar.visible = false
+	(woman.joints["head"] as Node3D).add_child(_head_jar)
+	_hand_jar = Props.instance("amphora")
+	_hand_jar.scale = Vector3.ONE * 0.7
+	_hand_jar.position = Vector3(0, 0.3, -0.3)
+	_hand_jar.rotation.x = -2.2  # tipped past level: the mouth forward and down into the storage jar
+	_hand_jar.visible = false
+	(woman.joints["chest"] as Node3D).add_child(_hand_jar)
+	woman.reached.connect(_on_carrier_reached)
+	woman.departed.connect(_on_carrier_departed)
+
+
+## The water carrier's round as a patrol. Static so the test can walk it.
+static func set_carrier_round(woman: Npc, well: Vector3) -> void:
+	var pts := PackedVector3Array()
+	var poses := PackedStringArray()
+	var pauses := PackedFloat32Array()
+	var faces := PackedFloat32Array()
+	var home := well + Vector3(CARRIER_ROUTE[0][0], 0, CARRIER_ROUTE[0][1])
+	for r: Array in CARRIER_ROUTE:
+		pts.append(well + Vector3(r[0], 0, r[1]) - home)
+		poses.append(r[2])
+		pauses.append(r[3])
+		faces.append(r[4])
+	woman.patrol = pts
+	woman.patrol_poses = poses
+	woman.patrol_pauses = pauses
+	woman.patrol_faces = faces
+	woman.patrol_speed = 0.6
+	woman.carry_pose = "head_carry"
+	woman.follow_ground = true
+	woman.stops_for_player = false
+
+
+func _on_carrier_reached(i: int) -> void:
+	match i:
+		CARRIER_LIFT:
+			_hydria.visible = false
+			_head_jar.visible = true
+			_carrier.carrying = true
+		CARRIER_POUR:
+			_head_jar.visible = false
+			_hand_jar.visible = true
+		CARRIER_SET_DOWN:
+			_head_jar.visible = false
+			_hydria.visible = true
+			_carrier.carrying = false
+
+
+func _on_carrier_departed(i: int) -> void:
+	if i == CARRIER_POUR:
+		# back onto her head, empty now
+		_hand_jar.visible = false
+		_head_jar.visible = true
