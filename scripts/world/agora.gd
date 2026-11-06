@@ -5,6 +5,9 @@ extends District
 const COL_H := 3.6
 ## The cloth between two columns: how far it stops short of each shaft, how far
 ## it hangs, and how far in front of the colonnade its top edge is tied.
+## The potter's boy's errand: a knucklebone left on the stoa's step after a game.
+const LOST_ASTRAGAL := Vector2(14.5, -4.85)
+const STOA_STEP := 0.32
 const BANNER_INSET := 0.35
 const BANNER_DROP := 1.25
 const BANNER_OUT := 0.42
@@ -69,6 +72,7 @@ func _ready() -> void:
 	spawn_inspectable("inscription_stele", Vector3(c.x, y, -2.6), 0.0)
 	spawn_inspectable("coin_stater", stall_pos + Vector3(0.4, 0.89, -0.1), 180.0)
 	spawn_inspectable("grain_pithos", Vector3(c.x + 2.3, y, 7.6), 200.0)
+	spawn_quest_item("astragal", Vector3(LOST_ASTRAGAL.x, y + STOA_STEP, LOST_ASTRAGAL.y), 15.0)
 
 
 ## The forecourt before the agora (Topo.FORECOURTS): paving at the street's

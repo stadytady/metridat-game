@@ -132,9 +132,25 @@ func _quests() -> void:
 	_quest_row("UI_QUEST_TALKS", heard, voices)
 	var done := Game.dreaming or Achievements.is_unlocked("ACH_DREAM")
 	_quest_row("UI_QUEST_SLEEP", 1 if done else 0, 1)
+	# errands, once someone has asked: half-way when the thing is found
+	var taken := errands()
+	if not taken.is_empty():
+		_body.add_child(UiStyle.label(tr("UI_GOALS_ERRANDS"), 20, UiStyle.MUTED))
+		for id: String in taken:
+			var s := Game.quest_state(id)
+			_quest_row(String(Quests.LIST[id]["title"]), s - Quests.TAKEN, Quests.DONE - Quests.TAKEN)
 	var note := UiStyle.label(tr("UI_QUEST_NOTE"), 18, UiStyle.MUTED)
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_body.add_child(note)
+
+
+## The errands the player has been asked to run, in the order they are listed.
+static func errands() -> Array[String]:
+	var out: Array[String] = []
+	for id: String in Quests.LIST:
+		if Game.quest_state(id) != Quests.NONE:
+			out.append(id)
+	return out
 
 
 func _quest_row(key: String, done: int, total: int) -> void:

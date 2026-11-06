@@ -1,0 +1,19 @@
+# Agathe at the well. One question about the water, and an errand (Quests):
+# the lamp her boy left on the grass by the well, thanked for when found.
+# Text is a key: the panel translates it, so EN/RU stay in strings.csv.
+# Indent with tabs: DM's INDENT_REGEX is ^\t+.
+
+~ start
+if Game.quest_ready("lamp")
+	Agathe: LOC_Q_LAMP_DONE
+	do Game.complete_quest("lamp")
+	=> END
+Agathe: NPC_CARRIER_1
+- LOC_CARRIER_CHOICE_WATER
+	Agathe: LOC_CARRIER_WATER_1
+	Agathe: LOC_CARRIER_WATER_2
+- LOC_Q_LAMP_ASK [if Game.quest_offered("lamp")]
+	Agathe: LOC_Q_LAMP_1
+	Agathe: LOC_Q_LAMP_2
+	do Game.take_quest("lamp")
+=> END

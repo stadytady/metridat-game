@@ -245,3 +245,41 @@ D_ANCHOR_STOCK_DESCRIPTION,"A long bar of grey lead, thickest in the middle wher
 D_ANCHOR_STOCK_HISTORY,"Greek ships of the Classical period carried wooden anchors: a shank with arms, weighted by a stock of lead set across the shank so that, as the anchor dragged, an arm turned down and bit into the sea floor. The wood seldom survives, but the lead stocks do, and they are frequent finds in the Mediterranean and the Black Sea, many of them where ships anchored or were lost.","На греческих кораблях классической эпохи были деревянные якоря: веретено с лапами и свинцовый шток поперёк веретена. Когда якорь тянуло по дну, шток разворачивал его так, что одна из лап впивалась в грунт. Дерево сохраняется редко, а свинцовые штоки — часто: их находят в Средиземном и Чёрном морях, многие там, где корабли стояли на якоре или погибли."
 D_ANCHOR_STOCK_NARRATIVE,"That the stock came off the Swallow, and that Damon is waiting for a carpenter to fit it to a new shank, is the game's invention.","То, что шток сняли с «Ласточки» и Дамон ждёт плотника, чтобы насадить его на новое веретено, придумано для игры."
 D_ANCHOR_STOCK_HINT,"On the pier, on the planks by its north edge, before you reach the ship.","На пристани, на настиле у северного края, не доходя до корабля."
+UI_PICK_UP,[E] Pick up %s,[E] Поднять: %s
+UI_QUEST_TAKEN,Errand: %s,Поручение: %s
+UI_QUEST_FOUND,Found — take it back: %s,"Найдено, верни хозяину: %s"
+UI_QUEST_DONE,Errand done: %s,Поручение выполнено: %s
+UI_GOALS_ERRANDS,Errands,Поручения
+Q_LOOM_TITLE,Myrto's lost loom weight,Потерянный грузик Мирто
+Q_LOOM_ITEM,loom weight,грузик
+Q_LAMP_TITLE,A lamp for the house,Светильник для дома
+Q_LAMP_ITEM,clay lamp,глиняный светильник
+Q_HOOK_TITLE,Glaukos's fish hook,Рыболовный крючок Главка
+Q_HOOK_ITEM,bronze hook,бронзовый крючок
+Q_ASTRA_TITLE,The lost knucklebone,Пропавшая косточка
+Q_ASTRA_ITEM,knucklebone,астрагал
+LOC_Q_LOOM_ASK,Is something wrong?,Что-то случилось?
+LOC_Q_LOOM_1,"A weight has gone from my loom. One bundle of the warp hangs slack, and the cloth goes crooked.","С моего станка пропал грузик. Один пучок основы провис, и полотно идёт криво."
+LOC_Q_LOOM_2,"The little one plays with them. Look outside the street door, on the path: it will be there somewhere.","Малыш вечно ими играет. Посмотри за уличной дверью, на тропинке: где-то там."
+LOC_Q_LOOM_DONE,My weight! Now the warp hangs straight again. Thank you.,Мой грузик! Теперь основа снова висит ровно. Спасибо.
+LOC_Q_HOOK_ASK,Can I help with anything?,Могу чем-нибудь помочь?
+LOC_Q_HOOK_1,"I've lost a hook. Good bronze, the best I had.","Я потерял крючок. Хорошая бронза, лучший из всех."
+LOC_Q_HOOK_2,"It will be over by the nets and the baskets, under the rack. My eyes are not what they were.","Он где-то у сетей и корзин, под вешалами. Глаза у меня уже не те."
+LOC_Q_HOOK_DONE,"That's it, that's my hook. Tomorrow it goes back on the line.","Он самый, мой крючок. Завтра снова на леску."
+NPC_CARRIER_NAME,Agathe the water carrier,Водоноска Агата
+NPC_CARRIER_1,"The water in this well is sweet, not like the one down by the harbour.","Вода в этом колодце сладкая, не то что у гавани."
+LOC_CARRIER_CHOICE_WATER,Do you carry it far?,Далеко носишь?
+LOC_CARRIER_WATER_1,"To the big jar under the stoa, then home. Ten times a day, more in summer.","До большого пифоса под стоей, потом домой. Раз десять на дню, летом больше."
+LOC_CARRIER_WATER_2,My mother carried it before me. Her neck was as straight as a column.,"До меня носила мать. Шея у неё была прямая, как колонна."
+LOC_Q_LAMP_ASK,You look worried.,Ты чем-то встревожена.
+LOC_Q_LAMP_1,My boy took our lamp out to play and came back without it. And night is coming.,Мой мальчишка унёс светильник играть и вернулся без него. А скоро ночь.
+LOC_Q_LAMP_2,"He was playing by the well, on the grass behind the curb. It must be lying there.","Он играл у колодца, на траве за срубом. Там, наверное, и бросил."
+LOC_Q_LAMP_DONE,"There it is, and not even cracked. We'll have light tonight.","Вот он, даже не треснул. Сегодня будет свет."
+NPC_BOY_1,"Shh, don't tell Kallias I stopped. The wheel is heavy, but I'm getting stronger.","Тсс, не говори Каллию, что я остановился. Круг тяжёлый, но я становлюсь сильнее."
+LOC_BOY_CHOICE_WOOD,And the wood for the kiln?,А дрова для печи?
+LOC_BOY_WOOD_1,That's me too. The kiln eats more than the mule does.,"Тоже я. Печь ест больше, чем мул."
+LOC_BOY_WOOD_2,"When the pots come out whole, Kallias gives me an obol. When they crack, he doesn't.","Когда горшки выходят целыми, Каллий даёт мне обол. Когда трескаются — нет."
+LOC_Q_ASTRA_ASK,Why so glum?,Ты чего такой грустный?
+LOC_Q_ASTRA_1,I've lost a knucklebone! One of my five. You can't play with four.,Я потерял астрагал! Один из пяти. С четырьмя не поиграешь.
+LOC_Q_ASTRA_2,We were playing on the steps of the stoa. It must have rolled off somewhere there.,"Мы играли на ступенях стои. Наверное, он там куда-то укатился."
+LOC_Q_ASTRA_DONE,My knucklebone! All five again. Thank you!,Мой астрагал! Снова все пять. Спасибо!

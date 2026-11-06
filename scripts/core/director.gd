@@ -259,6 +259,13 @@ func _route() -> Array:
 			r.append("amphora_stamped")
 			r.append(from)
 		r.append(Vector2(p.x, p.z))
+	# Agathe at the well asks after the lamp her boy left on the grass by it
+	r.append("talk:water_carrier")
+	r.append("take:lamp")
+	r.append(Vector2(3.8, -1.7))
+	r.append("pick:lamp")
+	r.append("give:lamp")
+	r.append(Vector2(9.0, 0.0))
 	r.append(Vector2(22.0, -0.9))
 	r.append("inscription_stele")
 	r.append(Vector2(20.4, 4.7))
@@ -270,10 +277,17 @@ func _route() -> Array:
 	r.append(Vector2(13.4, 4.8))
 	r.append(Vector2(13.4, 7.0))
 	r.append("talk:potter")
+	r.append("talk:turner")
+	r.append("take:astragal")
 	r.append("check:chickens")
 	r.append(Vector2(11.6, 7.7))
 	r.append("mould_figurine")
 	r.append(Vector2(12.5, 4.5))
+	# the boy's knucklebone on the stoa's step, and back to him with it
+	r.append(Vector2(14.5, -3.9))
+	r.append("pick:astragal")
+	r.append(Vector2(12.5, 4.5))
+	r.append("give:astragal")
 	r.append(Vector2(20.0, 3.5))
 	r.append(Vector2(30.0, 3.0))
 	# down the footpath to Myrto's house: talk at the oven, look into both rooms
@@ -281,6 +295,7 @@ func _route() -> Array:
 	r.append(Vector2(26.0, 17.4))
 	r.append(Vector2(27.3, 18.2))
 	r.append("talk:baker")
+	r.append("take:loom_weight")
 	for door: float in [22.9, 29.1]:
 		r.append(Vector2(door, 20.7))
 		r.append(Vector2(door, 23.4))
@@ -291,6 +306,11 @@ func _route() -> Array:
 		else:
 			r.append("loom_weights")
 		r.append(Vector2(door, 20.7))
+	# the loom weight out by the street door, back to Myrto at the oven
+	r.append(Vector2(26.3, 15.9))
+	r.append("pick:loom_weight")
+	r.append(Vector2(27.3, 18.2))
+	r.append("give:loom_weight")
 	r.append(Vector2(26.0, 17.4))
 	r.append(Vector2(26.0, 9.6))
 	r.append(Vector2(30.0, 3.0))
@@ -300,8 +320,14 @@ func _route() -> Array:
 	r.append(Vector2(56.0, 6.0))
 	r.append(Vector2(63.6, 14.4))
 	r.append("talk:fisher")
+	r.append("take:hook")
 	r.append(Vector2(64.6, 13.0))
 	r.append("net_sinkers")
+	# the hook among the nets under the rack, and back to Glaukos
+	r.append(Vector2(65.0, 12.4))
+	r.append("pick:hook")
+	r.append(Vector2(63.6, 14.4))
+	r.append("give:hook")
 	r.append(Vector2(56.0, 6.0))
 	# along the beach to the pier, out to the skipper by the gangway, and back
 	var px0 := Topo.pier_x0()
@@ -366,6 +392,10 @@ func _walkthrough() -> void:
 			await _talk(player, String(step).substr(5))
 		elif step == "check:chickens":
 			await _check_chickens(player)
+		elif String(step).begins_with("take:") or String(step).begins_with("give:"):
+			await _errand_talk(player, String(step).substr(0, 4), String(step).substr(5))
+		elif String(step).begins_with("pick:"):
+			await _pick(player, String(step).substr(5))
 		else:
 			await _inspect(player, items, step)
 		min_y = minf(min_y, player.global_position.y)
@@ -460,7 +490,7 @@ func _inspect(player: CharacterBody3D, items: Dictionary, id: String) -> void:
 
 
 ## Talks to an NPC through the interactor ray and reads every line.
-func _talk(player: CharacterBody3D, npc_id: String) -> void:
+func _talk(player: CharacterBody3D, npc_id: String, choice: String = "", min_lines: int = 3) -> void:
 	player.bot_move = Vector2.ZERO
 	await _frames(5)
 	var npc: Npc = null
@@ -493,17 +523,64 @@ func _talk(player: CharacterBody3D, npc_id: String) -> void:
 	if npc.marker != null and npc.marker.visible:
 		_fail.append("talk marker still shown during the talk with " + npc_id)
 	var shown := 0
+	var chose := choice == ""
 	while panel.is_open() and shown < 20:
 		shown += 1
+		if not chose and panel.choose(choice):
+			chose = true
 		var text: String = panel._line.text
 		if text.begins_with("NPC_") or text.begins_with("LOC_"):
 			_fail.append("untranslated line %s" % text)
 		panel.advance()
 		await _frames(2)
 	# A branching talk has no fixed length; reaching the end of one branch is enough.
-	if not Game.talked.get(npc_id, false) or shown < 3:
-		_fail.append("talk with %s: %d lines, expected at least 3" % [npc_id, shown])
+	if not chose:
+		_fail.append("talk with %s: no choice %s" % [npc_id, choice])
+	if not Game.talked.get(npc_id, false) or shown < min_lines:
+		_fail.append("talk with %s: %d lines, expected at least %d" % [npc_id, shown, min_lines])
 	print("talked to %s (%d lines)" % [npc_id, shown])
+
+
+## An errand's talk: "take" asks for it through its choice, "give" brings the
+## thing back, which the giver thanks for before anything else.
+func _errand_talk(player: CharacterBody3D, step: String, quest: String) -> void:
+	var giver := String(Quests.LIST[quest]["giver"])
+	var want := Quests.TAKEN if step == "take" else Quests.DONE
+	if step == "take":
+		await _talk(player, giver, String(Quests.LIST[quest]["ask"]), 2)
+	else:
+		await _talk(player, giver, "", 1)
+	if Game.quest_state(quest) != want:
+		_fail.append("errand %s after %s: state %d, expected %d" % [quest, step, Game.quest_state(quest), want])
+	print("errand %s: %s" % [quest, step])
+
+
+## Picks a taken errand's thing off the ground: shown only now, gone after.
+func _pick(player: CharacterBody3D, quest: String) -> void:
+	player.bot_move = Vector2.ZERO
+	await _frames(10)
+	var item: QuestItem = null
+	for n in get_tree().get_nodes_in_group(&"quest_item"):
+		if n.quest == quest:
+			item = n
+	if item == null:
+		_fail.append("no quest item " + quest)
+		return
+	if not item.visible:
+		_fail.append("quest item %s hidden while the errand is taken" % quest)
+	player.look_at_point(item.global_position + Vector3(0, item.box_size.y * 0.5, 0))
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	if not player.interactor.try_interact():
+		var hit: Object = player.interactor.get_collider()
+		_fail.append("ray does not hit quest item %s from %s (dist %.2f, hits %s)" % [quest, player.global_position,
+				player.camera.global_position.distance_to(item.global_position),
+				hit.get_path() if hit is Node else "nothing"])
+		return
+	await _frames(3)
+	if Game.quest_state(quest) != Quests.FOUND or item.visible:
+		_fail.append("quest item %s: state %d, visible %s after picking" % [quest, Game.quest_state(quest), item.visible])
+	print("picked up %s" % quest)
 
 
 ## The viewer must hold the find's model, with real geometry, and render.

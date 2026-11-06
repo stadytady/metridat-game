@@ -26,6 +26,8 @@ const HEARTH := Vector2(23.0, 24.7)
 ## room's stool (its top is 0.44 m up).
 const LOOM_WEIGHTS := Vector2(28.6, 24.4)
 const LAMP_STOOL := Vector2(24.9, 23.3)
+## Where Myrto's lost loom weight lies (an errand): on the path outside the street door.
+const LOST_WEIGHT := Vector2(26.6, 15.3)
 ## Myrto's round: kneeling at the oven she bakes; when a bread is done she
 ## gets up with it and lays it on the stack on the board behind her, then
 ## kneels again. [x, z, pose, pause s, facing yaw deg].
@@ -101,6 +103,8 @@ func _ready() -> void:
 	# spare weights at the foot of the loom; the lamp on the stool by the hearth
 	spawn_inspectable("loom_weights", Vector3(LOOM_WEIGHTS.x, y + 0.01, LOOM_WEIGHTS.y), 0.0)
 	spawn_inspectable("oil_lamp", Vector3(LAMP_STOOL.x, y + 0.44, LAMP_STOOL.y), 120.0)
+	# Myrto's errand: a loom weight the little one took out, on the path by the street door
+	spawn_quest_item("loom_weight", Vector3(LOST_WEIGHT.x, Topo.surface(LOST_WEIGHT.x, LOST_WEIGHT.y), LOST_WEIGHT.y), 30.0)
 	place("pithos", Vector3(20.5, y, 17.2), 30.0, Vector3.ONE * 0.9, 0.45, 1.2)
 	place("pithos", Vector3(21.4, y, 16.9), 110.0, Vector3.ONE * 0.75, 0.38, 1.0)
 	place("amphora", Vector3(31.8, y, 17.0), 20.0, Vector3.ONE, 0.17, 0.8)

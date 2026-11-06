@@ -12,6 +12,9 @@ const FIRE := Vector2(64.4, 17.0)
 const SINKERS := Vector2(65.7, 13.6)
 ## Cormorants on the beach some fifty metres south of the Swallow, above the
 ## surf: a patch of sand they walk, and two rocks they dry their wings on.
+## Glaukos's errand: a hook dropped at the foot of the drying net, on this side
+## of it (the net is solid to the ray).
+const LOST_HOOK := Vector2(65.1, 11.4)
 const CORMORANT_SAND := Vector2(65.0, 40.2)
 const CORMORANT_SAND_R := 2.2
 const CORMORANT_ROCKS := [Vector3(66.9, 0.0, 38.9), Vector3(67.4, 0.0, 41.6)]
@@ -41,6 +44,7 @@ func _ready() -> void:
 	_cormorant_rocks(kit, rng)
 	add_child(kit.build("Camp", &"dirt"))
 	_cormorants()
+	spawn_quest_item("hook", Vector3(LOST_HOOK.x, ground(LOST_HOOK) + 0.01, LOST_HOOK.y), 60.0)
 	_boat()
 	_fire()
 	_fisherman()

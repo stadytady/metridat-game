@@ -72,6 +72,7 @@ func _ready() -> void:
 	Game.discovered.connect(_on_discovered)
 	Game.lamp_lit.connect(_on_lamp_lit)
 	Game.location_entered.connect(func(title: String) -> void: show_toast(title))
+	Game.quest_changed.connect(_on_quest)
 	# Achievements get the Steam-style card, not the plain toast. It needs a canvas
 	# layer of its own: the info, dialogue and journal panels are canvas layers too,
 	# so a card drawn inside the HUD would sit *behind* them and never be seen while
@@ -140,6 +141,13 @@ func _on_discovered(_d: Discovery, is_new: bool) -> void:
 	elif Game.time_target() >= 0.45 and not _dusk_shown:
 		_dusk_shown = true
 		show_toast("UI_DUSK_HINT")
+
+
+## An errand taken, its thing found, or brought back: one line, like a place name.
+func _on_quest(id: String, state: int) -> void:
+	var prefix := {Quests.TAKEN: "UI_QUEST_TAKEN", Quests.FOUND: "UI_QUEST_FOUND", Quests.DONE: "UI_QUEST_DONE"}
+	if prefix.has(state):
+		show_toast(String(Quests.LIST[id]["title"]), prefix[state])
 
 
 func _on_lamp_lit(lit: int, total: int) -> void:

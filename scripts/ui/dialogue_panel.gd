@@ -174,6 +174,25 @@ func _notification(what: int) -> void:
 		_keys_hint.text = tr("UI_DIALOGUE_KEYS")
 
 
+## Highlight the choice whose text is this key (the walkthrough picks an
+## errand this way). False if no such choice is on screen.
+func choose(key: String) -> bool:
+	# the addon hands responses over already translated, so match either form
+	var i := _choice_keys.find(key)
+	if i < 0:
+		i = _choice_keys.find(tr(key))
+	if i < 0:
+		return false
+	_choice_index = i
+	_refresh_choices()
+	return true
+
+
+## The keys of the choices on screen.
+func choices() -> PackedStringArray:
+	return PackedStringArray(_choice_keys)
+
+
 ## Next line, or confirm the highlighted choice.
 func advance() -> void:
 	if _panel.visible:
