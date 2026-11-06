@@ -104,6 +104,28 @@ func _voyage_shots() -> void:
 	await p.landed
 	await _frames(8)
 	_save("voyage_pier")
+	# the night after the talk: the stern at night and at dawn, then the climb
+	var panel: Node = _main().get_node("DialoguePanel")
+	await _frames(30)
+	panel.close()
+	while p.stage != "night":
+		await get_tree().process_frame
+	await get_tree().create_timer(Prologue.DARK + 1.2).timeout
+	_save("night_stern")
+	while p.stage != "dawn":
+		await get_tree().process_frame
+	await get_tree().create_timer(Prologue.DARK + 1.2).timeout
+	_save("night_dawn")
+	while p.stage != "climb":
+		await get_tree().process_frame
+	for at: float in [0.03, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.88, 0.94, 0.98]:
+		while p.climb_u < at and p.stage == "climb":
+			await get_tree().process_frame
+		_save("night_climb_%02d" % int(at * 100.0))
+		print("climb %.2f at %s" % [at, p._cam.global_position])
+	await p.finished
+	await _frames(8)
+	_save("night_hill")
 
 
 ## Prompt, info panel and pause menu over the agora.
@@ -263,7 +285,13 @@ func _route() -> Array:
 			r.append("amphora_stamped")
 			r.append(from)
 		r.append(Vector2(p.x, p.z))
-	# Agathe at the well asks after the lamp her boy left on the grass by it
+	# Agathe at the well asks after the lamp her boy left on the grass by it.
+	# She stops for anyone within Npc.ATTENTION, wherever her round has taken
+	# her, behind the well-head too: wait out of her sight until she is back at
+	# the rope, then step up from the lane.
+	r.append(Vector2(12.5, 0.0))
+	r.append("await:water_carrier:0")
+	r.append(Vector2(5.0, -0.6))
 	r.append("talk:water_carrier")
 	r.append("take:lamp")
 	r.append(Vector2(3.8, -1.7))
@@ -398,6 +426,9 @@ func _walkthrough() -> void:
 			await _check_chickens(player)
 		elif String(step).begins_with("take:") or String(step).begins_with("give:"):
 			await _errand_talk(player, String(step).substr(0, 4), String(step).substr(5))
+		elif String(step).begins_with("await:"):
+			var bits := String(step).split(":")
+			await _await_at(player, bits[1], int(bits[2]))
 		elif String(step).begins_with("pick:"):
 			await _pick(player, String(step).substr(5))
 		else:
@@ -557,6 +588,26 @@ func _errand_talk(player: CharacterBody3D, step: String, quest: String) -> void:
 	if Game.quest_state(quest) != want:
 		_fail.append("errand %s after %s: state %d, expected %d" % [quest, step, Game.quest_state(quest), want])
 	print("errand %s: %s" % [quest, step])
+
+
+## Waits, up to a minute, for a walking NPC to reach a point of its round.
+func _await_at(player: CharacterBody3D, npc_id: String, i: int) -> void:
+	player.bot_move = Vector2.ZERO
+	var npc: Npc = null
+	for n in get_tree().get_nodes_in_group(&"npc"):
+		if n.npc_id == npc_id:
+			npc = n
+	if npc == null:
+		_fail.append("no npc " + npc_id)
+		return
+	var spot: Vector3 = npc._home + npc.patrol[i]
+	var t := 0.0
+	while t < 60.0 and Vector2(npc.position.x - spot.x, npc.position.z - spot.z).length() > 0.1:
+		t += get_physics_process_delta_time()
+		await get_tree().physics_frame
+	if t >= 60.0:
+		_fail.append("%s never came back to point %d of the round" % [npc_id, i])
+	print("waited %.1f s for %s" % [t, npc_id])
 
 
 ## Picks a taken errand's thing off the ground: shown only now, gone after.
@@ -810,7 +861,41 @@ func _check_prologue(player: CharacterBody3D) -> void:
 		_fail.append("prologue: only %d lines" % shown)
 	if Game.talked.get(Prologue.NPC_ID, false):
 		_fail.append("prologue: the arrival counted as a talk with Damon")
-	await p.finished
+	# the night at the stern, the same view at first light, the climb
+	var seen := {}
+	var climb_from := Vector3.INF
+	var climb_to := Vector3.INF
+	while is_instance_valid(p) and not p.is_queued_for_deletion() and Game.prologue:
+		var st: String = p.stage
+		var cam := player.get_viewport().get_camera_3d()
+		if st != "" and not seen.has(st):
+			seen[st] = true
+			await _frames(4)
+			cam = player.get_viewport().get_camera_3d()
+			if cam == player.camera:
+				_fail.append("prologue: the %s is seen through the player's eyes" % st)
+			if not Game.ui_blocking:
+				_fail.append("prologue: the world listens to keys during the %s" % st)
+			var want: float = {"night": Prologue.NIGHT_HOUR, "dawn": Prologue.DAWN_HOUR, "climb": Prologue.DAWN_HOUR}[st]
+			if not is_equal_approx(atm.t, want):
+				_fail.append("prologue: the %s at hour %.2f, want %.2f" % [st, atm.t, want])
+			if st == "night" and cam.global_position.distance_to(harbour.ship().global_position) > 8.0:
+				_fail.append("prologue: the night is not seen from the Swallow but from %s" % cam.global_position)
+		if st == "climb" and cam != player.camera:
+			if climb_from == Vector3.INF:
+				climb_from = cam.global_position
+			climb_to = cam.global_position
+		await get_tree().process_frame
+	for st: String in ["night", "dawn", "climb"]:
+		if not seen.has(st):
+			_fail.append("prologue: no %s after the talk" % st)
+	if climb_from != Vector3.INF and climb_to.y - climb_from.y < 20.0:
+		_fail.append("prologue: the climb goes from %s to %s, not up the hill" % [climb_from, climb_to])
+	if climb_to != Vector3.INF and climb_to.distance_to(player.camera.global_position) > 1.0:
+		_fail.append("prologue: the climb ends %.2f m from the player's eyes" % climb_to.distance_to(player.camera.global_position))
+	print("prologue: night at the stern, dawn, climb from y %.1f to %.1f" % [climb_from.y, climb_to.y])
+	if is_instance_valid(p) and not p.is_queued_for_deletion():
+		await p.finished
 	await _frames(3)
 	if Game.prologue or not is_equal_approx(atm.t, Game.time_target()) or Game.time_target() > 0.01:
 		_fail.append("prologue: no morning (prologue %s, hour %.2f)" % [Game.prologue, atm.t])
@@ -818,6 +903,8 @@ func _check_prologue(player: CharacterBody3D) -> void:
 		_fail.append("prologue: not on the hill in the morning but at %s" % player.global_position)
 	if Game.ui_blocking:
 		_fail.append("prologue: the game is still held after the morning")
+	if player.get_viewport().get_camera_3d() != player.camera:
+		_fail.append("prologue: the game begins through someone else's camera")
 	print("prologue: dusk on the pier, %d lines with Damon, morning on the hill" % shown)
 
 
