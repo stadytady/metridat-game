@@ -152,3 +152,44 @@ func test_player_has_both_step_sets() -> void:
 		check(steps.has(kind), "no %s steps in the table" % kind)
 		if steps.has(kind):
 			check((steps[kind] as Array).size() >= 4, "only %d %s takes" % [(steps[kind] as Array).size(), kind])
+
+## The voices of the back streets: five short one-shots, each long enough to be
+## recognised and none of them a looping bed (they are played on a timer, not
+## looped - a loop would make a lane a machine).
+func test_street_voices_are_one_shots() -> void:
+	for kind: String in StreetVoices.SOUNDS:
+		var s: AudioStreamWAV = StreetVoices.SOUNDS[kind]
+		check(s != null, "%s did not import" % kind)
+		if s == null:
+			continue
+		check(s.get_length() > 0.7 and s.get_length() < 4.0, "%s is %.2f s long" % [kind, s.get_length()])
+		check(s.loop_mode == AudioStreamWAV.LOOP_DISABLED, "%s loops: it is played on a timer" % kind)
+
+
+## The hammer has to sound like work: several strikes, not one long noise. Each
+## strike is a burst that decays, so the envelope crosses up and down more than
+## once - counted on every other millisecond, which is plenty at 22 kHz.
+func test_the_hammer_strikes_more_than_once() -> void:
+	var s: AudioStreamWAV = StreetVoices.SOUNDS["hammer"]
+	check(s != null, "hammer.wav did not import")
+	if s == null:
+		return
+	var data := s.get_data()
+	var samples := data.size() / 2
+	var peak := 0
+	var i := 0
+	while i < samples:
+		peak = maxi(peak, absi(data.decode_s16(i * 2)))
+		i += 4
+	var loud := 0
+	var was := false
+	i = 0
+	while i < samples:
+		var v := absi(data.decode_s16(i * 2))
+		if not was and v > peak / 3:
+			loud += 1
+			was = true
+		elif v < peak / 6:
+			was = false
+		i += 4
+	check(loud >= 3, "only %d strikes in the hammer" % loud)

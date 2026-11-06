@@ -310,8 +310,18 @@ func _ready() -> void:
 	_lanes(houses)
 	_terraces(houses)
 	_hearths(houses)
+	_voices(houses)
 	if _cottage_lamp != null:
 		_cottage_lamp.set_lit(false)
+
+
+## What goes on behind the walls: a hammer, a loom, a baby, a dog, a woman
+## humming, each on its own house and its own clock.
+func _voices(houses: Array) -> void:
+	var voices := StreetVoices.new()
+	voices.name = "Voices"
+	voices.houses = houses
+	add_child(voices)
 
 
 func _house(kit: MeshKit, glow: MeshKit, hs: Dictionary) -> void:

@@ -51,6 +51,9 @@ static func viewpoints() -> Dictionary:
 		"park": [Vector3(-77.0, Topo.terrain(-77.0, 19.0) + 1.7, 19.0), Vector3(-98.4, Topo.terrain(-98.4, 19.0) + 1.6, 19.0)],
 		"park_goddess": [Vector3(-93.5, Topo.terrain(-93.5, 19.0) + 1.6, 19.0), Vector3(-98.4, Topo.terrain(-98.4, 19.0) + 2.3, 19.0)],
 		"park_south": [Vector3(-85.0, Topo.terrain(-85.0, -34.0) + 3.5, -34.0), Vector3(-85.0, Topo.terrain(-85.0, -19.0) + 0.5, -14.0)],
+		# the back lanes: the corner where the -28 terrace meets the 37 lane, with
+		# the herm that marks it; look along the street, not into a wall
+		"side_street": [Vector3(-26.65, Topo.terrain(-26.65, 32.6) + 1.7, 32.6), Vector3(-26.65, Topo.terrain(-26.65, 38.6) + 1.0, 38.6)],
 		"house_lane": [Vector3(26.0, Topo.AGORA_H + 1.6, 5.0), Vector3(26.0, Topo.AGORA_H + 1.4, 18.0)],
 		"house_yard": [Vector3(24.0, Topo.HOUSE_H + 1.6, 17.0), Vector3(29.4, Topo.HOUSE_H + 0.5, 19.0)],
 		"house_room": [Vector3(25.6, Topo.HOUSE_H + 1.6, 22.9), Vector3(20.6, Topo.HOUSE_H + 0.4, 25.4)],

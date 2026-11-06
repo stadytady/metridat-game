@@ -1174,6 +1174,94 @@ def trailer_theme(rng):
     write_wav("trailer_theme", norm(reverb(out, rng), 0.8))
 
 
+def hammer(rng):
+    """A smith at his anvil: four or five strikes, each a metal ring over a
+    dull body, close enough together that the ear hears work."""
+    out = np.zeros(int(SR * 1.4))
+    pos = int(SR * 0.02)
+    for _ in range(int(rng.integers(4, 6))):
+        ln = int(SR * 0.4)
+        if pos + ln > len(out):
+            break
+        t = np.arange(ln) / SR
+        strike = rng.uniform(0.0, 2 * np.pi)
+        tone = np.zeros(ln)
+        for f, a, d in ((rng.uniform(760, 920), 0.7, 22.0),
+                        (rng.uniform(1420, 1680), 0.45, 30.0),
+                        (rng.uniform(2450, 2900), 0.3, 42.0)):
+            tone += a * np.sin(2 * np.pi * f * t + strike) * np.exp(-t * d)
+        tone += 0.55 * lowpass(rng.standard_normal(ln), 3200) * np.exp(-t * 55)
+        out[pos:pos + ln] += tone * np.minimum(1, t / 0.002)
+        pos += ln + int(SR * rng.uniform(0.16, 0.34))
+    write_wav("hammer", norm(bandpass(out, 220, 6000), 0.5))
+
+
+def loom(rng):
+    """A warp-weighted loom behind a wall: the beater goes thud, the shuttle
+    hisses across the warp, the beater goes thud."""
+    out = np.zeros(int(SR * 1.7))
+    for at, gain in ((0.05, 1.0), (1.2, 0.85)):
+        ln = int(SR * 0.45)
+        t = np.arange(ln) / SR
+        thud = np.sin(2 * np.pi * rng.uniform(118, 152) * t) * np.exp(-t * 16)
+        thud += 0.5 * lowpass(rng.standard_normal(ln), 420) * np.exp(-t * 30)
+        i = int(at * SR)
+        out[i:i + ln] += thud * gain * np.minimum(1, t / 0.004)
+    ln = int(SR * 0.55)
+    t = np.arange(ln) / SR
+    hiss = bandpass(rng.standard_normal(ln), 900, 2600) * np.sin(np.pi * t / 0.55) ** 2 * 0.3
+    i = int(0.55 * SR)
+    out[i:i + ln] += hiss
+    write_wav("loom", norm(out, 0.5))
+
+
+def child_cry(rng):
+    """A baby waking behind a door: one long cry that falls away, with the
+    breath after it."""
+    ln = int(SR * 1.9)
+    t = np.arange(ln) / SR
+    f = 540 + 150 * np.sin(2 * np.pi * 0.8 * t) - 95 * t
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    voice = np.sin(ph) + 0.5 * np.sin(2 * ph) + 0.3 * np.sin(3 * ph)
+    voice *= (0.6 + 0.4 * np.sin(2 * np.pi * 5.5 * t)) ** 2
+    env = np.minimum(1, t / 0.12) * np.exp(-np.maximum(0.0, t - 0.85) * 1.7)
+    breath = bandpass(rng.standard_normal(ln), 600, 3000) * 0.22 * np.exp(-((t - 1.45) / 0.22) ** 2)
+    write_wav("child_cry", norm(bandpass(voice * env + breath, 300, 3200), 0.5))
+
+
+def bark(rng):
+    """Two or three short barks from a yard dog - not the night howl."""
+    out = np.zeros(int(SR * 1.1))
+    pos = int(SR * 0.02)
+    for _ in range(int(rng.integers(2, 4))):
+        ln = int(SR * rng.uniform(0.1, 0.16))
+        if pos + ln > len(out):
+            break
+        t = np.arange(ln) / SR
+        f = rng.uniform(420, 620) * (1 + 0.5 * np.exp(-t * 30))
+        ph = 2 * np.pi * np.cumsum(f) / SR
+        tone = (np.sin(ph) + 0.6 * rng.standard_normal(ln)) * np.exp(-t * 22)
+        out[pos:pos + ln] += tone * np.minimum(1, t / 0.006)
+        pos += ln + int(SR * rng.uniform(0.13, 0.24))
+    write_wav("bark", norm(bandpass(out, 250, 2200), 0.5))
+
+
+def hum(rng):
+    """A woman humming three notes over her work, soft and close to the wall."""
+    ln = int(SR * 3.0)
+    t = np.arange(ln) / SR
+    out = np.zeros(ln)
+    for f0, a, b in ((196.0, 0.0, 1.15), (233.1, 1.15, 2.05), (196.0, 2.05, 3.0)):
+        i0, i1 = int(a * SR), int(b * SR)
+        tt = t[i0:i1] - a
+        vib = 1 + 0.008 * np.sin(2 * np.pi * 5.0 * tt)
+        ph = 2 * np.pi * np.cumsum(f0 * vib) / SR
+        tone = np.sin(ph) + 0.35 * np.sin(2 * ph) + 0.15 * np.sin(3 * ph)
+        env = np.minimum(1, tt / 0.15) * np.minimum(1, (b - a - tt) / 0.25)
+        out[i0:i1] += tone * env
+    write_wav("hum", norm(lowpass(out, 1200), 0.45))
+
+
 def main() -> None:
     for d in (TEX, MAT, AUD):
         d.mkdir(parents=True, exist_ok=True)
@@ -1219,6 +1307,13 @@ def main() -> None:
     door_creak(np.random.default_rng(526))
     faces(np.random.default_rng(527))
     cicada(np.random.default_rng(537))
+    # What goes on behind the walls of the side streets: one generator and one
+    # seed each, so a new voice never touches a sound that already exists.
+    hammer(np.random.default_rng(538))
+    loom(np.random.default_rng(539))
+    child_cry(np.random.default_rng(540))
+    bark(np.random.default_rng(541))
+    hum(np.random.default_rng(542))
     print(f"textures: {len(TEXTURES)}, materials: {len(MATERIALS)}, audio: {len(list(AUD.glob('*.wav')))}")
 
 
