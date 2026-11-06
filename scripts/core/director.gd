@@ -12,6 +12,7 @@ var _only: PackedStringArray = []
 ## A single shot from anywhere: "--at=x,z" and "--yaw=degrees".
 var _at := ""
 var _at_yaw := 0.0
+var _at_name := ""
 
 
 func _ready() -> void:
@@ -31,6 +32,8 @@ func _ready() -> void:
 			_at = a.substr(5)
 		elif a.begins_with("--yaw="):
 			_at_yaw = a.substr(6).to_float()
+		elif a.begins_with("--name="):
+			_at_name = a.substr(7)
 	if "--shots" in OS.get_cmdline_user_args():
 		_shots.call_deferred()
 	elif "--walkthrough" in OS.get_cmdline_user_args():
@@ -57,6 +60,7 @@ func _shots() -> void:
 	# World.viewpoints() first: --at=x,z --yaw=deg [--name=look].
 	if _at != "":
 		await _shot_at(player)
+		get_tree().quit()  # otherwise shots.sh waits on a window nobody closes
 		return
 	var vps: Dictionary = _main().world.viewpoints()
 	for name: String in vps:
@@ -114,7 +118,7 @@ func _shot_at(player: CharacterBody3D) -> void:
 	player.look_at_point(eye + Vector3(-sin(yaw), 0, -cos(yaw)) * 14.0)
 	player.camera.position.y = 0.0
 	await _frames(10)
-	var name := "at_%d_%d" % [roundi(x), roundi(z)]
+	var name := _at_name if _at_name != "" else "at_%d_%d" % [roundi(x), roundi(z)]
 	var img := get_viewport().get_texture().get_image()
 	img.save_png(_out.path_join(name + ".png"))
 	print("shot ", _out.path_join(name + ".png"))
