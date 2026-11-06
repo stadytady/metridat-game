@@ -3,6 +3,11 @@ extends District
 ## a merchant stall, benches, a statue base and stacked architectural pieces.
 
 const COL_H := 3.6
+## The cloth between two columns: how far it stops short of each shaft, how far
+## it hangs, and how far in front of the colonnade its top edge is tied.
+const BANNER_INSET := 0.35
+const BANNER_DROP := 1.25
+const BANNER_OUT := 0.42
 ## Braziers at the corners and lamps by the columns light when the sun is down.
 const DUSK := 0.78
 
@@ -123,18 +128,47 @@ func _ribbons(cols: Array, xf: Transform3D) -> void:
 			pivot.add_child(kit.build("Ribbon"))
 			add_child(pivot)
 			_sway.append(pivot)
-	var a: Vector3 = xf * (cols[2] as Vector3)
-	var b: Vector3 = xf * (cols[3] as Vector3)
+	add_child(banner(xf * (cols[2] as Vector3), xf * (cols[3] as Vector3)))
+
+
+## The cloth between two columns: tied along its top edge, just in front of the
+## shafts, and left to the wind below. It no longer swings as a stiff board on a
+## pivot (its corners went into the columns); the psx_banner material moves the
+## hem, so the mesh is cut fine enough to bend. UV x runs along the top, y from
+## the tied edge (0) to the hem (1), on both faces alike.
+static func banner(a: Vector3, b: Vector3) -> MeshInstance3D:
 	var mid := (a + b) / 2.0
-	var half := a.distance_to(b) / 2.0 - 0.35
-	var pivot := Node3D.new()
-	pivot.position = Vector3(mid.x, mid.y + COL_H - 0.15, mid.z + 0.42)
+	var half := a.distance_to(b) / 2.0 - BANNER_INSET
 	var kit := MeshKit.new()
-	kit.quad("awning_red", Vector3(-half, -1.25, 0), Vector3(half, -1.25, 0), Vector3(half, 0, 0), Vector3(-half, 0, 0))
-	kit.quad("awning_red", Vector3(half, -1.25, 0), Vector3(-half, -1.25, 0), Vector3(-half, 0, 0), Vector3(half, 0, 0))
-	pivot.add_child(kit.build("Cloth"))
-	add_child(pivot)
-	_sway.append(pivot)
+	kit.max_edge = 0.3
+	var front := PackedVector2Array([Vector2(0, 1), Vector2(1, 1), Vector2(1, 0), Vector2(0, 0)])
+	var back := PackedVector2Array([Vector2(1, 1), Vector2(0, 1), Vector2(0, 0), Vector2(1, 0)])
+	kit.quad("banner_red", Vector3(-half, -BANNER_DROP, 0), Vector3(half, -BANNER_DROP, 0), Vector3(half, 0, 0), Vector3(-half, 0, 0), front)
+	kit.quad("banner_red", Vector3(half, -BANNER_DROP, 0), Vector3(-half, -BANNER_DROP, 0), Vector3(-half, 0, 0), Vector3(half, 0, 0), back)
+	var mi := MeshInstance3D.new()
+	mi.name = "Cloth"
+	mi.mesh = kit.commit()
+	mi.position = Vector3(mid.x, mid.y + COL_H - 0.15, mid.z + BANNER_OUT)
+	# the hem blows out by up to swell + ripple: let it, without culling it away
+	mi.extra_cull_margin = 0.5
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	# the pole it is tied to, from shaft to shaft (a column is 0.3 m of stone)
+	var pole := MeshKit.new()
+	var reach := a.distance_to(b) / 2.0 - 0.28
+	pole.box("wood", Vector3(0, 0.025, 0), Vector3(reach * 2.0, 0.05, 0.05), [])
+	var pm := MeshInstance3D.new()
+	pm.name = "Pole"
+	pm.mesh = pole.commit()
+	mi.add_child(pm)
+	return mi
+
+
+## The hem's offset out of the cloth's plane (metres, along its local z) at a
+## point (uv) and time; the psx_banner shader computes the same.
+static func banner_offset(uv: Vector2, t: float, swell := 0.32, ripple := 0.04, speed := 1.3) -> float:
+	var hang := pow(clampf(uv.y, 0.0, 1.0), 1.3)
+	var gust := 0.6 + 0.4 * sin(t * speed + uv.x * 2.5)
+	return hang * (swell * gust + ripple * sin(uv.x * 8.0 + t * speed * 2.1))
 
 
 ## A pot of something hot by the stall, with steam coming off it.
