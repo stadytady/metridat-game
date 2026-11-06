@@ -425,7 +425,12 @@ func _wall_props(kit: MeshKit, houses: Array) -> void:
 						10, Vector3.ZERO, 1.0, true)
 				kit.box("wood", Vector3(0.28, 0.2, 0), Vector3(0.26, 0.04, 0.04), [])
 			_:
-				Arch.bench(kit, xf, 1.2)
+				# a bench, built without a collider like the rest of the goods: the
+				# streets of the backdrop are walked by the scripted route, and a
+				# bench with a body in it stopped the bot dead on its way to the beach
+				kit.box("limestone", Vector3(0, 0.42, 0), Vector3(1.2, 0.14, 0.5), ["bottom"])
+				for sx: float in [1.0, -1.0]:
+					kit.box("limestone", Vector3(sx * 0.3, 0.18, 0), Vector3(0.3, 0.36, 0.42), ["bottom"])
 	kit.xform = Transform3D.IDENTITY
 
 
