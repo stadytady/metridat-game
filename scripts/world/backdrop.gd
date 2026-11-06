@@ -291,6 +291,40 @@ static func wall_props(houses: Array) -> Array:
 	return out
 
 
+## People going about their business on the terrace streets: each walks a length
+## of one street and comes back, so somebody crosses a back lane now and then and
+## the eye catches movement away from the main street. The routes are cut out of
+## the streets' own polylines, so a walker follows the contour and never takes a
+## shortcut through a house. [{"points": Array[Vector3], "key": String}]
+static func walker_routes() -> Array:
+	var out := []
+	var runs := streets()
+	if runs.size() < TERRACES_X.size():
+		return out
+	# four streets, each over a different stretch of its run: two terraces in
+	# the middle of the slope, one near the top, one on the flat ground east
+	var picks := [0, 2, 4, 6]
+	for k in picks.size():
+		if picks[k] >= runs.size():
+			continue
+		var run: PackedVector2Array = runs[picks[k]]
+		if run.size() < 30:
+			continue
+		var start := 6 + k * 5
+		var stop := mini(run.size() - 8, start + 10)
+		if stop - start < 6:
+			continue
+		var there: Array[Vector3] = []
+		for i in range(start, stop):
+			var p := run[i]
+			there.append(Vector3(p.x, Topo.surface(p.x, p.y), p.y))
+		var points: Array[Vector3] = there.duplicate()
+		for i in range(stop - 2, start - 1, -1):
+			points.append(there[i - start])
+		out.append({"points": points, "key": "walker%d" % k})
+	return out
+
+
 func _ready() -> void:
 	_atm = get_parent().get_node_or_null("Atmosphere")
 	var kit := MeshKit.new()
@@ -311,8 +345,45 @@ func _ready() -> void:
 	_terraces(houses)
 	_hearths(houses)
 	_voices(houses)
+	_walkers()
 	if _cottage_lamp != null:
 		_cottage_lamp.set_lit(false)
+
+
+## The people on the terrace streets: they walk their stretch and come back, on
+## the ground's own height, so a stepped lane does not leave them wading. No
+## collider and no lines - they are weather, not furniture, and the scripted
+## route never meets them.
+func _walkers() -> void:
+	for i in walker_routes().size():
+		var route: Dictionary = walker_routes()[i]
+		var points: Array[Vector3] = route.points
+		if points.size() < 4:
+			continue
+		var n: Npc = Npc.new()
+		n.name = "Walker%d" % i
+		n.npc_id = String(route.key)
+		n.talkable = false
+		n.stops_for_player = false
+		n.solid = false
+		n.follow_ground = true
+		n.figure_scale = 0.94 + 0.04 * float(i % 3)
+		n.patrol_speed = 0.42 + 0.05 * float(i % 4)
+		n.patrol_pause = 0.0
+		n.position = points[0]
+		var offsets := PackedVector3Array()
+		for p: Vector3 in points:
+			offsets.append(p - points[0])
+		n.patrol = offsets
+		# a walker walks: no pause at every sample point, only at the two ends,
+		# and a plain stand there instead of the actor's declamation
+		n.patrol_poses = PackedStringArray(["stand"])
+		var pauses := PackedFloat32Array()
+		pauses.resize(offsets.size())
+		pauses[0] = 1.4
+		pauses[offsets.size() - 1] = 1.4
+		n.patrol_pauses = pauses
+		add_child(n)
 
 
 ## What goes on behind the walls: a hammer, a loom, a baby, a dog, a woman
