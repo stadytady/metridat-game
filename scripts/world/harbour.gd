@@ -17,6 +17,8 @@ const DECK_Y := 0.9
 ## The model's keel, from its mesh bounds: the test keeps it under the sea.
 const HULL_BOTTOM := -0.67
 const LANTERN_FROM := 0.8
+## Where the anchor stock lies (a find): on the planks by the pier's north edge.
+const ANCHOR_FIND := Vector2(76.0, -6.95)
 
 var _ship: Node3D
 var _gangway_node: Node3D
@@ -51,6 +53,8 @@ func _ready() -> void:
 	_gangway()
 	_crew()
 	_end_lantern()
+	# the lead stock of an anchor on the planks by the north edge, clear of the way along
+	spawn_inspectable("anchor_stock", Vector3(ANCHOR_FIND.x, Topo.PIER_H, ANCHOR_FIND.y), 0.0)
 
 
 

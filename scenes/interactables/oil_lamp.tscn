@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/interaction/inspectable.gd" id="1_insp"]
+[ext_resource type="Resource" path="res://data/discoveries/oil_lamp.tres" id="2_disc"]
+
+[node name="OilLamp" type="StaticBody3D"]
+script = ExtResource("1_insp")
+discovery = ExtResource("2_disc")
+box_size = Vector3(0.26, 0.08, 0.2)
+marker_height = 0.4

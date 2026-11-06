@@ -98,3 +98,13 @@ func test_the_legend_fits_the_voyage() -> void:
 			check(tr(l[0]) != l[0], "%s has no %s text" % [l[0], lang])
 	TranslationServer.set_locale("en")
 	check(Prologue.legend_at(Prologue.VOYAGE + 1.0).is_empty(), "the legend outlives the voyage")
+
+
+## The anchor stock (a find) lies on the pier's planks, by the north edge,
+## out of the way along the pier to the skipper.
+func test_the_anchor_stock_lies_on_the_planks() -> void:
+	var a: Vector2 = load("res://scripts/world/harbour.gd").ANCHOR_FIND
+	for dx: float in [-0.55, 0.55]:
+		check(Topo.on_pier(a.x + dx, a.y, 0.0), "the stock hangs off the pier at x %.2f" % (a.x + dx))
+	check(a.y < Topo.PIER_Z - 0.6, "the stock lies in the middle of the way at z %.2f" % a.y)
+	check(a.x < Topo.pier_x1() - 9.0, "the stock lies among the crew by the gangway")

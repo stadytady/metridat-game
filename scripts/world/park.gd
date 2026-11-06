@@ -56,6 +56,8 @@ const BENCHES := [
 	[-81.6, 16.8],
 	[-85.0, 28.0],
 ]
+## Where the marble head lies (a find): beside the north gate walk, east of it.
+const HEAD_FIND := Vector2(-84.3, 11.2)
 ## Cypresses: [x, |z|]. Two pairs flank the walk down from the terrace gate and
 ## two stand behind the goddess: the dark verticals over the round olives.
 const CYPRESSES := [
@@ -185,6 +187,8 @@ func _ready() -> void:
 	_benches(kit)
 	_grove(kit)
 	add_child(kit.build("Park"))
+	# the marble head on its straw by the north gate walk, looking at the walk
+	spawn_inspectable("goddess_head", Vector3(HEAD_FIND.x, Topo.terrain(HEAD_FIND.x, HEAD_FIND.y), HEAD_FIND.y), -90.0)
 
 
 func _grove(kit: MeshKit) -> void:

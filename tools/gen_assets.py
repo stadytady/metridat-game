@@ -644,6 +644,8 @@ MATERIALS = {
     "trough_water": ("psx_lit", "white", "#3d5f70", (1.0, 1.0)),
     # The red cloth hung between two columns of the stoa: tied at the top, the hem free.
     "banner_red": ("psx_banner", "white", "#a8412f", (1.0, 1.0)),
+    # Grey lead, for anchor stocks and the like.
+    "lead": ("psx_lit", "white", "#6e7276", (1.0, 1.0)),
     "belt": ("psx_lit", "white", "#3a2618", (1.0, 1.0)),
     "face_bare": ("psx_lit", "face_bare", "#ffffff", (1.0, 1.0)),
     "face_short": ("psx_lit", "face_short", "#ffffff", (1.0, 1.0)),
