@@ -149,3 +149,23 @@ func test_the_face_is_painted_on_the_front() -> void:
 		for name: String in Figure.RIG:
 			check((joints[name] as Node3D).get_child_count() > 0, "%s has no mesh" % name)
 		root.free()
+
+
+## Every woman in the city wears her chiton to the ground and her head covered
+## or her hair long, from her look alone: no box skirts stuck on the hips.
+func test_women_are_dressed_by_their_look() -> void:
+	for key: String in Figure.LOOKS:
+		var l: Dictionary = Figure.LOOKS[key]
+		if not l.get("woman", false):
+			continue
+		check(l.get("skirt", "long") == "long", "%s goes without a long chiton" % key)
+		var root := Node3D.new()
+		var joints := Figure.build(root, "chiton", l)
+		var hips: Node3D = joints["pelvis"]
+		check(hips.find_children("*", "MeshInstance3D", false, false).size() == 1, "%s has pieces stuck on the hips" % key)
+		# the chiton reaches down past the knees, towards the feet
+		var lowest := INF
+		for mi: MeshInstance3D in hips.find_children("*", "MeshInstance3D", false, false):
+			lowest = minf(lowest, mi.mesh.get_aabb().position.y)
+		check(lowest < -0.8, "%s's chiton stops at %.2f m below the hips" % [key, lowest])
+		root.free()
