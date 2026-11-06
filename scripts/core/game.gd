@@ -36,6 +36,9 @@ signal quest_changed(id: String, state: int)
 var dreaming := false
 ## The arrival at the pier the evening before, until the morning on the hill.
 var prologue := false
+## The prologue's own hour: dusk on the pier, then the night aboard and the
+## dawn before the hill (Prologue.morning sets it, behind a fade).
+var prologue_hour := DayCycle.PROLOGUE
 signal prologue_changed(on: bool)
 signal dream_requested
 signal dream_changed(on: bool)
@@ -93,7 +96,7 @@ func time_target() -> float:
 	if dreaming:
 		return DayCycle.DREAM
 	if prologue:
-		return DayCycle.PROLOGUE
+		return prologue_hour
 	return DayCycle.target_for(found_count(), total())
 
 

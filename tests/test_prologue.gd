@@ -129,3 +129,47 @@ func test_the_mooring_lines_hang_from_bollard_to_rail() -> void:
 		check(straight.y - mid.y > 0.3, "a line hangs like a stick: sag %.2f m" % (straight.y - mid.y))
 		for p: Vector3 in pts:
 			check(p.y > 0.8, "a line dips into the sea at %s" % p)
+
+
+func test_the_night_and_dawn_hours_come_from_the_game() -> void:
+	var was := Game.prologue
+	Game.prologue = true
+	for h: float in [Prologue.NIGHT_HOUR, Prologue.DAWN_HOUR]:
+		Game.prologue_hour = h
+		check(is_equal_approx(Game.time_target(), h), "the prologue's hour %.2f is not the game's" % h)
+	Game.prologue_hour = DayCycle.PROLOGUE
+	Game.prologue = was
+	check(Prologue.NIGHT_HOUR >= DayCycle.LAMPS_ON, "the night aboard is before the lamps are lit")
+
+
+## Whatever is asked, Damon ends on where to sleep and where to go in the morning.
+func test_damon_always_says_where_to_sleep() -> void:
+	var text := FileAccess.get_file_as_string("res://data/dialogues/prologue.dialogue")
+	check(text.contains("\nDamon: LOC_PRO_END\n=> END"), "the farewell is not the last line of every branch")
+	for lang in ["en", "ru"]:
+		TranslationServer.set_locale(lang)
+		var end := tr("LOC_PRO_END")
+		check(end.to_lower().contains("корм" if lang == "ru" else "stern"), "the farewell does not say where to sleep (%s)" % lang)
+		check(end.to_lower().contains("холм" if lang == "ru" else "hill"), "the farewell does not send them up the hill (%s)" % lang)
+	TranslationServer.set_locale("en")
+
+
+## The climb: from the Swallow's stern to the player's eyes on the hill, over
+## the ground the whole way and at a pace a camera can take.
+func test_the_climb_goes_from_the_stern_to_the_hill_over_the_ground() -> void:
+	var stern: Vector3 = load("res://scripts/world/harbour.gd").ship_pos() + Prologue.STERN_EYE
+	var eye := Topo.spawn_point() + Vector3(0, 1.6, 0)
+	var pts := Prologue.ascent_points(stern, eye)
+	check(Prologue.ascent_at(pts, 0.0).distance_to(stern) < 0.01, "the climb does not start on the stern")
+	check(Prologue.ascent_at(pts, 1.0).distance_to(eye) < 0.01, "the climb does not end in the player's eyes")
+	var low := INF
+	var at := Vector3.ZERO
+	for i in range(1, 400):
+		var p := Prologue.ascent_at(pts, i / 400.0)
+		var over := p.y - maxf(Topo.surface(p.x, p.z), 0.0)
+		if over < low:
+			low = over
+			at = p
+	check(low > 1.4, "the camera dips to %.2f m over the ground at %s" % [low, at])
+	var speed := Prologue.ascent_length(pts) / Prologue.ASCENT
+	check(speed > 5.0 and speed < 25.0, "the climb runs at %.1f m/s" % speed)
