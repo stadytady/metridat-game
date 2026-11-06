@@ -316,10 +316,4 @@ func _baker(y: float) -> void:
 					l.visible = false
 			_stack[_stacked].visible = true
 			_stacked += 1)
-	# hair and kerchief: Figure.LOOKS["baker"]; the skirt is hers, over kneeling legs
-	var pelvis: Node3D = b.joints["pelvis"]
-	var sk := MeshKit.new()
-	sk.box("chiton_dark", Vector3(0, -0.22, 0.05), Vector3(0.42, 0.42, 0.5), [])  # skirt over the kneeling legs
-	var sm := MeshInstance3D.new()
-	sm.mesh = sk.commit()
-	pelvis.add_child(sm)
+	# kerchief, hair and the long chiton to the ground: Figure.LOOKS["baker"]

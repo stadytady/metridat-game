@@ -7,7 +7,8 @@ extends "res://tests/test_case.gd"
 func test_the_spinner_is_a_woman() -> void:
 	var l := Figure.look_for("cottage_woman")
 	check(Figure.face_of(l) == "face_woman", "the cottage woman has a man's face")
-	check(l.get("kerchief", "").is_empty(), "two kerchiefs: dress_woman() already gives her one")
+	check(not l.get("kerchief", "").is_empty(), "she goes bareheaded: the look gives her no kerchief")
+	check(l.get("skirt", "") == "long", "her chiton does not reach the ground")
 
 
 func test_the_thread_stays_within_its_lengths() -> void:
@@ -32,7 +33,6 @@ func test_it_hangs_in_front_of_her_and_above_the_floor() -> void:
 	var root := Node3D.new()
 	Engine.get_main_loop().root.add_child(root)
 	var joints := Figure.build(root, "chiton_dark", Figure.look_for("cottage_woman"))
-	Figure.dress_woman(joints)
 	Spindle.hold_distaff(joints)
 	var hand := Spindle.right_hand(joints)
 	var t := 0.0

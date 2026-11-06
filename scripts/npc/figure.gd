@@ -103,10 +103,9 @@ const LOOKS := {
 	"carrier": {"beard": 1, "hair": 1},
 	"splicer": {"beard": 0, "hair": 1},
 	"actor": {"beard": 0, "hair": 1, "cloth": "chiton_red"},
-	"baker": {"woman": true, "kerchief": "cloth", "skirt": "none"},
+	"baker": {"woman": true, "kerchief": "cloth", "skirt": "long", "cloth": "chiton_dark"},
 	"water_carrier": {"woman": true, "kerchief": "chiton_dark", "skirt": "long", "cloth": "chiton_blue"},
-	# dress_woman() gives her the kerchief and the skirt: the look only makes her a woman
-	"cottage_woman": {"woman": true, "skirt": "none", "cloth": "chiton_dark"},
+	"cottage_woman": {"woman": true, "kerchief": "chiton_dark", "skirt": "long", "cloth": "chiton_red"},
 }
 const DYES := ["chiton", "chiton_red", "chiton_blue", "chiton_ochre"]
 const FACES := ["face_bare", "face_short", "face_beard", "face_woman"]
@@ -196,12 +195,19 @@ static func _segment(kit: MeshKit, name: String, cloth: String, look: Dictionary
 
 static func _hair(kit: MeshKit, look: Dictionary) -> void:
 	if look.get("woman", false):
-		kit.box("hair", Vector3(0, 0.25, 0.02), Vector3(0.21, 0.07, 0.23), [])
-		kit.box("hair", Vector3(0, 0.02, 0.12), Vector3(0.18, 0.3, 0.06), [])  # down the back
 		var kerchief: String = look.get("kerchief", "")
-		if not kerchief.is_empty():
-			kit.box(kerchief, Vector3(0, 0.26, 0.02), Vector3(0.23, 0.06, 0.25), [])
-			kit.box(kerchief, Vector3(0, 0.18, 0.11), Vector3(0.23, 0.14, 0.05), [])
+		if kerchief.is_empty():
+			# hair parted over the crown and falling down the back to the shoulders
+			kit.box("hair", Vector3(0, 0.25, 0.015), Vector3(0.205, 0.06, 0.225), [])
+			kit.box("hair", Vector3(0, 0.08, 0.112), Vector3(0.19, 0.3, 0.05), [])
+			return
+		# A kerchief tied close over the head, as on the vases: a cap just over the
+		# skull from the hairline back, a fold hanging over the nape, and the hair
+		# showing below it. Kept to the head's own width, so it reads as cloth on
+		# a head and not as a box sat on top of one.
+		kit.box(kerchief, Vector3(0, 0.235, 0.012), Vector3(0.2, 0.075, 0.22), [])
+		kit.box(kerchief, Vector3(0, 0.16, 0.108), Vector3(0.198, 0.13, 0.04), [])
+		kit.box("hair", Vector3(0, 0.03, 0.11), Vector3(0.15, 0.13, 0.045), [])
 		return
 	match int(look.get("hair", 0)):
 		1:  # curly: fuller on top and over the ears
@@ -263,22 +269,6 @@ static func _attach(joint: Node3D, kit: MeshKit) -> void:
 	mi.mesh = kit.commit()
 	joint.add_child(mi)
 
-
-## A woman's figure: hair down the back under a kerchief, and a long chiton over
-## the legs. The same recipe as Myrto at her oven, kept here so any NPC can wear it.
-static func dress_woman(joints: Dictionary) -> void:
-	var head: Node3D = joints.get("head")
-	if head != null:
-		var hk := MeshKit.new()
-		hk.box("hair", Vector3(0, 0.02, 0.12), Vector3(0.18, 0.3, 0.06), [])  # down the back
-		hk.box("cloth", Vector3(0, 0.25, 0.02), Vector3(0.23, 0.06, 0.25), [])  # kerchief
-		hk.box("cloth", Vector3(0, 0.17, 0.11), Vector3(0.23, 0.14, 0.05), [])
-		_attach(head, hk)
-	var pelvis: Node3D = joints.get("pelvis")
-	if pelvis != null:
-		var sk := MeshKit.new()
-		sk.box("chiton_dark", Vector3(0, -0.22, 0.05), Vector3(0.42, 0.42, 0.5), [])  # skirt
-		_attach(pelvis, sk)
 
 static func apply_pose(joints: Dictionary, pose: String, extra: Dictionary = {}) -> void:
 	var p: Dictionary = POSES.get(pose, {})
