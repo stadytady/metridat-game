@@ -14,6 +14,11 @@ const WELL_X := 5.0
 const WELL_SIDE := -1.0
 const WELL_OFF := 1.1
 
+## Two children playing knucklebones, in the open paving between the stoa and the
+## statue base: clear of the route the walkthrough walks and of the folk crossing
+## the square, and in sight of anyone coming onto it from the street.
+const KNUCKLEBONES := Vector3(26.0, Topo.AGORA_H, -0.8)
+
 ## A yard on the other side of the same lane: a fence, hay, a water trough,
 ## grass, and a mule that walks it.
 const YARD_X := 5.6
@@ -126,6 +131,7 @@ func _ready() -> void:
 	dog.rotation.y = deg_to_rad(-100.0)  # along the stoa's end wall, head towards the square
 	add_child(dog)
 	_folk()
+	_knucklebones()
 
 
 ## People crossing the square on their own business: a porter with a jar, a woman
@@ -154,6 +160,15 @@ func _folk() -> void:
 		n.position = Vector3(f[0].x, Topo.AGORA_H, f[0].z)
 		add_child(n)
 		n.collision_layer = 0
+
+
+## Two children throwing astragals on the square. They own their bones and their
+## clock; three steps up from the paving so a bone never sinks into it.
+func _knucklebones() -> void:
+	var game := Knucklebones.new()
+	game.name = "Knucklebones"
+	game.position = KNUCKLEBONES + Vector3(0, 0.01, 0)
+	add_child(game)
 
 
 ## A broken pot: a scatter of curved red sherds, one with a black-glazed face.

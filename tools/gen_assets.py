@@ -622,6 +622,9 @@ MATERIALS = {
     # so the patina reads as mottling and not as teal blotches a hand wide.
     "bronze_old": ("psx_lit", "bronze", "#6f6a52", (0.45, 0.45)),
     "gold": ("psx_lit", "coin", "#ffffff", (1.0, 1.0)),
+    # Knucklebones: flat ivory, no texture, so a bone the size of a thumb reads
+    # as bone and not as a chip of the paving it lies on.
+    "bone": ("psx_lit", "white", "#d5c9a8", (1.0, 1.0)),
     "cloth": ("psx_lit", "cloth", "#ffffff", (0.5, 0.5)),
     "sail": ("psx_sail", "cloth", "#c8b8a0", (0.3, 0.3)),
     "hull": ("psx_lit", "wood", "#6a5a4a", (0.4, 0.4)),

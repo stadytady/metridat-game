@@ -3,3 +3,7 @@ build/
 *.tmp
 __pycache__/
 dist/
+# godot-bridge (DSH) drops its in-game interaction server here when it launches
+# the project; it is a local tool, never part of the game or its builds.
+autoload/mcp_interaction_server.gd
+autoload/mcp_interaction_server.gd.uid
