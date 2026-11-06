@@ -10,6 +10,15 @@ const BOAT := Vector2(69.6, 16.4)
 const RACK := [Vector2(63.6, 11.0), Vector2(66.6, 11.0)]
 const FIRE := Vector2(64.4, 17.0)
 const SINKERS := Vector2(65.7, 13.6)
+## Cormorants on the beach some fifty metres south of the Swallow, above the
+## surf: a patch of sand they walk, and two rocks they dry their wings on.
+const CORMORANT_SAND := Vector2(65.0, 40.2)
+const CORMORANT_SAND_R := 2.2
+const CORMORANT_ROCKS := [Vector3(66.9, 0.0, 38.9), Vector3(67.4, 0.0, 41.6)]
+const CORMORANTS_ON_SAND := 3
+## The beach's own boulders keep this far off the colony (built into a scratch
+## kit, as on the camp, so the rng and every other rock stay where they were).
+const CORMORANT_CLEAR := 6.0
 
 
 static func ground(p: Vector2) -> float:
@@ -29,7 +38,9 @@ func _ready() -> void:
 	_seat_and_nets(kit, rng)
 	_baskets(kit, rng)
 	_fire_ring(kit, rng)
+	_cormorant_rocks(kit, rng)
 	add_child(kit.build("Camp", &"dirt"))
+	_cormorants()
 	_boat()
 	_fire()
 	_fisherman()
@@ -155,3 +166,32 @@ func _fisherman() -> void:
 	f.position = Vector3(SEAT.x, ground(SEAT), SEAT.y)
 	f.rotation.y = deg_to_rad(90.0)  # faces west, up the beach towards the city
 	add_child(f)
+
+
+## The rocks the cormorants stand on: their tops, on the beach's own height.
+static func cormorant_rock_tops() -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	for r: Vector3 in CORMORANT_ROCKS:
+		out.append(Vector3(r.x, Topo.terrain(r.x, r.z) + 0.42, r.z))
+	return out
+
+
+func _cormorant_rocks(kit: MeshKit, rng: RandomNumberGenerator) -> void:
+	for top: Vector3 in cormorant_rock_tops():
+		kit.blob("rock", top - Vector3(0, 0.3, 0), Vector3(0.8, 0.34, 0.65), 0.15, rng)
+
+
+func _cormorants() -> void:
+	var tops := cormorant_rock_tops()
+	for i in tops.size():
+		var b := Cormorant.new()
+		b.name = "CormorantRock%d" % i
+		b.home = tops[i]
+		b.on_rock = true
+		add_child(b)
+	for i in CORMORANTS_ON_SAND:
+		var b := Cormorant.new()
+		b.name = "CormorantSand%d" % i
+		b.home = Vector3(CORMORANT_SAND.x, Topo.terrain(CORMORANT_SAND.x, CORMORANT_SAND.y), CORMORANT_SAND.y)
+		b.radius = CORMORANT_SAND_R
+		add_child(b)
