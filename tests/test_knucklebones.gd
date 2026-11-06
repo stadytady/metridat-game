@@ -6,6 +6,7 @@ extends "res://tests/test_case.gd"
 
 const KB := preload("res://scripts/npc/knucklebones.gd")
 const LIFE := preload("res://scripts/world/life.gd")
+const HOUSE := preload("res://scripts/world/house.gd")
 ## The agora's own furniture, as agora.gd places it: the statue base, the stall
 ## and the bench by the east parapet. The children must not sit in any of them.
 const FURNITURE := [Vector3(1.0, 0, 0.5), Vector3(-2.0, 0, 6.5), Vector3(6.0, 0, -2.0)]
@@ -116,3 +117,97 @@ func test_the_spot_is_on_the_square() -> void:
 	for at: Vector3 in FURNITURE:
 		var d := Vector2(p.x - (c.x + at.x), p.z - (c.y + at.z)).length()
 		check(d > 1.6, "the children sit %.2f m from the agora's furniture at %s" % [d, at])
+
+
+## A stand-in for the world's Atmosphere: only the hour is read.
+func _world(hour: float) -> Node3D:
+	var gs := GDScript.new()
+	gs.source_code = "extends Node\nvar t := 0.0\n"
+	gs.reload()
+	var atm := Node.new()
+	atm.set_script(gs)
+	atm.name = "Atmosphere"
+	atm.t = hour
+	var w := Node3D.new()
+	w.add_child(atm)
+	Engine.get_main_loop().root.add_child(w)
+	return w
+
+
+func test_home_at_dusk() -> void:
+	check(not KB.at_home(DayCycle.LAMPS_ON - 0.01), "home before the lamps are lit")
+	check(KB.at_home(DayCycle.LAMPS_ON), "still out when the lamps are lit")
+	check(KB.at_home(DayCycle.DREAM), "out on the square during the dream")
+
+
+func test_the_way_home_is_flat_and_through_doors() -> void:
+	var walls: Array = HOUSE.walls()
+	for i in 2:
+		var r := KB.home_route(i)
+		var start: Vector3 = LIFE.KNUCKLEBONES + KB.seat_spots()[i]
+		var pts: Array[Vector2] = [Vector2(start.x, start.z)]
+		pts.append_array(r)
+		for k in pts.size() - 1:
+			for s in 21:
+				var p := pts[k].lerp(pts[k + 1], s / 20.0)
+				var h := Topo.surface(p.x, p.y)
+				check(absf(h - Topo.HOUSE_H) < 0.05, "child %d walks at %.2f, not on the flat, at %s" % [i, h, p])
+				for w: Array in walls:
+					var c: Vector3 = w[0]
+					var size: Vector3 = w[1]
+					var inside := absf(p.x - c.x) < size.x / 2.0 + 0.12 and absf(p.y - c.z) < size.z / 2.0 + 0.12
+					check(not inside, "child %d walks through a wall at %s" % [i, p])
+
+
+func test_they_sit_by_the_hearth_clear_of_the_room() -> void:
+	var b: Rect2 = HOUSE.bounds()
+	var stool := HOUSE.LAMP_STOOL
+	for i in 2:
+		var s: Vector2 = KB.HOME_SEATS[i]
+		check(s.x > b.position.x + HOUSE.WALL_T + 1.2 and s.x < HOUSE.DIVIDE_X - 0.4, "seat %d off the living room in x: %s" % [i, s])
+		check(s.y > HOUSE.RANGE_Z + 0.4 and s.y < b.end.y - HOUSE.WALL_T - 0.3, "seat %d off the living room in z: %s" % [i, s])
+		var d := s.distance_to(HOUSE.HEARTH)
+		check(d > 0.75 and d < 1.6, "seat %d is %.2f m from the hearth" % [i, d])
+		check(s.distance_to(stool) > 1.0, "seat %d crowds the lamp on the stool" % i)
+		# facing the fire: the yaw points from the seat to the hearth
+		var yaw := deg_to_rad(KB.seat_yaw(i))
+		var look := Vector2(-sin(yaw), -cos(yaw))
+		check(look.dot((HOUSE.HEARTH - s).normalized()) > 0.99, "seat %d does not face the fire" % i)
+	check(KB.HOME_SEATS[0].distance_to(KB.HOME_SEATS[1]) > 0.8, "the two sit on one another")
+
+
+func test_they_go_home_at_dusk_and_come_back_by_day() -> void:
+	var w := _world(0.2)
+	var kb: Knucklebones = KB.new()
+	w.add_child(kb)
+	kb._process(0.1)
+	check(kb.walkers().is_empty(), "walking home in the afternoon")
+	w.get_node("Atmosphere").t = DayCycle.LAMPS_ON + 0.01
+	kb._process(0.1)
+	check(kb.walkers().size() == 2, "%d children go home at dusk" % kb.walkers().size())
+	for c in kb.children():
+		check(not c.visible, "a child is still playing on the square after dusk")
+	for n in kb.walkers():
+		check(not n.patrol.is_empty(), "seen at dusk, a child is put home instead of walking")
+		check(n.collision_layer == 0, "a child walking home blocks the footpath")
+	w.get_node("Atmosphere").t = 0.1
+	kb._process(0.1)
+	check(kb.walkers().is_empty(), "still at home in the morning")
+	for c in kb.children():
+		check(c.visible, "no child back on the square in the morning")
+	w.free()
+
+
+func test_already_home_if_the_square_is_built_after_dusk() -> void:
+	var w := _world(1.0)
+	var kb: Knucklebones = KB.new()
+	w.add_child(kb)
+	kb._process(0.1)
+	check(kb.walkers().size() == 2, "nobody at home at night")
+	for i in kb.walkers().size():
+		var n: Npc = kb.walkers()[i]
+		check(n.patrol.is_empty(), "child %d walks home in the middle of the night" % i)
+		var at := Vector2(n.global_position.x, n.global_position.z)
+		check(at.distance_to(KB.HOME_SEATS[i]) < 0.01, "child %d is not at its seat: %s" % [i, at])
+		check(n.pose == "sit", "child %d is not sitting at home" % i)
+	w.free()

@@ -84,7 +84,8 @@ func _process(delta: float) -> void:
 		return
 	# Automation (screenshots, trailer) jumps straight to its hour.
 	# Automation and the dream (entered and left behind a fade) jump straight there.
-	var snap := Game.time_override >= 0.0 or Game.dreaming or t > 1.0
+	# the prologue cuts between its hours behind a fade: they jump, never glide
+	var snap := Game.time_override >= 0.0 or Game.dreaming or Game.prologue or t > 1.0
 	t = target if snap else move_toward(t, target, delta / TRANSITION)
 	apply(t)
 

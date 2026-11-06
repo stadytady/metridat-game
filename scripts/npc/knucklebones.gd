@@ -11,6 +11,14 @@ extends Node3D
 ## so the children alternate without a state machine, and each bone knows from
 ## the clock alone whether it is in a hand, in the air, or lying on the stones.
 ## Everything steps on 1/15 s, the clock the rest of the city moves on.
+##
+## When the town's lamps come on (DayCycle.LAMPS_ON) the game is over: the two
+## get up, walk home down the footpath to Myrto's house and sit by the hearth
+## in the living room. Seen to happen, they walk; if the hour is already past
+## dusk when the square is built (the prologue, the dream, a debug hour) they
+## are simply there. Back under the threshold, they are playing again.
+
+const HOUSE := preload("res://scripts/world/house.gd")
 
 const CHILD_SCALE := 0.62
 ## How far each child sits from the middle, along the local x.
@@ -47,6 +55,41 @@ var _from: Array[Vector3] = []
 ## The throw whose landing spots the bones are flying to / lying on now.
 var _landing_of := -99
 var _t := 0.0
+var _atm: Node
+## True once the hour has been seen under dusk: only then do they walk home.
+var _played := false
+var _shells: Array[StaticBody3D] = []
+## The two of them going home, or sitting there; empty while they play.
+var _walkers: Array[Npc] = []
+
+## Home: from the square out through the parapet gap, down the footpath and in
+## at the living room's door (House), world x/z on the flat at AGORA_H. Each
+## child takes the same way, the second a little to the side of the first.
+const HOME_ROUTE := [Vector2(30.0, 3.0), Vector2(26.0, 9.6), Vector2(26.0, 17.4), Vector2(22.9, 20.7), Vector2(22.9, 23.0)]
+const ROUTE_SIDE := Vector2(0.4, 0.0)
+## Where they sit, either side of the hearth, clear of the couch, the stool
+## with the lamp on it and the way the player comes in to look at that lamp.
+const HOME_SEATS := [Vector2(22.95, 25.75), Vector2(24.05, 25.05)]
+
+
+## Whether, at this hour, the children are at home rather than on the square.
+static func at_home(t: float) -> bool:
+	return t >= DayCycle.LAMPS_ON
+
+
+## The way home for child i, ending at its seat, world x/z.
+static func home_route(i: int) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	for p: Vector2 in HOME_ROUTE:
+		out.append(p + ROUTE_SIDE * float(i))
+	out.append(HOME_SEATS[i])
+	return out
+
+
+## Facing the fire from a seat, as a yaw in degrees (Figure faces -Z).
+static func seat_yaw(i: int) -> float:
+	var d: Vector2 = HOUSE.HEARTH - HOME_SEATS[i]
+	return rad_to_deg(atan2(-d.x, -d.y))
 
 
 ## Where the two children sit, as local offsets from the middle.
@@ -113,9 +156,20 @@ func _child(i: int) -> void:
 	shell.position = seat_spots()[i]
 	shell.add_child(cs)
 	add_child(shell)
+	_shells.append(shell)
 
 
 func _process(delta: float) -> void:
+	if _atm == null:
+		_atm = _find_atmosphere()
+	var hour: float = _atm.t if _atm != null else 0.0
+	if at_home(hour):
+		if _walkers.is_empty():
+			_go_home(_played)
+		return
+	if not _walkers.is_empty():
+		_come_out()
+	_played = true
 	_t += delta
 	var t := floorf(_t * 15.0) / 15.0
 	var turn := floori(t / TURN)
@@ -223,6 +277,81 @@ static func _mix(a: Dictionary, b: Dictionary, u: float) -> Dictionary:
 		if v != Vector3.ZERO:
 			out[name] = v
 	return out
+
+
+func _find_atmosphere() -> Node:
+	var n := get_parent()
+	while n != null:
+		var a := n.get_node_or_null("Atmosphere")
+		if a != null:
+			return a
+		n = n.get_parent()
+	return null
+
+
+## The game is over: the players on the square are put away and two walkers
+## take their place, either at the start of the way home or already seated.
+func _go_home(walk: bool) -> void:
+	_show_game(false)
+	for i in 2:
+		var n: Npc = Npc.new()
+		n.name = "HomeChild%d" % i
+		n.talkable = false
+		n.solid = false  # the route back up the footpath is the bot's too
+		n.stops_for_player = false
+		n.figure_scale = CHILD_SCALE
+		n.body_mat = String(LOOKS[i]["cloth"])
+		n.look = LOOKS[i]
+		var route := home_route(i)
+		var seat: Vector2 = route[route.size() - 1]
+		var y := Topo.HOUSE_H
+		if walk:
+			var start := global_position + seat_spots()[i]
+			n.pose = "stand"
+			n.position = get_parent().to_local(Vector3(start.x, y, start.z))
+			var pts := PackedVector3Array()
+			var pauses := PackedFloat32Array()
+			var poses := PackedStringArray()
+			var faces := PackedFloat32Array()
+			for k in route.size():
+				pts.append(Vector3(route[k].x - start.x, 0, route[k].y - start.z))
+				var last := k == route.size() - 1
+				pauses.append(1.0e9 if last else 0.0)  # there for the night
+				poses.append("sit" if last else "walk")
+				faces.append(seat_yaw(i) if last else NAN)
+			n.patrol = pts
+			n.patrol_pauses = pauses
+			n.patrol_poses = poses
+			n.patrol_faces = faces
+			n.patrol_speed = 0.5
+		else:
+			n.pose = "sit"
+			n.position = get_parent().to_local(Vector3(seat.x, y, seat.y))
+			n.rotation.y = deg_to_rad(seat_yaw(i))
+		get_parent().add_child(n)
+		_walkers.append(n)
+
+
+## Morning again (or the hour turned back): the walkers go, the game comes out.
+func _come_out() -> void:
+	for n in _walkers:
+		n.queue_free()
+	_walkers.clear()
+	_show_game(true)
+
+
+func _show_game(on: bool) -> void:
+	for b in _bodies:
+		b.visible = on
+	for b in _bones:
+		b.visible = on
+	for s in _shells:
+		s.collision_layer = 3 if on else 0
+
+
+## The two going home or sitting there; empty while they play.
+func walkers() -> Array[Npc]:
+	return _walkers
 
 
 ## The two children, for tests and for anything that wants to look at them.
