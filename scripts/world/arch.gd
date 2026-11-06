@@ -41,10 +41,25 @@ static func house(kit: MeshKit, xf: Transform3D, w: float, d: float, h: float, o
 			kit.box("wood", Vector3(-w / 2.0 + 0.6 + bx * 1.2, h - 0.25, 0.12), Vector3(0.14, 0.14, 0.3), ["bottom"])
 	if opts.get("door", true):
 		var dx: float = opts.get("door_x", 0.0)
-		kit.quad("door", Vector3(dx - 0.5, 0, 0.03), Vector3(dx + 0.5, 0, 0.03), Vector3(dx + 0.5, 1.95, 0.03), Vector3(dx - 0.5, 1.95, 0.03),
-				PackedVector2Array([Vector2(0, 1), Vector2(1, 1), Vector2(1, 0), Vector2(0, 0)]))
+		if opts.get("ajar", false):
+			# an open door sells a street: the reveal, the dark of the room and
+			# a leaf standing in it, instead of a painted rectangle
+			_open_door(kit, dx, opts)
+		else:
+			kit.quad("door", Vector3(dx - 0.5, 0, 0.03), Vector3(dx + 0.5, 0, 0.03), Vector3(dx + 0.5, 1.95, 0.03), Vector3(dx - 0.5, 1.95, 0.03),
+					PackedVector2Array([Vector2(0, 1), Vector2(1, 1), Vector2(1, 0), Vector2(0, 0)]))
+			if opts.get("recess", false):
+				_door_jambs(kit, dx, 2.0)
 		kit.box("limestone", Vector3(dx, 2.05, 0.06), Vector3(1.4, 0.2, 0.14), ["bottom"])
 		kit.box("limestone", Vector3(dx, -0.06, 0.25), Vector3(1.3, 0.12, 0.5), ["bottom"])
+		# A house stands on the highest corner of its plot, so on a slope its door
+		# can hang a step or two over the street: stone steps take the drop, as
+		# they do in every hill town. Visual only - a step you can trip on the
+		# pavement is worse than one you walk through.
+		var steps: int = opts.get("steps", 0)
+		for k in steps:
+			kit.box("limestone", Vector3(dx, -0.12 - FLOOR_STEP * (k + 0.5), 0.5 + 0.32 * k),
+					Vector3(1.34, FLOOR_STEP, 0.34), ["bottom"])
 	var windows: int = opts.get("windows", 1)
 	# opts.glow: a separate kit for windows lit at night (some of them, chosen
 	# by the house's seed); its node is shown only after dusk
@@ -53,6 +68,8 @@ static func house(kit: MeshKit, xf: Transform3D, w: float, d: float, h: float, o
 		var wx := (-w / 2.0 + 1.0) + i * (w - 2.0) / maxf(1.0, windows - 1.0) if windows > 1 else w / 2.0 - 1.0
 		kit.quad("dark", Vector3(wx - 0.25, h - 1.1, 0.02), Vector3(wx + 0.25, h - 1.1, 0.02),
 				Vector3(wx + 0.25, h - 0.7, 0.02), Vector3(wx - 0.25, h - 0.7, 0.02))
+		if opts.get("frames", false):
+			_window_frame(kit, wx, h - 0.7, opts.get("seed", 0) + i)
 		if glow and window_lit(opts.get("seed", 0), i):
 			glow.xform = xf
 			glow.color = Color(1, 1, 1, lamp_phase(opts.get("seed", 0), i))
@@ -62,6 +79,49 @@ static func house(kit: MeshKit, xf: Transform3D, w: float, d: float, h: float, o
 			glow.xform = Transform3D.IDENTITY
 			glow.color = Color.WHITE
 	kit.xform = Transform3D.IDENTITY
+
+
+## A door that reads as a hole and not as a painted rectangle. The house behind
+## it is a solid box - cutting a real opening would cost the wall its own faces -
+## so the doorway is built on the street side of the plaster: a black panel
+## between two stone reveals, and the leaf hung on one jamb, standing open out
+## into the lane the way a Greek door did. What sells it is the shadow of the
+## reveal and the dark beside the leaf, which is all a PS1 doorway ever had.
+static func _open_door(kit: MeshKit, dx: float, opts: Dictionary) -> void:
+	var base := kit.xform
+	# the dark of the room, a hair proud of the plaster so it stays visible
+	kit.quad("void", Vector3(dx - 0.5, 0, 0.045), Vector3(dx + 0.5, 0, 0.045),
+			Vector3(dx + 0.5, 1.95, 0.045), Vector3(dx - 0.5, 1.95, 0.045))
+	_door_jambs(kit, dx, 1.95)
+	# the leaf, hinged at the left jamb and swung out into the street
+	kit.xform = base * Transform3D(Basis(Vector3.UP, deg_to_rad(-38.0)), Vector3(dx - 0.48, 0, 0.06))
+	kit.box("door", Vector3(0.47, 0.95, 0), Vector3(0.94, 1.9, 0.07), [])
+	kit.box("wood", Vector3(0.82, 1.0, 0.05), Vector3(0.06, 0.12, 0.04), [])  # the ring on its face
+	kit.xform = base
+
+
+## The two stone reveals either side of a doorway, proud of the plaster.
+static func _door_jambs(kit: MeshKit, dx: float, height: float) -> void:
+	for s: float in [-1.0, 1.0]:
+		kit.box("limestone", Vector3(dx + s * 0.57, height * 0.5, 0.01),
+				Vector3(0.15, height, 0.2), ["bottom"])
+
+
+## A window with a stone sill and its shutters: one folded back against the wall,
+## or both pulled to. Nothing moves - it is the shape that says the house has
+## people in it, and the sill is what stops the wall reading as a blanket.
+static func _window_frame(kit: MeshKit, wx: float, top: float, seed: int) -> void:
+	kit.box("limestone", Vector3(wx, top + 0.03, 0.06), Vector3(0.78, 0.1, 0.2), ["bottom"])
+	var shut := hash(seed * 17 + 5)
+	var both_closed := posmod(shut, 3) == 0
+	for s: float in [-1.0, 1.0]:
+		if both_closed or s < 0.0:
+			# hanging over the opening
+			kit.box("door", Vector3(wx + s * 0.19, top - 0.22, 0.045), Vector3(0.36, 0.42, 0.04), [])
+		else:
+			# folded back flat on the plaster beside it
+			kit.box("door", Vector3(wx + 0.44, top - 0.22, 0.035), Vector3(0.34, 0.42, 0.03), [])
+
 
 
 ## Whether a house's window shows a lamp at night: one in two, by its seed.

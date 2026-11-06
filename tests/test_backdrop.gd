@@ -68,3 +68,31 @@ func test_lamps_flicker_out_of_step() -> void:
 	for c: Color in mesh.surface_get_arrays(0)[Mesh.ARRAY_COLOR]:
 		phases[snappedf(c.a, 0.001)] = true
 	check(phases.size() >= 20, "lamps pulse in step: %d phases" % phases.size())
+
+
+## The things left by the walls: on the ground, against a house, and not in the
+## walkable middle of the lane (a lane is 1.8 m wide and the goods stand in 0.42).
+func test_wall_props_stand_on_the_ground_by_the_walls() -> void:
+	var houses: Array = B.plan()
+	var props: Array = B.wall_props(houses)
+	check(props.size() > 25, "only %d things left by the walls" % props.size())
+	for p: Dictionary in props:
+		var at: Vector3 = p.pos
+		check(absf(at.y - Topo.terrain(at.x, at.z)) < 0.01, "a %s floats at %s" % [p.kind, at])
+		check(not B.on_house(houses, at.x, at.z, 0.0), "a %s stands inside a house at %s" % [p.kind, at])
+		check(B._dist_to(B.streets(), Vector2(at.x, at.z)) > B.LANE_HALF - 0.35,
+				"a %s blocks the lane at %s" % [p.kind, at])
+
+
+## Herms at the crossings: always on the ground, never in either lane, never
+## inside a wall.
+func test_herms_stand_at_the_crossings() -> void:
+	var houses: Array = B.plan()
+	var herms: Array = B.crossing_herms(houses)
+	check(herms.size() >= 8, "only %d herms at the crossings" % herms.size())
+	for h: Dictionary in herms:
+		var at: Vector3 = h.pos
+		check(absf(at.y - Topo.terrain(at.x, at.z)) < 0.01, "a herm floats at %s" % at)
+		check(not B.on_house(houses, at.x, at.z, 0.3), "a herm stands in a wall at %s" % at)
+		check(B._dist_to(B.stairs(), Vector2(at.x, at.z)) > B.LANE_HALF + 0.3, "a herm blocks a stepped lane at %s" % at)
+		check(B._dist_to(B.streets(), Vector2(at.x, at.z)) > B.LANE_HALF + 0.2, "a herm blocks a street at %s" % at)
