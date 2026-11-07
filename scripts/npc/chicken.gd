@@ -19,6 +19,9 @@ var home := Vector3.ZERO
 var radius := 1.5
 var rooster := false
 var feathers := "hen"
+## Off a flat floor (a pen on a slope): stand on Topo.surface instead of the
+## home's height. Homes are given in world coordinates (Poultry sits at the origin).
+var follow_ground := false
 var state := State.IDLE
 ## How many times it has scattered: the walkthrough checks it.
 var fled := 0
@@ -38,6 +41,7 @@ func _ready() -> void:
 	_build()
 	scale = Vector3.ONE * (1.2 if rooster else 1.0)
 	position = home + Vector3(_rng.randf_range(-0.5, 0.5), 0, _rng.randf_range(-0.5, 0.5)) * radius
+	position.y = floor_y(position)
 	rotation.y = _rng.randf_range(0, TAU)
 	_t = _rng.randf() * 10.0
 	_timer = _rng.randf_range(0.5, 2.0)
@@ -179,6 +183,11 @@ func _start_peck() -> void:
 	_timer = _rng.randf_range(1.2, 3.5)
 
 
+## Where its feet are at p: the home's floor, or the ground itself.
+func floor_y(p: Vector3) -> float:
+	return Topo.surface(p.x, p.z) if follow_ground else home.y
+
+
 ## Steps towards _target, turning to face it; true on arrival.
 func _move(delta: float, speed: float) -> bool:
 	var d := Vector3(_target.x - position.x, 0, _target.z - position.z)
@@ -186,7 +195,7 @@ func _move(delta: float, speed: float) -> bool:
 		return true
 	rotation.y = lerp_angle(rotation.y, atan2(-d.x, -d.z), minf(1.0, delta * 12.0))
 	position += d.normalized() * minf(d.length(), speed * delta)
-	position.y = home.y
+	position.y = floor_y(position)
 	return false
 
 
