@@ -1,7 +1,7 @@
 class_name Knucklebones
 extends Node3D
 ## Two children playing knucklebones on the square: they sit facing each other
-## with five astragals between them, one gathers the bones, cups them in both
+## with four astragals between them, one gathers the bones, cups them in both
 ## hands and throws, and while the bones lie where they landed the other child
 ## takes a turn. Nobody is talkable yet - `can_interact()` is false, so the
 ## crosshair leaves them alone - but the bones are already dealt out for the
@@ -30,7 +30,7 @@ const LOOKS := [
 	{"beard": 0, "hair": 1, "cloth": "chiton_ochre"},
 ]
 
-const BONES := 5
+const BONES := 4  # as in the game they play (AstragalGame)
 ## One child's turn, in seconds: the other waits this long before gathering.
 const TURN := 3.6
 ## Into a turn: the hand is down on the bones, and up with them at RELEASE.
@@ -100,8 +100,8 @@ static func seat_spots() -> Array[Vector3]:
 	return [Vector3(-SEAT_GAP, 0, 0), Vector3(SEAT_GAP, 0, 0)]
 
 
-## Where bone `i` comes down after throw `n`, as a local offset. The five share
-## the circle out between them - one bone every 72 degrees, jittered, and the
+## Where bone `i` comes down after throw `n`, as a local offset. The four share
+## the circle out between them - one bone every quarter turn, jittered, and the
 ## rings staggered - so no two ever land on one another, and the middle stays
 ## clear for the hand that gathers them.
 static func bone_home(n: int, i: int) -> Vector3:
@@ -258,7 +258,7 @@ func _take_from_hand() -> void:
 		_clatter.play(FLIGHT * 0.55)
 
 
-## Finished bones get a yaw of their own, so five of them never lie in a row.
+## Finished bones get a yaw of their own, so four of them never lie in a row.
 func _set_bone(n: int, i: int) -> void:
 	var home := bone_home(n, i)
 	_bones[i].position = home
@@ -385,8 +385,8 @@ func get_prompt() -> String:
 	return tr("UI_ASTRAGAL_PLAY")
 
 
-## E at the children sits the player down to a throw of their own: five bones,
-## three throws, higher sum takes the throw.
+## E at the children sits the player down to a throw of their own: four bones,
+## three throws (AstragalGame has the rules).
 func interact() -> void:
 	if _panel != null and is_instance_valid(_panel):
 		return

@@ -59,7 +59,7 @@ func test_the_children_sit_facing_each_other() -> void:
 
 func test_the_bones_come_down_between_them() -> void:
 	var n := _game()
-	check(_bones(n).size() == KB.BONES, "%d astragals, not five" % _bones(n).size())
+	check(_bones(n).size() == KB.BONES and KB.BONES == AstragalGame.BONES, "%d astragals, not as many as the game throws" % _bones(n).size())
 	for throw_index in 4:
 		var spots: Array[Vector2] = []
 		for i in KB.BONES:
@@ -212,26 +212,39 @@ func test_already_home_if_the_square_is_built_after_dusk() -> void:
 		check(n.pose == "sit", "child %d is not sitting at home" % i)
 	w.free()
 
-## The rules of the children's game: five bones of one to four, three throws,
-## the higher sum takes the throw, and the game ends after the third.
+## The rules of the children's game: four bones counting 1, 3, 4 or 6, the
+## broad faces far likelier than the narrow, three throws; Aphrodite's throw
+## beats all, the dog loses to all, else the higher sum.
 func test_the_astragal_rules_hold() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
-	for i in 200:
+	var counts := {}
+	for i in 2000:
 		var hand := AstragalGame.throw_bones(rng)
-		check(hand.size() == AstragalGame.BONES, "a hand of %d bones" % hand.size())
+		check(hand.size() == 4, "a hand of %d bones, not four" % hand.size())
 		for b: int in hand:
-			check(b >= 1 and b <= AstragalGame.FACES, "a bone shows %d" % b)
+			check(b in [1, 3, 4, 6], "a bone shows %d: no two or five on a knucklebone" % b)
+			counts[b] = int(counts.get(b, 0)) + 1
+	check(int(counts.get(3, 0)) > 2 * int(counts.get(1, 0)) and int(counts.get(4, 0)) > 2 * int(counts.get(6, 0)),
+			"the broad faces do not come up more often than the narrow: %s" % [counts])
+	var venus: Array[int] = [6, 1, 4, 3]
+	var dog: Array[int] = [1, 1, 1, 1]
+	var big: Array[int] = [6, 6, 6, 4]
+	var small: Array[int] = [3, 1, 1, 1]
+	check(AstragalGame.kind(venus) == AstragalGame.VENUS and AstragalGame.kind(dog) == AstragalGame.DOG, "the named throws are not known")
+	check(AstragalGame.kind(big) == "" and AstragalGame.kind(small) == "", "an ordinary hand has a name")
+	check(AstragalGame.judge(venus, big) == "me", "Aphrodite (14) loses to a sum of 22")
+	check(AstragalGame.judge(small, dog) == "me", "the dog beats a sum of 6")
+	check(AstragalGame.judge(dog, small) == "them", "the dog beats a sum of 6")
+	check(AstragalGame.judge(venus, venus) == "draw", "two Aphrodites are not a draw")
+	check(AstragalGame.judge(big, small) == "me" and AstragalGame.judge(small, big) == "them", "the higher sum does not take it")
 	var g := AstragalGame.new(99)
 	var seen := 0
 	while not g.over:
 		var entry := g.play_throw()
 		seen += 1
 		check(entry.sum_mine == AstragalGame.total(entry.mine), "the sum does not match the bones")
-		check(entry.sum_theirs == AstragalGame.total(entry.theirs), "their sum does not match")
-		var want := "me" if entry.sum_mine > entry.sum_theirs else (
-				"them" if entry.sum_theirs > entry.sum_mine else "draw")
-		check(entry.winner == want, "the throw was given to the wrong hand")
+		check(entry.winner == AstragalGame.judge(entry.mine, entry.theirs), "the throw was given to the wrong hand")
 	check(seen == AstragalGame.THROWS, "the game ran %d throws" % seen)
 	check(g.won + g.lost <= AstragalGame.THROWS, "more throws won than played")
 	check(g.winner in ["me", "them", "draw"], "no winner after three throws")

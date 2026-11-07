@@ -6,7 +6,7 @@ extends SubViewportContainer
 ## tumble through the air, come down on the slab, kick up once and lie still;
 ## then the children's five do the same on the far half. A bone shows its
 ## count by the face it comes to rest on - pips cut in the four long faces.
-## The counts come from AstragalGame; this only shows them falling.
+## The counts (1, 3, 4, 6) come from AstragalGame; this only shows them falling.
 
 signal landed(side: int)  # one hand has come to rest (0 the player, 1 the children)
 signal settled            # both have
@@ -34,9 +34,11 @@ const BONE_LEN := 0.09
 const BONE_H := 0.042
 const BONE_D := 0.048
 const KNOB := 1.2  # the knobs stand this much proud of the bar
-## Face -> the local axis that faces up when the bone shows it.
-const FACE_AXES := {1: Vector3.UP, 2: Vector3.BACK, 3: Vector3.DOWN, 4: Vector3.FORWARD}
-const FACE_ANGLES := {1: 0.0, 2: -PI / 2.0, 3: PI, 4: PI / 2.0}
+## Face -> the local axis that faces up when the bone shows it: the broad
+## faces (3 and 4) are the bar's top and bottom, the narrow ones (1 and 6) its
+## sides, as on a real knucklebone.
+const FACE_AXES := {3: Vector3.UP, 1: Vector3.BACK, 4: Vector3.DOWN, 6: Vector3.FORWARD}
+const FACE_ANGLES := {3: 0.0, 1: -PI / 2.0, 4: PI, 6: PI / 2.0}
 
 var _vp: SubViewport
 var _bones: Array[Array] = [[], []]
@@ -110,9 +112,16 @@ static func bone_mesh() -> ArrayMesh:
 	for v: int in FACE_AXES:
 		var n: Vector3 = FACE_AXES[v]
 		var half := (BONE_H if absf(n.y) > 0.5 else BONE_D) / 2.0
+		# six is two rows of three: a row of six would run into the knobs
+		var rows := 2 if v == 6 else 1
+		var per := v / rows
 		for k in v:
-			var x := (float(k) - float(v - 1) / 2.0) * 0.014
-			var c := Vector3(x, 0, 0) + n * (half + 0.0005)
+			var col := k % per
+			var row := k / per
+			var x := (float(col) - float(per - 1) / 2.0) * 0.014
+			var across := (float(row) - float(rows - 1) / 2.0) * 0.016
+			var off := Vector3(x, 0, across) if absf(n.y) > 0.5 else Vector3(x, across, 0)
+			var c := off + n * (half + 0.0005)
 			var sz := Vector3(pip, 0.002, pip) if absf(n.y) > 0.5 else Vector3(pip, pip, 0.002)
 			kit.box("dark", c, sz, [])
 	return kit.commit()

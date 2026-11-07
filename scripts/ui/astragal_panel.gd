@@ -1,6 +1,6 @@
 extends CanvasLayer
-## The knucklebones table: five bones a hand, three throws, the higher sum takes
-## the throw. Opened by E at the children on the agora; E throws, Esc leaves.
+## The knucklebones table: four bones a hand counting 1, 3, 4 or 6, three
+## throws; Aphrodite's throw beats all, the dog loses to all, else the higher sum. Opened by E at the children on the agora; E throws, Esc leaves.
 ## The rules live in AstragalGame; the bones are seen flying and coming down in
 ## AstragalTable, and the sums and the log fill in once they lie still.
 
@@ -129,6 +129,15 @@ func _faces(bones: Array[int]) -> String:
 	return " ".join(out)
 
 
+## A sum, or the name of the throw when it is one that beats (or loses to) any sum.
+func _sum_text(total: int, kind: String) -> String:
+	if kind == AstragalGame.VENUS:
+		return tr("UI_ASTRAGAL_VENUS")
+	if kind == AstragalGame.DOG:
+		return tr("UI_ASTRAGAL_DOG")
+	return str(total)
+
+
 func _refresh() -> void:
 	var settled := _game.throws.size() - (0 if _pending.is_empty() else 1)
 	if settled <= 0:
@@ -140,8 +149,8 @@ func _refresh() -> void:
 		var last: Dictionary = _game.throws[settled - 1]
 		_bones_mine.text = _faces(last.mine)
 		_bones_theirs.text = _faces(last.theirs)
-		_sum_mine.text = str(last.sum_mine)
-		_sum_theirs.text = str(last.sum_theirs)
+		_sum_mine.text = _sum_text(last.sum_mine, last.kind_mine)
+		_sum_theirs.text = _sum_text(last.sum_theirs, last.kind_theirs)
 	_log.visible = settled > 0
 	_foot.text = tr("UI_ASTRAGAL_AGAIN") if _game.over and _pending.is_empty() else tr("UI_ASTRAGAL_KEYS")
 
@@ -164,7 +173,8 @@ func _on_settled() -> void:
 	var line := UiStyle.label("", 22, UiStyle.TEXT)
 	var mark := "UI_ASTRAGAL_ROUND_WIN" if entry.winner == "me" else (
 			"UI_ASTRAGAL_ROUND_LOSE" if entry.winner == "them" else "UI_ASTRAGAL_ROUND_DRAW")
-	line.text = "%d.  %d : %d  (%s)" % [_game.throws.size(), entry.sum_mine, entry.sum_theirs, tr(mark)]
+	line.text = "%d.  %s : %s  (%s)" % [_game.throws.size(), _sum_text(entry.sum_mine, entry.kind_mine),
+			_sum_text(entry.sum_theirs, entry.kind_theirs), tr(mark)]
 	_log.add_child(line)
 	_refresh()
 	if _game.over:

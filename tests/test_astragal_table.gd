@@ -8,7 +8,7 @@ const PANEL := preload("res://scripts/ui/astragal_panel.gd")
 
 
 func test_a_bone_shows_the_face_it_was_turned_to() -> void:
-	for v in range(1, AstragalGame.FACES + 1):
+	for v: int in AstragalGame.FACE_VALUES:
 		for yaw: float in [-0.6, 0.0, 0.4, 2.0]:
 			check(T.face_up(T.face_basis(v, yaw)) == v, "a bone turned to %d shows %d (yaw %.1f)" % [v, T.face_up(T.face_basis(v, yaw)), yaw])
 
@@ -29,11 +29,11 @@ func test_the_bones_come_down_apart_on_their_own_half() -> void:
 func test_a_bone_flies_up_comes_down_and_lies_still() -> void:
 	var start: Vector3 = T.HANDS[0]
 	var at := T.spot(0, 2, 1)
-	var final := T.face_basis(3, 0.3)
+	var final := T.face_basis(4, 0.3)
 	var rest := T.rest_height()
 	var mid := T.pose(start, at, final, Vector3(1, 0.2, 0.5), 2.0, T.LAND_AT * 0.5, rest)
 	check(mid.origin.y > maxf(start.y, rest) + 0.1, "the bone does not rise in flight (%.2f)" % mid.origin.y)
-	check(T.face_up(mid.basis) != 3 or not mid.basis.is_equal_approx(final), "the bone does not tumble in flight")
+	check(not mid.basis.is_equal_approx(final), "the bone does not tumble in flight")
 	var end := T.pose(start, at, final, Vector3(1, 0.2, 0.5), 2.0, 1.0, rest)
 	check(end.origin.distance_to(at + Vector3(0, rest, 0)) < 0.001, "the bone does not come to rest on its spot")
 	check(end.basis.is_equal_approx(final), "the bone does not come to rest showing its face")
@@ -43,8 +43,8 @@ func test_a_bone_flies_up_comes_down_and_lies_still() -> void:
 func test_the_window_shows_what_the_rules_dealt() -> void:
 	var table: AstragalTable = T.new()
 	Engine.get_main_loop().root.add_child(table)
-	var mine: Array[int] = [1, 2, 3, 4, 2]
-	var theirs: Array[int] = [4, 4, 1, 3, 2]
+	var mine: Array[int] = [1, 3, 4, 6]
+	var theirs: Array[int] = [6, 6, 3, 1]
 	var landed: Array[int] = []
 	var settled := [false]
 	table.landed.connect(func(side: int) -> void: landed.append(side))
