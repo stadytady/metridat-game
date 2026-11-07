@@ -49,7 +49,7 @@ theme/default_font_subpixel_positioning=0
 [internationalization]
 
 locale/translations=PackedStringArray("res://data/i18n/strings.en.translation", "res://data/i18n/strings.ru.translation")
-locale/translations_pot_files=PackedStringArray("res://data/dialogues/prologue.dialogue", "res://data/dialogues/fedr.dialogue", "res://data/dialogues/baker.dialogue", "res://data/dialogues/sailor.dialogue", "res://data/dialogues/fisher.dialogue", "res://data/dialogues/potter.dialogue")
+locale/translations_pot_files=PackedStringArray("res://data/dialogues/prologue.dialogue", "res://data/dialogues/fedr.dialogue", "res://data/dialogues/baker.dialogue", "res://data/dialogues/sailor.dialogue", "res://data/dialogues/fisher.dialogue", "res://data/dialogues/potter.dialogue", "res://data/dialogues/water_carrier.dialogue", "res://data/dialogues/turner.dialogue")
 
 [physics]
 
