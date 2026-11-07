@@ -44,7 +44,8 @@ func test_dream_key() -> void:
 	check(DayCycle.sample(0.5).fog_end == night.fog_end, "the waking day keeps its far fog")
 
 
-## The town's lamps come on at the eighth of the city's finds, not before.
+## The town's lamps come on at the dusk the finds lead to, not before: the same
+## fraction of the evening whatever the number of finds.
 func test_the_lamps_come_on_at_the_eighth_find() -> void:
 	var total := 0
 	for f: String in DirAccess.get_files_at("res://data/discoveries"):

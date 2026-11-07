@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="Discovery" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/interaction/discovery.gd" id="1_d"]
+[ext_resource type="PackedScene" path="res://scenes/interactables/models/votive.tscn" id="2_m"]
+
+[resource]
+script = ExtResource("1_d")
+id = &"goddess_votive"
+title = "D_GODDESS_VOTIVE_TITLE"
+location = "LOC_HILL"
+description = "D_GODDESS_VOTIVE_DESCRIPTION"
+history = "D_GODDESS_VOTIVE_HISTORY"
+sources = "W. Burkert, Greek Religion (Harvard, 1985); the terracottas of Panticapaeum in the collections of the Kerch Museum."
+narrative = "D_GODDESS_VOTIVE_NARRATIVE"
+hint = "D_GODDESS_VOTIVE_HINT"
+model = ExtResource("2_m")

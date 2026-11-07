@@ -9,6 +9,8 @@ const ORDER := ["LOC_HILL", "LOC_STREET", "LOC_AGORA", "LOC_SHORE", "LOC_SANCTUA
 var _panel: PanelContainer
 var _title: Label
 var _rows: VBoxContainer
+## Keeps the list inside the screen however many finds the city has.
+var _scroll: ScrollContainer
 var _opened_frame := -1
 
 
@@ -24,9 +26,16 @@ func _ready() -> void:
 	_title = UiStyle.label("", 34, UiStyle.BORDER)
 	_rows = VBoxContainer.new()
 	_rows.add_theme_constant_override("separation", 8)
+	# The registry grows as finds are added, and a panel that grows with it
+	# leaves the screen: past the height of the window the rows scroll.
+	_scroll = ScrollContainer.new()
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_scroll.custom_minimum_size = Vector2(0, 0)
+	_scroll.add_child(_rows)
 	var foot := UiStyle.label("UI_JOURNAL_KEYS", 20, UiStyle.MUTED)
 	foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	for n: Control in [_title, _rows, foot]:
+	for n: Control in [_title, _scroll, foot]:
 		col.add_child(n)
 	_panel.visible = false
 
@@ -85,6 +94,10 @@ func _fill() -> void:
 			row.mouse_exited.connect(func() -> void: title.add_theme_color_override("font_color", UiStyle.TEXT))
 		_rows.add_child(row)
 	_panel.reset_size()
+	# never taller than the screen: the rest of the list scrolls behind the title
+	var room := 1080.0 - 80.0
+	if _panel.size.y > room:
+		_panel.size.y = room
 	_panel.position = ((Vector2(1920, 1080) - _panel.size) / 2.0).max(Vector2(40, 40))
 
 
