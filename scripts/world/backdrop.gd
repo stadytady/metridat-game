@@ -325,6 +325,33 @@ static func walker_routes() -> Array:
 	return out
 
 
+## The workshops that spill out of the houses into the lanes: a woman at a
+## warp-weighted loom, a man weaving a basket in his doorway, a child sitting on
+## a step. One house here and there carries a scene, and the scene keeps to the
+## wall side of the lane so there is still room to walk past.
+## [{pos, kind, yaw}]
+const PORCH_KINDS := ["loom", "baskets", "child"]
+## How far into the lane a scene may stand: a lane is 1.8 m across and the wall
+## is 1.3 m off its centre.
+const PORCH_OUT := 0.3
+
+static func porch_scenes(houses: Array) -> Array:
+	var out := []
+	for hs: Dictionary in houses:
+		if out.size() >= 5:
+			break
+		var seed := hash(int(hs.opts.get("seed", 0)) * 23 + 7)
+		if posmod(seed, 19) != 0:
+			continue
+		if Topo.is_reserved(hs.pos.x, hs.pos.y, 3.0):
+			continue
+		var basis := Basis.from_euler(Vector3(0, hs.yaw, 0))
+		var at := Vector3(hs.pos.x, 0, hs.pos.y) + basis * Vector3(0, 0, hs.d / 2.0 + PORCH_OUT)
+		at.y = Topo.surface(at.x, at.z)
+		out.append({"pos": at, "kind": PORCH_KINDS[out.size() % PORCH_KINDS.size()], "yaw": hs.yaw})
+	return out
+
+
 func _ready() -> void:
 	_atm = get_parent().get_node_or_null("Atmosphere")
 	var kit := MeshKit.new()
@@ -346,8 +373,59 @@ func _ready() -> void:
 	_hearths(houses)
 	_voices(houses)
 	_walkers()
+	_porches(houses)
 	if _cottage_lamp != null:
 		_cottage_lamp.set_lit(false)
+
+
+## The porch scenes: the prop batched into the city mesh, the person on their own
+## as an Npc, because they move.
+func _porches(houses: Array) -> void:
+	var kit := MeshKit.new()
+	var i := 0
+	for s: Dictionary in porch_scenes(houses):
+		var yaw := float(s.yaw)
+		var out := Basis.from_euler(Vector3(0, yaw, 0)) * Vector3(0, 0, 1)
+		var at: Vector3 = s.pos
+		match String(s.kind):
+			"loom":
+				Arch.loom(kit, Arch.frame(at, out))
+				var loom_seat := at + out * 0.6
+				_seat(kit, loom_seat, Figure.SEAT["weave"] - 0.04, "wood")
+				_porch_npc(loom_seat, yaw + PI, "weave", 1.0, "Weaver%d" % i,
+						{"woman": true, "kerchief": "cloth", "skirt": "long", "cloth": "chiton_blue"})
+			"baskets":
+				Arch.basket_work(kit, Arch.frame(at, out))
+				var bench_seat := at + out * 0.34
+				_seat(kit, bench_seat, Figure.SEAT["mender"] - 0.03, "limestone")
+				_porch_npc(bench_seat, yaw + PI, "mender", 1.0, "Basketmaker%d" % i,
+						{"beard": 1, "hair": 2, "cloth": "chiton"})
+			_:
+				_porch_npc(at + out * 0.1, yaw, "sit", 0.62, "Doorstep%d" % i,
+						{"beard": 0, "hair": 0, "cloth": "chiton_ochre"})
+		i += 1
+	add_child(kit.build("Porches"))
+
+
+## Something to sit on: the poses put the pelvis at a seat height, so a worker
+## without one under them hovers.
+func _seat(kit: MeshKit, at: Vector3, height: float, mat: String) -> void:
+	kit.box(mat, at + Vector3(0, height * 0.5, 0), Vector3(0.36, height, 0.36), [])
+
+
+func _porch_npc(at: Vector3, yaw: float, pose: String, scale: float, key: String, look: Dictionary = {}) -> void:
+	var n: Npc = Npc.new()
+	n.name = key
+	n.npc_id = key
+	n.talkable = false
+	n.stops_for_player = false
+	n.solid = false
+	n.pose = pose
+	n.look = look
+	n.figure_scale = scale
+	n.position = at
+	n.rotation.y = yaw
+	add_child(n)
 
 
 ## The people on the terrace streets: they walk their stretch and come back, on

@@ -458,6 +458,42 @@ static func stall(kit: MeshKit, xf: Transform3D, stripes: Array = []) -> void:
 	kit.xform = Transform3D.IDENTITY
 
 
+## A warp-weighted loom standing against a wall: two uprights, the top beam, the
+## cloth beam with the woven web rolled on it, the warp hanging in front of both
+## and a row of clay weights pulling it taut - the loom Greek women actually
+## used, and the one the house of Myrto already has inside.
+static func loom(kit: MeshKit, xf: Transform3D) -> void:
+	kit.xform = xf
+	for s: float in [-1.0, 1.0]:
+		kit.box("wood", Vector3(s * 0.52, 1.0, 0), Vector3(0.09, 2.0, 0.09), ["bottom"])
+	kit.box("wood", Vector3(0, 1.98, 0), Vector3(1.14, 0.12, 0.12), ["bottom"])   # top beam
+	kit.box("wood", Vector3(0, 1.12, 0.16), Vector3(1.06, 0.09, 0.12), ["bottom"])  # cloth beam
+	kit.box("wood", Vector3(0, 1.42, 0.2), Vector3(1.0, 0.06, 0.06), ["bottom"])    # heddle bar
+	# the web rolled on the cloth beam
+	kit.lathe("cloth", PackedVector2Array([Vector2(0.0, -0.07), Vector2(0.1, -0.03), Vector2(0.1, 0.05), Vector2(0.0, 0.09)]),
+			8, Vector3(0, 1.12, 0.24), 1.0, true)
+	# the warp: threads from the top beam down past the beams to the weights
+	for i in 7:
+		var x := -0.36 + i * 0.12
+		kit.box("cloth", Vector3(x, 1.1, 0.13), Vector3(0.02, 1.7, 0.02), ["bottom"])
+	# clay weights on the loose ends
+	for i in 6:
+		var x := -0.3 + i * 0.12
+		kit.box("clay", Vector3(x, 0.22, 0.13), Vector3(0.08, 0.11, 0.05), [])
+	kit.xform = Transform3D.IDENTITY
+
+
+## A half-woven basket and the withies beside it: what a man sits down to do in
+## the doorway.
+static func basket_work(kit: MeshKit, xf: Transform3D) -> void:
+	kit.xform = xf
+	kit.lathe("basket", PackedVector2Array([Vector2(0.1, 0.0), Vector2(0.2, 0.12), Vector2(0.22, 0.22)]), 8,
+			Vector3(0, 0, 0), 2.0, true, "basket")
+	for i in 5:
+		kit.box("basket", Vector3(-0.28 + i * 0.05, 0.02, 0.22), Vector3(0.02, 0.02, 0.34), [])
+	kit.xform = Transform3D.IDENTITY
+
+
 static func bench(kit: MeshKit, xf: Transform3D, length: float) -> void:
 	kit.xform = xf
 	kit.solid_box("limestone", Vector3(0, 0.42, 0), Vector3(length, 0.14, 0.5), ["bottom"])

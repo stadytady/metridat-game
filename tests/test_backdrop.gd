@@ -143,3 +143,24 @@ func test_the_walkers_keep_to_their_streets() -> void:
 		check(span > 12.0, "%s only covers %.1f m" % [r.key, span])
 		streets[snappedf(points[0].x, 1.0)] = true
 	check(streets.size() >= 3, "the walkers share only %d streets" % streets.size())
+
+## The porch scenes stand at the wall side of a lane, on the ground, in more than
+## one kind, and each has somebody at it whose pose really exists.
+func test_the_porches_hold_work_that_can_be_seen() -> void:
+	var houses: Array = B.plan()
+	var scenes: Array = B.porch_scenes(houses)
+	check(scenes.size() >= 3, "only %d porch scenes" % scenes.size())
+	var kinds := {}
+	for s: Dictionary in scenes:
+		var at: Vector3 = s.pos
+		check(absf(at.y - Topo.surface(at.x, at.z)) < 0.01, "a %s stands off the ground at %s" % [s.kind, at])
+		check(B.on_house(houses, at.x, at.z, B.PORCH_OUT + 0.5), "a %s stands away from its wall (%s)" % [s.kind, at])
+		check(B._dist_to(B.streets(), Vector2(at.x, at.z)) > B.LANE_HALF - 0.45,
+				"a %s blocks the lane at %s" % [s.kind, at])
+		check(not Topo.is_reserved(at.x, at.z, 1.0), "a %s stands on the walked ground at %s" % [s.kind, at])
+		kinds[s.kind] = true
+	check(kinds.size() >= 2, "the porches only ever hold %d kind of work" % kinds.size())
+	# the poses the scenes put people in must be real ones
+	for pose: String in ["weave", "mender", "sit"]:
+		check(Figure.POSES.has(pose), "no %s pose for the porch work" % pose)
+		check(Figure.SEAT.has(pose), "the %s pose has no seat height" % pose)
