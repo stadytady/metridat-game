@@ -87,12 +87,18 @@ const POSES := {
 	"sit": {"chest": Vector3(-10, 0, 0), "head": Vector3(-14, 0, 0),
 		"l_hip": Vector3(78, 0, 20), "r_hip": Vector3(78, 0, -20), "l_knee": Vector3(-104, 0, 0), "r_knee": Vector3(-104, 0, 0),
 		"l_shoulder": Vector3(26, 0, 12), "r_shoulder": Vector3(26, 0, -12), "l_elbow": Vector3(58, 0, 0), "r_elbow": Vector3(58, 0, 0)},
+	# on a low stool at a warp-weighted loom: back straight, both hands up at the
+	# warp, the knees tucked in under the cloth beam
+	"weave": {"chest": Vector3(-8, 0, 0), "head": Vector3(-10, 0, 0),
+		"l_shoulder": Vector3(74, 0, 12), "r_shoulder": Vector3(74, 0, -12),
+		"l_elbow": Vector3(34, 0, 0), "r_elbow": Vector3(34, 0, 0),
+		"l_hip": Vector3(84, 0, 10), "r_hip": Vector3(84, 0, -10), "l_knee": Vector3(-88, 0, 0), "r_knee": Vector3(-88, 0, 0)},
 }
 
 ## Pelvis height for a pose (seated figures sit on something low).
 const SEAT := {"stand": 0.92, "potter": 0.46, "turner": 0.32, "mender": 0.4, "sleep": 0.12, "baker": 0.5, "carry": 0.92, "declaim": 0.92, "draw": 0.92,
 	"walk": 0.92, "think": 0.92, "spin": 0.92, "pick": 0.86, "stoke": 0.5, "sit_think": 0.34,
-	"head_carry": 0.92, "pour": 0.92, "sit": 0.3}
+	"head_carry": 0.92, "pour": 0.92, "sit": 0.3, "weave": 0.54}
 
 
 ## How a person looks: "woman", "beard" (0 none, 1 short, 2 full), "hair"
@@ -340,6 +346,14 @@ static func motion(pose: String, t: float) -> Dictionary:
 			var pull := k * 4.0 if k < 0.25 else maxf(0.0, 1.0 - (k - 0.25) * 2.0)
 			return {"r_shoulder": Vector3(-pull * 30, 0, -pull * 25), "r_elbow": Vector3(-pull * 35, 0, 0),
 				"head": Vector3(0, pull * 8, 0)}
+		"weave":
+			# beat the weft home with both hands, then run the shuttle across
+			var k := fposmod(q * 0.55, 1.0)
+			var beat := sin(k * 2.0 * PI) if k < 0.5 else 0.0
+			var run := sin((k - 0.5) * 2.0 * PI) if k >= 0.5 else 0.0
+			return {"l_shoulder": Vector3(-beat * 14, 0, 0), "r_shoulder": Vector3(-beat * 14 + run * 10, 0, -run * 10),
+				"l_elbow": Vector3(beat * 16, 0, 0), "r_elbow": Vector3(beat * 16 - run * 22, 0, 0),
+				"chest": Vector3(-beat * 3, 0, 0), "head": Vector3(0, run * 7, 0)}
 		_:
 			return {"chest": Vector3(sin(q * 1.1) * 2, 0, 0)}
 
