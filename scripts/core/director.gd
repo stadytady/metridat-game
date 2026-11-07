@@ -91,8 +91,42 @@ func _shots() -> void:
 	# the knucklebones table: bones in the air, then lying with the sums in
 	if "astragal" in _only:
 		await _astragal_shots()
+	# the people of the back streets, one frame each from in front of them
+	if "lanefolk" in _only:
+		await _lanefolk_shots(player)
 	_report_perf()
 	get_tree().quit()
+
+
+const BACKDROP := preload("res://scripts/world/backdrop.gd")
+
+
+## Each person in the back streets (Backdrop) from a few steps in front, a
+## little above, so a pose that sinks into a wall or floats over a step shows.
+func _lanefolk_shots(player: CharacterBody3D) -> void:
+	var bd: Node = _main().world.find_child("Backdrop", true, false)
+	if bd == null:
+		return
+	for n: Npc in bd.find_children("*", "Npc", true, false):
+		if not n.visible:
+			continue
+		var front := Vector3(-sin(n.rotation.y), 0, -cos(n.rotation.y))
+		var houses: Array = BACKDROP.plan()
+		var shot := 0
+		for side: float in [0.0, 0.7, -0.7, 1.4, -1.4]:
+			if shot >= 2:
+				break
+			var dir := front.rotated(Vector3.UP, side)
+			var eye := n.global_position + dir * 2.4 + Vector3(0, 1.3, 0)
+			# not from inside a house: the walls are culled from within
+			if BACKDROP.on_house(houses, eye.x, eye.z, 0.4):
+				continue
+			shot += 1
+			player.global_position = eye - Vector3(0, 1.6, 0)
+			player.look_at_point(n.global_position + Vector3(0, 0.6 * n.figure_scale, 0))
+			player.camera.position.y = 0.0
+			await _frames(6)
+			_save("lane_%s_%d" % [n.name, shot])
 
 
 ## The knucklebones table mid-throw and after the bones have come to rest.

@@ -282,13 +282,13 @@ static func crossing_herms(houses: Array) -> Array:
 ## quern, a bench. It is the cheapest way to stop a terrace of walls reading as
 ## scenery: somebody lives here, and put their jar down by the door.
 ## [{pos, kind, dir}]
-const PROP_KINDS := ["pithos", "basket", "woodpile", "amphora", "quern", "bench"]
+const PROP_KINDS := ["pithos", "basket", "woodpile", "amphora", "quern", "bench", "jars", "washing"]
 
 static func wall_props(houses: Array) -> Array:
 	var out := []
 	for hs: Dictionary in houses:
 		var seed := hash(int(hs.opts.get("seed", 0)) * 7 + 11)
-		if posmod(seed, 3) != 0:
+		if posmod(seed, 2) != 0:
 			continue
 		var basis := Basis.from_euler(Vector3(0, hs.yaw, 0))
 		var front := Vector3(hs.pos.x, 0, hs.pos.y) + basis * Vector3(0, 0, hs.d / 2.0)
@@ -310,28 +310,55 @@ static func walker_routes() -> Array:
 	var runs := streets()
 	if runs.size() < TERRACES_X.size():
 		return out
-	# four streets, each over a different stretch of its run: two terraces in
-	# the middle of the slope, one near the top, one on the flat ground east
-	var picks := [0, 2, 4, 6]
-	for k in picks.size():
-		if picks[k] >= runs.size():
-			continue
-		var run: PackedVector2Array = runs[picks[k]]
+	var houses := plan()
+	# one walker on each of the first WALKERS.size() streets, alternating the
+	# south and the north half of the slope, kept off the walked main street and
+	# off any stretch where a house has been built across the street's line
+	for k in mini(runs.size(), WALKERS.size()):
+		var run: PackedVector2Array = runs[k]
 		if run.size() < 30:
 			continue
-		var start := 6 + k * 5
-		var stop := mini(run.size() - 8, start + 10)
-		if stop - start < 6:
+		var start := 4 + (k % 3) * 3 if k % 2 == 0 else run.size() - 18 - (k % 3) * 2
+		var picked := -1
+		for shift in range(0, 12, 3):
+			var a := start + (shift if k % 2 == 0 else -shift)
+			if a < 2 or a + 10 > run.size() - 2:
+				continue
+			var clear := true
+			for i in range(a, a + 10):
+				if Topo.is_reserved(run[i].x, run[i].y, 1.5) or on_house(houses, run[i].x, run[i].y, 0.3):
+					clear = false
+					break
+			if clear:
+				picked = a
+				break
+		if picked < 0:
 			continue
 		var there: Array[Vector3] = []
-		for i in range(start, stop):
+		for i in range(picked, picked + 10):
 			var p := run[i]
 			there.append(Vector3(p.x, Topo.surface(p.x, p.y), p.y))
 		var points: Array[Vector3] = there.duplicate()
-		for i in range(stop - 2, start - 1, -1):
-			points.append(there[i - start])
-		out.append({"points": points, "key": "walker%d" % k})
+		for i in range(there.size() - 2, -1, -1):
+			points.append(there[i])
+		out.append({"points": points, "key": "walker%d" % k, "kind": k})
 	return out
+
+
+## Who walks the terrace streets: what they look like, what they carry and how
+## fast they go. A street of identical grey men reads as a crowd scene; these
+## are neighbours on errands. load: "" (empty hands), "hydria" or "basket" on
+## the head, "amphora" in the arms.
+const WALKERS := [
+	{"look": {"woman": true, "kerchief": "chiton_dark", "skirt": "long", "cloth": "chiton_red"}, "load": "hydria", "speed": 0.4, "scale": 0.96},
+	{"look": {"beard": 2, "hair": 1, "cloth": "chiton"}, "load": "amphora", "speed": 0.38, "scale": 1.0},
+	{"look": {"woman": true, "kerchief": "cloth", "skirt": "long", "cloth": "chiton_ochre"}, "load": "basket", "speed": 0.44, "scale": 0.94},
+	{"look": {"beard": 2, "hair": 2, "cloth": "chiton_dark"}, "load": "", "speed": 0.3, "scale": 0.97},
+	{"look": {"beard": 0, "hair": 0, "cloth": "chiton_blue"}, "load": "", "speed": 0.62, "scale": 0.72},
+	{"look": {"beard": 1, "hair": 0, "cloth": "chiton_ochre"}, "load": "", "speed": 0.5, "scale": 1.02},
+	{"look": {"woman": true, "kerchief": "chiton_dark", "skirt": "long", "cloth": "chiton_blue"}, "load": "hydria", "speed": 0.42, "scale": 0.95},
+	{"look": {"beard": 1, "hair": 1, "cloth": "chiton_red"}, "load": "amphora", "speed": 0.4, "scale": 0.99},
+]
 
 
 ## The workshops that spill out of the houses into the lanes: a woman at a
@@ -339,26 +366,101 @@ static func walker_routes() -> Array:
 ## a step. One house here and there carries a scene, and the scene keeps to the
 ## wall side of the lane so there is still room to walk past.
 ## [{pos, kind, yaw}]
-const PORCH_KINDS := ["loom", "baskets", "child"]
+const PORCH_KINDS := ["loom", "baskets", "child", "quern", "elder", "talk"]
+const PORCH_MAX := 10
 ## How far into the lane a scene may stand: a lane is 1.8 m across and the wall
 ## is 1.3 m off its centre.
 const PORCH_OUT := 0.3
 
 static func porch_scenes(houses: Array) -> Array:
 	var out := []
+	var walls := terrace_walls(houses)
 	for hs: Dictionary in houses:
-		if out.size() >= 5:
+		if out.size() >= PORCH_MAX:
 			break
 		var seed := hash(int(hs.opts.get("seed", 0)) * 23 + 7)
-		if posmod(seed, 19) != 0:
+		if posmod(seed, 5) != 0:
 			continue
 		if Topo.is_reserved(hs.pos.x, hs.pos.y, 3.0):
 			continue
+		var dx := porch_x(hs)
+		if is_nan(dx):
+			continue
 		var basis := Basis.from_euler(Vector3(0, hs.yaw, 0))
-		var at := Vector3(hs.pos.x, 0, hs.pos.y) + basis * Vector3(0, 0, hs.d / 2.0 + PORCH_OUT)
+		var at := Vector3(hs.pos.x, 0, hs.pos.y) + basis * Vector3(dx, 0, hs.d / 2.0 + PORCH_OUT)
+		if terrace_wall_distance(walls, Vector2(at.x, at.z)) < PORCH_WALL_CLEAR:
+			continue  # down in the trough behind a retaining wall, out of sight
 		at.y = Topo.surface(at.x, at.z)
-		out.append({"pos": at, "kind": PORCH_KINDS[out.size() % PORCH_KINDS.size()], "yaw": hs.yaw})
+		out.append({"pos": at, "kind": PORCH_KINDS[out.size() % PORCH_KINDS.size()], "yaw": hs.yaw, "x": dx})
 	return out
+
+
+## The people of a porch scene, as data: where each sits or stands, which way
+## they face, their pose and look, and the seat under them (0: none). Workers
+## face their work at the wall; the child, the old man and the gossips face the
+## lane. Heights are the ground's at each one's own spot, so a sloping lane
+## neither sinks a seat nor leaves it floating.
+## [{pos, faces (a point they look at), pose, look, scale, seat}]
+static func porch_people(s: Dictionary) -> Array:
+	var yaw := float(s.yaw)
+	var out_dir := Basis.from_euler(Vector3(0, yaw, 0)) * Vector3(0, 0, 1)
+	var along := Basis.from_euler(Vector3(0, yaw, 0)) * Vector3(1, 0, 0)
+	var at: Vector3 = s.pos
+	var people := []
+	var add := func(p: Vector3, faces: Vector3, pose: String, look: Dictionary, scale: float, seat: float) -> void:
+		p.y = Topo.surface(p.x, p.z)
+		people.append({"pos": p, "faces": faces, "pose": pose, "look": look, "scale": scale, "seat": seat})
+	match String(s.kind):
+		"loom":
+			add.call(at + out_dir * 0.6, at, "weave",
+					{"woman": true, "kerchief": "cloth", "skirt": "long", "cloth": "chiton_blue"}, 1.0, Figure.SEAT["weave"] - 0.04)
+		"baskets":
+			add.call(at + out_dir * 0.4, at, "mender", {"beard": 1, "hair": 2, "cloth": "chiton"}, 1.0, Figure.SEAT["mender"] - 0.03)
+		"child":
+			add.call(at + out_dir * 0.1, at + out_dir * 3.0, "sit", {"beard": 0, "hair": 0, "cloth": "chiton_ochre"}, 0.62, 0.0)
+		"quern":
+			# kneeling over the saddle quern at the wall, pushing the rubbing stone
+			add.call(at + out_dir * 0.62, at, "stoke",
+					{"woman": true, "kerchief": "chiton_dark", "skirt": "long", "cloth": "chiton_ochre"}, 0.97, 0.0)
+		"elder":
+			add.call(at + out_dir * 0.05, at + out_dir * 3.0, "sit_think", {"beard": 2, "hair": 1, "cloth": "chiton_dark"}, 0.98,
+					Figure.SEAT["sit_think"] - 0.02)
+		_:
+			# two neighbours by the door, turned to each other
+			var a := at + out_dir * 0.35 + along * 0.45
+			var b := at + out_dir * 0.35 - along * 0.45
+			add.call(a, b, "stand", {"woman": true, "kerchief": "cloth", "skirt": "long", "cloth": "chiton_red"}, 0.96, 0.0)
+			add.call(b, a, "think", {"woman": true, "kerchief": "chiton_dark", "skirt": "long", "cloth": "chiton_blue"}, 0.94, 0.0)
+	return people
+
+
+## The yaw that turns a figure (it faces -z) from p towards q.
+static func face_yaw(p: Vector3, q: Vector3) -> float:
+	var d := q - p
+	return atan2(-d.x, -d.z)
+
+
+## Where along a house front its porch scene goes: beside the door, not in
+## front of it (the threshold and the steps stand out into the lane there), and
+## on the other side from whatever wall_props left by that house. NAN when the
+## front is too narrow for both a door and a scene.
+static func porch_x(hs: Dictionary) -> float:
+	var door := float(hs.opts.get("door_x", 0.0))
+	var seed := hash(int(hs.opts.get("seed", 0)) * 7 + 11)
+	var prop_side := 1.0 if posmod(seed >> 6, 2) == 0 else -1.0
+	var room: float = float(hs.w) / 2.0 - PORCH_EDGE
+	for side: float in [-prop_side, prop_side]:
+		var x := door + side * PORCH_DOOR_GAP
+		if absf(x) <= room:
+			return x
+	return NAN
+
+
+## How far a scene keeps from the door's middle, and from a front's corner.
+const PORCH_DOOR_GAP := 1.35
+## How far a scene keeps from a terrace's retaining wall.
+const PORCH_WALL_CLEAR := 1.6
+const PORCH_EDGE := 0.75
 
 
 ## Wall lamps beside the doors of the back lanes: one house in nine, seeded, and
@@ -484,7 +586,8 @@ func _fountain(houses: Array) -> void:
 	add_child(kit.build("LaneWell"))
 	var jar := Props.instance("amphora")
 	jar.scale = Vector3.ONE * 0.8
-	jar.position = at + dir * 0.75 + Vector3(0, 0.02, 0)
+	jar.position = at + dir * 0.75
+	jar.position.y = Topo.surface(jar.position.x, jar.position.z) + 0.02
 	add_child(jar)
 	# the woman: standing with her hands on the rope, the way the carrier draws
 	var woman: Npc = Npc.new()
@@ -495,6 +598,7 @@ func _fountain(houses: Array) -> void:
 	woman.solid = false
 	woman.pose = "draw"
 	woman.position = at + dir * 0.95
+	woman.position.y = Topo.surface(woman.position.x, woman.position.z)  # the lane falls away from the curb
 	# she stands on the far side and looks back at the curb: local -z must point
 	# along -dir, so the yaw is atan2(dir.x, dir.z) and no half turn on top
 	woman.rotation.y = atan2(dir.x, dir.z)
@@ -554,20 +658,21 @@ func _porches(houses: Array) -> void:
 		match String(s.kind):
 			"loom":
 				Arch.loom(kit, Arch.frame(at, out))
-				var loom_seat := at + out * 0.6
-				_seat(kit, loom_seat, Figure.SEAT["weave"] - 0.04, "wood")
-				_porch_people.append(_porch_npc(loom_seat, yaw + PI, "weave", 1.0, "Weaver%d" % i,
-						{"woman": true, "kerchief": "cloth", "skirt": "long", "cloth": "chiton_blue"}))
 			"baskets":
 				Arch.basket_work(kit, Arch.frame(at, out))
-				var bench_seat := at + out * 0.34
-				_seat(kit, bench_seat, Figure.SEAT["mender"] - 0.03, "limestone")
-				_porch_people.append(_porch_npc(bench_seat, yaw + PI, "mender", 1.0, "Basketmaker%d" % i,
-						{"beard": 1, "hair": 2, "cloth": "chiton"}))
-			_:
-				_porch_people.append(_porch_npc(at + out * 0.1, yaw, "sit", 0.62, "Doorstep%d" % i,
-						{"beard": 0, "hair": 0, "cloth": "chiton_ochre"}))
-		i += 1
+			"quern":
+				# a saddle quern on the ground at the wall, grain heaped at one end
+				kit.xform = Arch.frame(at + out * 0.2, out)
+				kit.box("limestone", Vector3(0, 0.07, 0), Vector3(0.36, 0.14, 0.62), [])
+				kit.box("limestone", Vector3(0, 0.17, 0.05), Vector3(0.18, 0.07, 0.3), [])
+				kit.box("bread", Vector3(0, 0.15, -0.22), Vector3(0.24, 0.03, 0.12), [])
+				kit.xform = Transform3D.IDENTITY
+		for p: Dictionary in porch_people(s):
+			if float(p.seat) > 0.0:
+				_seat(kit, p.pos, float(p.seat), "wood" if String(s.kind) == "loom" else "limestone")
+			_porch_people.append(_porch_npc(p.pos, face_yaw(p.pos, p.faces), String(p.pose), float(p.scale),
+					"%s%d" % [String(s.kind).capitalize(), i], p.look))
+			i += 1
 	add_child(kit.build("Porches"))
 
 
@@ -610,8 +715,10 @@ func _walkers() -> void:
 		n.stops_for_player = false
 		n.solid = false
 		n.follow_ground = true
-		n.figure_scale = 0.94 + 0.04 * float(i % 3)
-		n.patrol_speed = 0.42 + 0.05 * float(i % 4)
+		var kind: Dictionary = WALKERS[int(route.kind) % WALKERS.size()]
+		n.look = kind.look
+		n.figure_scale = float(kind.scale)
+		n.patrol_speed = float(kind.speed)
 		n.patrol_pause = 0.0
 		n.position = points[0]
 		var offsets := PackedVector3Array()
@@ -627,7 +734,43 @@ func _walkers() -> void:
 		pauses[offsets.size() - 1] = 1.4
 		n.patrol_pauses = pauses
 		add_child(n)
+		_load(n, String(kind.load))
 		_walker_people.append(n)
+
+
+## What a walker carries, hung on the joint that carries it; the walk keeps the
+## carrying arms (Npc.carry_pose) instead of swinging them through the load.
+func _load(n: Npc, load: String) -> void:
+	if load == "":
+		return
+	var thing: Node3D
+	match load:
+		"hydria":
+			thing = Props.instance("amphora")
+			thing.scale = Vector3.ONE * 0.55
+			thing.position = Vector3(0, 0.27, 0.02)
+			(n.joints["head"] as Node3D).add_child(thing)
+			n.carry_pose = "head_carry"
+		"basket":
+			var kit := MeshKit.new()
+			kit.lathe("basket", PackedVector2Array([Vector2(0.12, 0.0), Vector2(0.2, 0.12), Vector2(0.21, 0.16)]), 8,
+					Vector3.ZERO, 2.0, true, "basket")
+			for k in 3:
+				kit.box("bread", Vector3(-0.06 + k * 0.06, 0.15, 0.0), Vector3(0.07, 0.04, 0.1), [])
+			var mi := MeshInstance3D.new()
+			mi.mesh = kit.commit()
+			mi.position = Vector3(0, 0.24, 0.0)
+			(n.joints["head"] as Node3D).add_child(mi)
+			thing = mi
+			n.carry_pose = "head_carry"
+		_:
+			thing = Props.instance("amphora")
+			thing.scale = Vector3.ONE * 0.75
+			thing.position = Vector3(0, 0.05, -0.32)
+			(n.joints["chest"] as Node3D).add_child(thing)
+			n.carry_pose = "carry"
+	thing.name = "Load"
+	n.carrying = true
 
 
 ## A watchman with a lantern, out only after dusk: he paces the stretch of street
@@ -810,6 +953,23 @@ func _wall_props(kit: MeshKit, houses: Array) -> void:
 				kit.lathe("limestone", PackedVector2Array([Vector2(0.22, 0.12), Vector2(0.24, 0.2), Vector2(0.12, 0.24)]),
 						10, Vector3.ZERO, 1.0, true)
 				kit.box("wood", Vector3(0.28, 0.2, 0), Vector3(0.26, 0.04, 0.04), [])
+			"jars":
+				# a row of jars against the wall, the small jug in front
+				for k in 3:
+					kit.xform = xf * Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * (0.8 if k == 1 else 0.7)), Vector3(-0.42 + k * 0.42, 0, -0.06))
+					Props.amphora(kit)
+				kit.xform = xf
+				kit.lathe("clay", PackedVector2Array([Vector2(0.06, 0.0), Vector2(0.1, 0.1), Vector2(0.05, 0.2), Vector2(0.06, 0.24)]),
+						7, Vector3(0.2, 0, 0.22), 1.0, true)
+			"washing":
+				# two poles by the wall and a line between them, cloth hung over it
+				for sx: float in [-0.75, 0.75]:
+					kit.box("wood", Vector3(sx, 0.85, 0), Vector3(0.06, 1.7, 0.06), ["bottom"])
+				kit.box("wood", Vector3(0, 1.62, 0), Vector3(1.56, 0.02, 0.02), [])
+				for k in 3:
+					var cx := -0.45 + k * 0.45
+					var mat := "cloth" if k != 1 else "chiton_blue"
+					kit.box(mat, Vector3(cx, 1.62 - 0.3 - k * 0.05, 0), Vector3(0.36, 0.6 + k * 0.1, 0.02), [])
 			_:
 				# a bench, built without a collider like the rest of the goods: the
 				# streets of the backdrop are walked by the scripted route, and a
@@ -839,8 +999,11 @@ func _lanes(houses: Array) -> void:
 
 ## Retaining walls along the downhill edge of each terrace street (left open
 ## where a stepped lane comes through), and stone steps down the steep lanes.
-func _terraces(houses: Array) -> void:
-	var kit := MeshKit.new()
+## The retaining walls along the downhill side of the terrace streets, where
+## the ground falls away: [{centre (x, z), along (unit), length, top, foot}].
+## The porches read it too: a scene in the trough behind one of these sinks.
+static func terrace_walls(houses: Array) -> Array:
+	var out := []
 	var stair_runs := stairs()
 	for run: PackedVector2Array in streets():
 		for i in run.size() - 1:
@@ -858,8 +1021,31 @@ func _terraces(houses: Array) -> void:
 			var foot := Topo.terrain(e.x + down.x * 0.8, e.y + down.y * 0.8)
 			if top - foot < 0.5:
 				continue  # the ground hardly falls here: no wall needed
-			kit.xform = Transform3D(Basis(Vector3.UP, atan2(-t.y, t.x)), Vector3(e.x, (top + foot - 0.4) / 2.0, e.y))
-			kit.solid_box("limestone", Vector3.ZERO, Vector3(a.distance_to(b) + 0.08, top - foot + 0.4, 0.45), ["bottom"])
+			out.append({"centre": e, "along": t, "length": a.distance_to(b) + 0.08, "top": top, "foot": foot})
+	return out
+
+
+## How far p (x, z) is from the nearest retaining wall's face line.
+static func terrace_wall_distance(walls: Array, p: Vector2) -> float:
+	var best := INF
+	for w: Dictionary in walls:
+		var c: Vector2 = w.centre
+		var t: Vector2 = w.along
+		var u := clampf((p - c).dot(t), -float(w.length) / 2.0, float(w.length) / 2.0)
+		best = minf(best, p.distance_to(c + t * u))
+	return best
+
+
+func _terraces(houses: Array) -> void:
+	var kit := MeshKit.new()
+	var stair_runs := stairs()
+	for w: Dictionary in terrace_walls(houses):
+		var e: Vector2 = w.centre
+		var t: Vector2 = w.along
+		var top := float(w.top)
+		var foot := float(w.foot)
+		kit.xform = Transform3D(Basis(Vector3.UP, atan2(-t.y, t.x)), Vector3(e.x, (top + foot - 0.4) / 2.0, e.y))
+		kit.solid_box("limestone", Vector3.ZERO, Vector3(float(w.length), top - foot + 0.4, 0.45), ["bottom"])
 	for run: PackedVector2Array in stair_runs:
 		for i in run.size() - 1:
 			var a := run[i]
