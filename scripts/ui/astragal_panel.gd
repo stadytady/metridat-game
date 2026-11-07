@@ -1,0 +1,167 @@
+extends CanvasLayer
+## The knucklebones table: five bones a hand, three throws, the higher sum takes
+## the throw. Opened by E at the children on the agora; E throws, Esc leaves.
+## The rules live in AstragalGame, so this file is layout and input only.
+
+signal closed
+
+const CLATTER := preload("res://assets/audio/astragal.wav")
+const GOLD := Color("#d9a75a")
+
+var _game := AstragalGame.new()
+var _panel: PanelContainer
+var _sum_mine: Label
+var _sum_theirs: Label
+var _bones_mine: Label
+var _bones_theirs: Label
+var _log: VBoxContainer
+var _foot: Label
+var _clatter: AudioStreamPlayer
+var _shown_throws := 0
+
+
+func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	layer = 4
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.55)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(dim)
+	_panel = PanelContainer.new()
+	_panel.add_theme_stylebox_override("panel", UiStyle.panel())
+	_panel.custom_minimum_size = Vector2(760, 0)
+	add_child(_panel)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 16)
+	_panel.add_child(col)
+	var title := UiStyle.label(tr("UI_ASTRAGAL_TITLE"), 40, GOLD)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(title)
+	var grid := GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 28)
+	grid.add_theme_constant_override("v_separation", 10)
+	col.add_child(grid)
+	grid.add_child(UiStyle.label("", 24, UiStyle.MUTED))
+	grid.add_child(_head("UI_ASTRAGAL_YOU"))
+	grid.add_child(_head("UI_ASTRAGAL_THEM"))
+	grid.add_child(UiStyle.label("", 24, UiStyle.MUTED))
+	_bones_mine = _body("-")
+	_bones_theirs = _body("-")
+	grid.add_child(_bones_mine)
+	grid.add_child(_bones_theirs)
+	grid.add_child(UiStyle.label(tr("UI_ASTRAGAL_SUM"), 24, UiStyle.MUTED))
+	_sum_mine = _body("-")
+	_sum_theirs = _body("-")
+	grid.add_child(_sum_mine)
+	grid.add_child(_sum_theirs)
+	_log = VBoxContainer.new()
+	_log.add_theme_constant_override("separation", 6)
+	col.add_child(_log)
+	_foot = UiStyle.label(tr("UI_ASTRAGAL_KEYS"), 20, UiStyle.MUTED)
+	_foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(_foot)
+	_clatter = AudioStreamPlayer.new()
+	_clatter.stream = CLATTER
+	_clatter.volume_db = -9.0
+	add_child(_clatter)
+	_panel.visible = false
+
+
+func _head(key: String) -> Label:
+	var l := UiStyle.label(tr(key), 24, GOLD)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.custom_minimum_size.x = 200
+	return l
+
+
+func _body(text: String) -> Label:
+	var l := UiStyle.label(text, 26, UiStyle.TEXT)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	return l
+
+
+func open() -> void:
+	_panel.visible = true
+	# the panel was built while hidden and a container skips sorting then: sort
+	# the whole lot before measuring, or every cell inside the grid stays 0x0
+	for c: Node in _panel.find_children("*", "Container", true, false):
+		(c as Container).queue_sort()
+	_panel.queue_sort()
+	_panel.reset_size()
+	_panel.position = ((Vector2(1920, 1080) - _panel.size) / 2.0).max(Vector2(40, 40))
+	Game.ui_blocking = true
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	_refresh()
+
+
+func close() -> void:
+	_panel.visible = false
+	Game.ui_blocking = false
+	Game.mark_ui_closed()
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	closed.emit()
+	queue_free()
+
+
+## The bones as their faces: a five is "1 4", not a row of pips.
+func _faces(bones: Array[int]) -> String:
+	var out := PackedStringArray()
+	for b: int in bones:
+		out.append(str(b))
+	return " ".join(out)
+
+
+func _refresh() -> void:
+	if _game.throws.is_empty():
+		_bones_mine.text = "вЂ”"
+		_bones_theirs.text = "вЂ”"
+		_sum_mine.text = "вЂ”"
+		_sum_theirs.text = "вЂ”"
+	else:
+		var last: Dictionary = _game.throws[-1]
+		_bones_mine.text = _faces(last.mine)
+		_bones_theirs.text = _faces(last.theirs)
+		_sum_mine.text = str(last.sum_mine)
+		_sum_theirs.text = str(last.sum_theirs)
+	_log.visible = not _game.throws.is_empty()
+	_foot.text = tr("UI_ASTRAGAL_AGAIN") if _game.over else tr("UI_ASTRAGAL_KEYS")
+
+
+func _throw() -> void:
+	var entry := _game.play_throw()
+	if entry.is_empty():
+		return
+	_clatter.pitch_scale = randf_range(0.94, 1.08)
+	_clatter.play()
+	var line := UiStyle.label("", 22, UiStyle.TEXT)
+	var mark := "UI_ASTRAGAL_ROUND_WIN" if entry.winner == "me" else (
+			"UI_ASTRAGAL_ROUND_LOSE" if entry.winner == "them" else "UI_ASTRAGAL_ROUND_DRAW")
+	line.text = "%d.  %d : %d  (%s)" % [_game.throws.size(), entry.sum_mine, entry.sum_theirs, tr(mark)]
+	_log.add_child(line)
+	_refresh()
+	if _game.over:
+		var verdict := UiStyle.label("", 28, GOLD)
+		verdict.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		var key := "UI_ASTRAGAL_WIN" if _game.winner == "me" else (
+				"UI_ASTRAGAL_LOSE" if _game.winner == "them" else "UI_ASTRAGAL_DRAW")
+		verdict.text = tr(key)
+		_log.add_child(verdict)
+		_panel.reset_size()
+		_panel.position = ((Vector2(1920, 1080) - _panel.size) / 2.0).max(Vector2(40, 40))
+
+
+func _process(_delta: float) -> void:
+	if not _panel.visible:
+		return
+	if Input.is_action_just_pressed(&"pause"):
+		close()
+		return
+	if Input.is_action_just_pressed(&"interact"):
+		if _game.over:
+			for c in _log.get_children():
+				c.queue_free()
+			_game.restart()
+			_refresh()
+		else:
+			_throw()

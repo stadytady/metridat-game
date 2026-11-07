@@ -1262,6 +1262,36 @@ def hum(rng):
     write_wav("hum", norm(lowpass(out, 1200), 0.45))
 
 
+def astragal(rng):
+    """Knucklebones coming down on stone: five dry, hard little clicks in a
+    scatter, each a narrow body under a bright ring, and two late ticks as they
+    settle. Bones, not dice: no hollow rattle, no wood."""
+    out = np.zeros(int(SR * 0.8))
+    pos = int(SR * 0.01)
+    for _ in range(int(rng.integers(5, 7))):
+        ln = int(SR * 0.16)
+        if pos + ln > len(out):
+            break
+        t = np.arange(ln) / SR
+        # the body of the knock, then the ring of the bone on the slab
+        body = lowpass(rng.standard_normal(ln), 2200) * np.exp(-t * 95)
+        ring = (np.sin(2 * np.pi * rng.uniform(1900, 3100) * t)
+                + 0.6 * np.sin(2 * np.pi * rng.uniform(3300, 4700) * t)) * np.exp(-t * 120)
+        click = (body * 0.8 + ring * 0.5) * np.minimum(1, t / 0.001)
+        out[pos:pos + ln] += click
+        pos += ln + int(SR * rng.uniform(0.01, 0.05))
+    for _ in range(2):
+        ln = int(SR * 0.09)
+        if pos + ln > len(out):
+            break
+        t = np.arange(ln) / SR
+        tick = (np.sin(2 * np.pi * rng.uniform(2300, 3400) * t) * np.exp(-t * 170)
+                + lowpass(rng.standard_normal(ln), 2600) * np.exp(-t * 130) * 0.5)
+        out[pos:pos + ln] += tick * 0.45
+        pos += ln + int(SR * rng.uniform(0.02, 0.06))
+    write_wav("astragal", norm(bandpass(out, 400, 7000), 0.5))
+
+
 def main() -> None:
     for d in (TEX, MAT, AUD):
         d.mkdir(parents=True, exist_ok=True)
@@ -1314,6 +1344,7 @@ def main() -> None:
     child_cry(np.random.default_rng(540))
     bark(np.random.default_rng(541))
     hum(np.random.default_rng(542))
+    astragal(np.random.default_rng(543))
     print(f"textures: {len(TEXTURES)}, materials: {len(MATERIALS)}, audio: {len(list(AUD.glob('*.wav')))}")
 
 

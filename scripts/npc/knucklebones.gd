@@ -61,6 +61,9 @@ var _played := false
 var _shells: Array[StaticBody3D] = []
 ## The two of them going home, or sitting there; empty while they play.
 var _walkers: Array[Npc] = []
+## The bones coming down on the stones, and the panel the player plays in.
+var _clatter: AudioStreamPlayer3D
+var _panel: CanvasLayer
 
 ## Home: from the square out through the parapet gap, down the footpath and in
 ## at the living room's door (House), world x/z on the flat at AGORA_H. Each
@@ -121,6 +124,15 @@ func _ready() -> void:
 		_bones.append(bone)
 		_from.append(Vector3.ZERO)
 		_set_bone(0, i)
+	# the bones come down on the stones between them, so that is where it is heard
+	_clatter = AudioStreamPlayer3D.new()
+	_clatter.name = "Clatter"
+	_clatter.stream = preload("res://assets/audio/astragal.wav")
+	_clatter.volume_db = -6.0
+	_clatter.unit_size = 2.0
+	_clatter.max_distance = 18.0
+	_clatter.position.y = 0.05
+	add_child(_clatter)
 
 
 func _bone_mesh() -> ArrayMesh:
@@ -231,7 +243,8 @@ func _place_bone(i: int, t: float, handed: bool) -> void:
 
 
 ## The bones have just left the hand: remember where it was, so the arc starts
-## there and not at the middle of the circle.
+## there and not at the middle of the circle. The clatter comes a moment later,
+## when they come down - each bone its own click, but one sound for the throw.
 func _take_from_hand() -> void:
 	var thrower := _joints[_landing_of % 2]
 	var hand: Node3D = thrower.get("r_elbow")
@@ -240,6 +253,9 @@ func _take_from_hand() -> void:
 	var at := hand.global_position + hand.global_transform.basis.y * -0.26 * CHILD_SCALE
 	for i in BONES:
 		_from[i] = to_local(at)
+	if _clatter != null:
+		_clatter.pitch_scale = 0.95 + float(_landing_of % 3) * 0.05
+		_clatter.play(FLIGHT * 0.55)
 
 
 ## Finished bones get a yaw of their own, so five of them never lie in a row.
@@ -361,12 +377,21 @@ func children() -> Array[Node3D]:
 
 ## The game with them comes later; until then the crosshair skips the children.
 func can_interact() -> bool:
-	return false
-
-
-func interact() -> void:
-	pass
+	# nobody plays knucklebones in the dark, and the children are indoors by then
+	return not Knucklebones.at_home(Game.time_target())
 
 
 func get_prompt() -> String:
-	return ""
+	return tr("UI_ASTRAGAL_PLAY")
+
+
+## E at the children sits the player down to a throw of their own: five bones,
+## three throws, higher sum takes the throw.
+func interact() -> void:
+	if _panel != null and is_instance_valid(_panel):
+		return
+	_panel = preload("res://scripts/ui/astragal_panel.gd").new()
+	_panel.name = "AstragalPanel"
+	get_tree().current_scene.add_child(_panel)
+	_panel.closed.connect(func() -> void: _panel = null)
+	_panel.open()

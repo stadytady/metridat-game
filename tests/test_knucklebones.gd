@@ -211,3 +211,38 @@ func test_already_home_if_the_square_is_built_after_dusk() -> void:
 		check(at.distance_to(KB.HOME_SEATS[i]) < 0.01, "child %d is not at its seat: %s" % [i, at])
 		check(n.pose == "sit", "child %d is not sitting at home" % i)
 	w.free()
+
+## The rules of the children's game: five bones of one to four, three throws,
+## the higher sum takes the throw, and the game ends after the third.
+func test_the_astragal_rules_hold() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	for i in 200:
+		var hand := AstragalGame.throw_bones(rng)
+		check(hand.size() == AstragalGame.BONES, "a hand of %d bones" % hand.size())
+		for b: int in hand:
+			check(b >= 1 and b <= AstragalGame.FACES, "a bone shows %d" % b)
+	var g := AstragalGame.new(99)
+	var seen := 0
+	while not g.over:
+		var entry := g.play_throw()
+		seen += 1
+		check(entry.sum_mine == AstragalGame.total(entry.mine), "the sum does not match the bones")
+		check(entry.sum_theirs == AstragalGame.total(entry.theirs), "their sum does not match")
+		var want := "me" if entry.sum_mine > entry.sum_theirs else (
+				"them" if entry.sum_theirs > entry.sum_mine else "draw")
+		check(entry.winner == want, "the throw was given to the wrong hand")
+	check(seen == AstragalGame.THROWS, "the game ran %d throws" % seen)
+	check(g.won + g.lost <= AstragalGame.THROWS, "more throws won than played")
+	check(g.winner in ["me", "them", "draw"], "no winner after three throws")
+	check(g.play_throw().is_empty(), "the game went on after the third throw")
+	g.restart()
+	check(not g.over and g.throws.is_empty() and g.winner == "", "restart left the old game")
+
+
+## The children can be played with by day, and not in the dark when they are home.
+func test_the_children_can_be_played_with_by_day() -> void:
+	check(Knucklebones.at_home(DayCycle.LAMPS_ON), "the children are out after the lamps are lit")
+	check(not Knucklebones.at_home(0.4), "the children are home in the afternoon")
+	check(tr("UI_ASTRAGAL_PLAY") != "", "the prompt to play is not translated")
+	check(tr("UI_ASTRAGAL_WIN") != "" and tr("UI_ASTRAGAL_LOSE") != "", "the verdicts are not translated")

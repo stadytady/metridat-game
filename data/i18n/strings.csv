@@ -292,3 +292,16 @@ D_MASON_MARK_DESCRIPTION,"A limestone block lying on its side in the lane, its f
 D_MASON_MARK_HISTORY,"Blocks were cut and fitted by gangs paid by the piece, and the building accounts of Greek sanctuaries record work counted that way; a mark cut on a block tallied it to the gang that dressed it or showed where it went in the course.","Блоки тёсали и подгоняли артели, которым платили со штуки, и строительные отчёты греческих святилищ считают работу именно так; вырезанная на блоке метка привязывала его к артели, обработавшей камень, или указывала место в кладке."
 D_MASON_MARK_NARRATIVE,"The block has lain here since the wall it belonged to was taken down, and the boys of the lane use it for a seat; that is the game's invention.","Блок лежит здесь с тех пор, как разобрали стену, которой он принадлежал, а мальчишки из переулка сидят на нём — это придумано для игры."
 D_MASON_MARK_HINT,"In the lane behind the agora, by the wall on the way to Myrto's yard.","В переулке за агорой, у стены по дороге во двор Мирто."
+UI_ASTRAGAL_PLAY,Play knucklebones,Сыграть в астрагалы
+UI_ASTRAGAL_TITLE,Knucklebones,Астрагалы
+UI_ASTRAGAL_YOU,You,Вы
+UI_ASTRAGAL_THEM,The children,Мальчишки
+UI_ASTRAGAL_SUM,Sum,Сумма
+UI_ASTRAGAL_KEYS,[E] Throw   [ESC] Leave,[E] Бросить   [ESC] Уйти
+UI_ASTRAGAL_AGAIN,[E] Another game   [ESC] Leave,[E] Ещё игра   [ESC] Уйти
+UI_ASTRAGAL_ROUND_WIN,yours,ваш
+UI_ASTRAGAL_ROUND_LOSE,theirs,их
+UI_ASTRAGAL_ROUND_DRAW,no one,никто
+UI_ASTRAGAL_WIN,You take the bones home,Кости ваши
+UI_ASTRAGAL_LOSE,The children win,Мальчишки выиграли
+UI_ASTRAGAL_DRAW,Nobody wins,Никто не выиграл
