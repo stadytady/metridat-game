@@ -52,6 +52,11 @@ const POSES := {
 	"mender": {"chest": Vector3(-28, 0, 0), "head": Vector3(-22, 0, 0),
 		"l_shoulder": Vector3(20, 0, 10), "r_shoulder": Vector3(20, 0, -10), "l_elbow": Vector3(45, 0, 0), "r_elbow": Vector3(45, 0, 0),
 		"l_hip": Vector3(80, 0, 10), "r_hip": Vector3(80, 0, -10), "l_knee": Vector3(-60, 0, 0), "r_knee": Vector3(-60, 0, 0)},
+	# sitting on a stone gutting a fish on a board before the knees: bent over
+	# it, the left hand pinning the fish, the right with the knife
+	"gut": {"chest": Vector3(-36, 0, 0), "head": Vector3(-24, 0, 0),
+		"l_shoulder": Vector3(40, 0, 12), "l_elbow": Vector3(42, 0, 0), "r_shoulder": Vector3(36, 0, -14), "r_elbow": Vector3(54, 0, 0),
+		"l_hip": Vector3(80, 0, 10), "r_hip": Vector3(80, 0, -10), "l_knee": Vector3(-70, 0, 0), "r_knee": Vector3(-70, 0, 0)},
 	# walking upright: the stride itself comes from step_motion()
 	"walk": {"chest": Vector3(-4, 0, 0), "head": Vector3(-8, 0, 0)},
 	# spinning standing: the distaff in the crook of the left arm, wool up by the
@@ -98,7 +103,7 @@ const POSES := {
 ## Pelvis height for a pose (seated figures sit on something low).
 const SEAT := {"stand": 0.92, "potter": 0.46, "turner": 0.32, "mender": 0.4, "sleep": 0.12, "baker": 0.5, "carry": 0.92, "declaim": 0.92, "draw": 0.92,
 	"walk": 0.92, "think": 0.92, "spin": 0.92, "pick": 0.86, "stoke": 0.5, "sit_think": 0.34,
-	"head_carry": 0.92, "pour": 0.92, "sit": 0.3, "weave": 0.54}
+	"head_carry": 0.92, "pour": 0.92, "sit": 0.3, "weave": 0.54, "gut": 0.4}
 
 
 ## How a person looks: "woman", "beard" (0 none, 1 short, 2 full), "hair"
@@ -340,6 +345,15 @@ static func motion(pose: String, t: float) -> Dictionary:
 		"sleep":
 			# slow breathing
 			return {"chest": Vector3(sin(q * 1.4) * 2.0, 0, 0)}
+		"gut":
+			# short strokes along the belly, then a flick of the knife to throw
+			# the guts aside for the gulls
+			var k := fposmod(q * 0.4, 1.0)
+			if k < 0.75:
+				var s := sin(q * 9.0)
+				return {"r_shoulder": Vector3(s * 6, s * 8, 0), "r_elbow": Vector3(-s * 10, 0, 0), "head": Vector3(0, s * 3, 0)}
+			var flick := sin((k - 0.75) / 0.25 * PI)
+			return {"r_shoulder": Vector3(flick * 20, 0, -flick * 35), "r_elbow": Vector3(-flick * 30, 0, 0), "chest": Vector3(flick * 5, 0, 0)}
 		"mender":
 			# the needle goes through, the arm pulls the twine out and up
 			var k := fposmod(q * 0.8, 1.0)
