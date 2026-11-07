@@ -159,11 +159,85 @@ func test_the_porches_hold_work_that_can_be_seen() -> void:
 				"a %s blocks the lane at %s" % [s.kind, at])
 		check(not Topo.is_reserved(at.x, at.z, 1.0), "a %s stands on the walked ground at %s" % [s.kind, at])
 		kinds[s.kind] = true
-	check(kinds.size() >= 2, "the porches only ever hold %d kind of work" % kinds.size())
+	check(kinds.size() >= 5, "the porches only ever hold %d kinds of work" % kinds.size())
+	check(scenes.size() >= 8, "only %d porch scenes in the back lanes" % scenes.size())
+	# never down behind a terrace's retaining wall
+	var walls: Array = B.terrace_walls(houses)
+	check(not walls.is_empty(), "no retaining walls to keep clear of")
+	for s: Dictionary in scenes:
+		for p: Dictionary in B.porch_people(s):
+			var d: float = B.terrace_wall_distance(walls, Vector2(p.pos.x, p.pos.z))
+			check(d > 0.9, "someone at a %s sits %.2f m behind a retaining wall at %s" % [s.kind, d, p.pos])
+		# beside the door, never on its threshold and steps
+	for hs: Dictionary in houses:
+		for s: Dictionary in scenes:
+			var basis := Basis.from_euler(Vector3(0, hs.yaw, 0))
+			var local: Vector3 = basis.inverse() * (s.pos - Vector3(hs.pos.x, s.pos.y, hs.pos.y))
+			if absf(local.z - (hs.d / 2.0 + B.PORCH_OUT)) < 0.05 and absf(local.x) < hs.w / 2.0:
+				check(absf(local.x - float(hs.opts.get("door_x", 0.0))) > 1.0, "a %s sits on a doorstep at %s" % [s.kind, s.pos])
 	# the poses the scenes put people in must be real ones
-	for pose: String in ["weave", "mender", "sit"]:
+	for pose: String in ["weave", "mender", "sit", "stoke", "sit_think", "think"]:
 		check(Figure.POSES.has(pose), "no %s pose for the porch work" % pose)
 		check(Figure.SEAT.has(pose), "the %s pose has no seat height" % pose)
+
+## The people of the porches: on the ground at their own spot, workers turned
+## to their work at the wall, the rest to the lane, the two neighbours to each
+## other; whoever sits has a seat under them of the height the pose sits at.
+func test_porch_people_face_their_work_and_sit_on_something() -> void:
+	var houses: Array = B.plan()
+	var faced_wall := 0
+	for s: Dictionary in B.porch_scenes(houses):
+		var out := Basis.from_euler(Vector3(0, float(s.yaw), 0)) * Vector3(0, 0, 1)
+		var people: Array = B.porch_people(s)
+		check(not people.is_empty(), "a %s scene with nobody at it" % s.kind)
+		for p: Dictionary in people:
+			var at: Vector3 = p.pos
+			check(absf(at.y - Topo.surface(at.x, at.z)) < 0.01, "someone at a %s stands %.2f off the ground" % [s.kind, at.y - Topo.surface(at.x, at.z)])
+			check(not B.on_house(houses, at.x, at.z, 0.0), "someone at a %s is inside a house at %s" % [s.kind, at])
+			var yaw := B.face_yaw(at, p.faces)
+			var fwd := Vector3(-sin(yaw), 0, -cos(yaw))
+			var want: Vector3 = (p.faces as Vector3) - at
+			want.y = 0.0
+			check(fwd.dot(want.normalized()) > 0.99, "someone at a %s looks away from what they face" % s.kind)
+			if String(s.kind) in ["loom", "baskets", "quern"]:
+				check(fwd.dot(out) < -0.9, "the %s worker has their back to the work" % s.kind)
+				faced_wall += 1
+			if String(s.kind) in ["child", "elder"]:
+				check(fwd.dot(out) > 0.9, "the %s sits facing the wall" % s.kind)
+			var sits := float(Figure.SEAT[String(p.pose)]) < 0.7 and String(p.pose) not in ["stoke", "sit"]
+			check(not sits or float(p.seat) > 0.2, "a %s sits on air (pose %s, seat %.2f)" % [s.kind, p.pose, p.seat])
+	check(faced_wall >= 3, "only %d workers at their work" % faced_wall)
+
+
+## The distance to a retaining wall: on its face line it is nothing, a step
+## off to the side it is that step, and past its end it is measured to the end.
+func test_the_distance_to_a_retaining_wall() -> void:
+	var walls: Array = B.terrace_walls(B.plan())
+	check(walls.size() > 50, "only %d retaining walls along the terraces" % walls.size())
+	var w: Dictionary = walls[0]
+	var c: Vector2 = w.centre
+	var t: Vector2 = w.along
+	var n := Vector2(-t.y, t.x)
+	var one := [w]
+	check(B.terrace_wall_distance(one, c) < 0.001, "the wall's own centre is not on it")
+	check(absf(B.terrace_wall_distance(one, c + n * 1.5) - 1.5) < 0.001, "1.5 m off the face reads %.2f" % B.terrace_wall_distance(one, c + n * 1.5))
+	var past := c + t * (float(w.length) / 2.0 + 2.0)
+	check(absf(B.terrace_wall_distance(one, past) - 2.0) < 0.001, "2 m past the end reads %.2f" % B.terrace_wall_distance(one, past))
+
+
+## Each walker is someone of their own: no two look the same, some carry.
+func test_the_walkers_are_neighbours_not_a_crowd() -> void:
+	var looks := {}
+	var loads := 0
+	for r: Dictionary in B.walker_routes():
+		var kind: Dictionary = B.WALKERS[int(r.kind) % B.WALKERS.size()]
+		looks[str(kind.look)] = true
+		if String(kind.load) != "":
+			loads += 1
+	check(looks.size() == B.walker_routes().size(), "%d walkers share %d looks" % [B.walker_routes().size(), looks.size()])
+	check(B.walker_routes().size() >= 6, "only %d walkers on the terrace streets" % B.walker_routes().size())
+	check(loads >= 3, "only %d walkers carry anything" % loads)
+
 
 ## The lamps of the back lanes hang on the plaster beside a door, a hand off the
 ## frame, at the height a lamp is carried - and there are enough of them to walk
