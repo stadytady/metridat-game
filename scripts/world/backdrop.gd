@@ -38,6 +38,12 @@ var _smoke: Array[GPUParticles3D] = []
 ## Lamps on the walls of the back lanes: with the cottage's one they make the
 ## town a scatter of fires at night instead of one lit street and a black map.
 var _lane_lamps: Array[WallLamp] = []
+## Who works at a doorstep by day and goes in at dusk, who keeps walking, and the
+## one man who only comes out once the lamps are lit.
+var _porch_people: Array[Npc] = []
+var _walker_people: Array[Npc] = []
+var _watchman: Npc
+var _night := false
 var _atm: Node
 
 
@@ -408,6 +414,64 @@ static func fountain_at(houses: Array) -> Dictionary:
 	return {}
 
 
+## Where the watchman paces: up and down the street past the first crossing herm,
+## three metres either way. Empty when the town has no crossing to stand on.
+static func watch_route(houses: Array) -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	var herms := crossing_herms(houses)
+	if herms.is_empty():
+		return out
+	var h: Vector3 = herms[0].pos
+	for dz: float in [-3.0, 3.0]:
+		var p := Vector3(h.x, 0, h.z + dz)
+		p.y = Topo.surface(p.x, p.z)
+		out.append(p)
+	return out
+
+
+## The animals of the back streets: a dog asleep by the herm at a crossing, and
+## hens scratching about by the lane's well. Both spots are already known to be
+## clear of houses and of the lanes, because the herm and the well stand there.
+## [{pos, kind}]
+static func animal_spots(houses: Array) -> Array:
+	var out := []
+	var herms := crossing_herms(houses)
+	if herms.size() >= 2:
+		var at: Vector3 = herms[1].pos + Vector3(1.15, 0, -0.95)
+		at.y = Topo.surface(at.x, at.z)
+		out.append({"pos": at, "kind": "dog", "yaw": 0.6})
+	var well := fountain_at(houses)
+	if not well.is_empty():
+		var flock_at: Vector3 = well.pos + Vector3(-1.25, 0, 1.05)
+		flock_at.y = Topo.surface(flock_at.x, flock_at.z)
+		out.append({"pos": flock_at, "kind": "flock", "yaw": 0.0})
+	return out
+
+
+## The dog and the hens. The dog keeps the habits of the one by the stoa (it
+## sleeps, breathes, lifts its head); the hens roost at night on their own.
+func _animals(houses: Array) -> void:
+	for s: Dictionary in animal_spots(houses):
+		var at: Vector3 = s.pos
+		if String(s.kind) == "dog":
+			var dog := Dog.new()
+			dog.name = "LaneDog"
+			dog.position = at
+			dog.scale = Vector3.ONE * 1.1
+			dog.rotation.y = float(s.yaw)
+			add_child(dog)
+			continue
+		var birds := [["rooster", true], ["hen", false], ["hen_white", false]]
+		for i in birds.size():
+			var hen := Chicken.new()
+			hen.name = "LaneHen%d" % i
+			hen.home = at
+			hen.radius = 1.4
+			hen.feathers = birds[i][0]
+			hen.rooster = birds[i][1]
+			add_child(hen)
+
+
 ## The well head in the lane, with the woman who has come for water.
 func _fountain(houses: Array) -> void:
 	var spot := fountain_at(houses)
@@ -461,6 +525,8 @@ func _ready() -> void:
 	_porches(houses)
 	_lane_lamps_at(houses)
 	_fountain(houses)
+	_animals(houses)
+	_watchman_at(houses)
 	if _cottage_lamp != null:
 		_cottage_lamp.set_lit(false)
 
@@ -490,17 +556,17 @@ func _porches(houses: Array) -> void:
 				Arch.loom(kit, Arch.frame(at, out))
 				var loom_seat := at + out * 0.6
 				_seat(kit, loom_seat, Figure.SEAT["weave"] - 0.04, "wood")
-				_porch_npc(loom_seat, yaw + PI, "weave", 1.0, "Weaver%d" % i,
-						{"woman": true, "kerchief": "cloth", "skirt": "long", "cloth": "chiton_blue"})
+				_porch_people.append(_porch_npc(loom_seat, yaw + PI, "weave", 1.0, "Weaver%d" % i,
+						{"woman": true, "kerchief": "cloth", "skirt": "long", "cloth": "chiton_blue"}))
 			"baskets":
 				Arch.basket_work(kit, Arch.frame(at, out))
 				var bench_seat := at + out * 0.34
 				_seat(kit, bench_seat, Figure.SEAT["mender"] - 0.03, "limestone")
-				_porch_npc(bench_seat, yaw + PI, "mender", 1.0, "Basketmaker%d" % i,
-						{"beard": 1, "hair": 2, "cloth": "chiton"})
+				_porch_people.append(_porch_npc(bench_seat, yaw + PI, "mender", 1.0, "Basketmaker%d" % i,
+						{"beard": 1, "hair": 2, "cloth": "chiton"}))
 			_:
-				_porch_npc(at + out * 0.1, yaw, "sit", 0.62, "Doorstep%d" % i,
-						{"beard": 0, "hair": 0, "cloth": "chiton_ochre"})
+				_porch_people.append(_porch_npc(at + out * 0.1, yaw, "sit", 0.62, "Doorstep%d" % i,
+						{"beard": 0, "hair": 0, "cloth": "chiton_ochre"}))
 		i += 1
 	add_child(kit.build("Porches"))
 
@@ -511,7 +577,7 @@ func _seat(kit: MeshKit, at: Vector3, height: float, mat: String) -> void:
 	kit.box(mat, at + Vector3(0, height * 0.5, 0), Vector3(0.36, height, 0.36), [])
 
 
-func _porch_npc(at: Vector3, yaw: float, pose: String, scale: float, key: String, look: Dictionary = {}) -> void:
+func _porch_npc(at: Vector3, yaw: float, pose: String, scale: float, key: String, look: Dictionary = {}) -> Npc:
 	var n: Npc = Npc.new()
 	n.name = key
 	n.npc_id = key
@@ -524,6 +590,7 @@ func _porch_npc(at: Vector3, yaw: float, pose: String, scale: float, key: String
 	n.position = at
 	n.rotation.y = yaw
 	add_child(n)
+	return n
 
 
 ## The people on the terrace streets: they walk their stretch and come back, on
@@ -560,6 +627,68 @@ func _walkers() -> void:
 		pauses[offsets.size() - 1] = 1.4
 		n.patrol_pauses = pauses
 		add_child(n)
+		_walker_people.append(n)
+
+
+## A watchman with a lantern, out only after dusk: he paces the stretch of street
+## by the first crossing herm. The model is an ordinary Npc; the lantern hangs on
+## his right hand - a clay dish, a flame of its own and a small warm light - so
+## the back street has one moving fire in it at night.
+func _watchman_at(houses: Array) -> void:
+	var route := watch_route(houses)
+	if route.size() < 2:
+		return
+	var n: Npc = Npc.new()
+	n.name = "Watchman"
+	n.npc_id = "watchman"
+	n.talkable = false
+	n.stops_for_player = false
+	n.solid = false
+	n.follow_ground = true
+	n.look = {"beard": 1, "hair": 2, "cloth": "chiton_dark"}
+	n.position = route[0]
+	var offsets := PackedVector3Array()
+	for p: Vector3 in route:
+		offsets.append(p - route[0])
+	n.patrol = offsets
+	n.patrol_speed = 0.34
+	n.patrol_poses = PackedStringArray(["stand"])
+	var pauses := PackedFloat32Array()
+	pauses.resize(offsets.size())
+	pauses[0] = 3.0
+	pauses[offsets.size() - 1] = 3.0
+	n.patrol_pauses = pauses
+	add_child(n)
+	var hand: Node3D = n.joints["r_elbow"]
+	hand.add_child(_lantern())
+	n.visible = false
+	_watchman = n
+
+
+## The lantern itself: a dish on a hook, a flame and a light that flickers.
+func _lantern() -> Node3D:
+	var root := Node3D.new()
+	root.name = "Lantern"
+	root.position = Vector3(0, -0.3, 0)
+	var kit := MeshKit.new()
+	kit.lathe("clay", PackedVector2Array([Vector2(0.03, 0.0), Vector2(0.09, 0.05), Vector2(0.1, 0.09)]), 8,
+			Vector3.ZERO, 1.0, true)
+	var mi := MeshInstance3D.new()
+	mi.mesh = kit.commit()
+	root.add_child(mi)
+	var flame := Lamp._make_flame(0.06)
+	flame.position = Vector3(0, 0.12, 0)
+	root.add_child(flame)
+	var light := OmniLight3D.new()
+	light.position = Vector3(0, 0.18, 0)
+	light.light_color = Color(1.0, 0.62, 0.3)
+	light.omni_range = 6.0
+	light.shadow_enabled = false
+	light.set_script(preload("res://scripts/world/flicker.gd"))
+	light.base_energy = 1.2
+	light.amount = 0.35
+	root.add_child(light)
+	return root
 
 
 ## What goes on behind the walls: a hammer, a loom, a baby, a dog, a woman
@@ -824,6 +953,17 @@ func _process(_delta: float) -> void:
 		_cottage_lamp.set_lit(hour >= WallLamp.DUSK)
 	for lamp: WallLamp in _lane_lamps:
 		lamp.set_lit(hour >= WallLamp.DUSK)
+	# Night in the back streets: the looms and the baskets are carried in, half
+	# the walkers go home, and the watchman comes out with his lantern.
+	var night := hour >= WallLamp.DUSK
+	if night != _night:
+		_night = night
+		for p: Npc in _porch_people:
+			p.visible = not night
+		for i in _walker_people.size():
+			_walker_people[i].visible = not night or i % 2 == 0
+		if _watchman != null:
+			_watchman.visible = night
 	var day := hour < 0.95
 	for s in _smoke:
 		if s.emitting != day:

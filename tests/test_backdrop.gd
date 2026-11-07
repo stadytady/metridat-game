@@ -192,3 +192,29 @@ func test_the_lane_has_its_own_well() -> void:
 	check(not B.on_house(houses, at.x, at.z, 0.5), "the lane's well stands in a house at %s" % at)
 	check(not Topo.is_reserved(at.x, at.z, 1.0), "the lane's well stands on the walked ground")
 	check(B._dist_to(B.streets(), Vector2(at.x, at.z)) < B.LANE_HALF + 2.0, "the lane's well is not by a street at %s" % at)
+
+## The animals of the back streets stand on the ground, out of the houses, and
+## there is more than one kind of them.
+func test_the_back_streets_have_their_animals() -> void:
+	var houses: Array = B.plan()
+	var spots: Array = B.animal_spots(houses)
+	check(spots.size() >= 2, "only %d animal spots in the back streets" % spots.size())
+	var kinds := {}
+	for s: Dictionary in spots:
+		var at: Vector3 = s.pos
+		check(absf(at.y - Topo.surface(at.x, at.z)) < 0.01, "an animal stands off the ground at %s" % at)
+		check(not B.on_house(houses, at.x, at.z, 0.2), "an animal stands inside a house at %s" % at)
+		kinds[s.kind] = true
+	check(kinds.size() >= 2, "the animals are all of one kind")
+
+
+## The watchman paces a real stretch of street, on the ground, clear of walls.
+func test_the_watchman_has_somewhere_to_pace() -> void:
+	var houses: Array = B.plan()
+	var route: Array[Vector3] = B.watch_route(houses)
+	check(route.size() >= 2, "the watchman has nowhere to walk")
+	for p: Vector3 in route:
+		check(absf(p.y - Topo.surface(p.x, p.z)) < 0.01, "the watchman walks off the ground at %s" % p)
+		check(not B.on_house(houses, p.x, p.z, 0.4), "the watchman walks through a wall at %s" % p)
+	if route.size() >= 2:
+		check(route[0].distance_to(route[1]) > 4.0, "the watchman paces only %.1f m" % route[0].distance_to(route[1]))
