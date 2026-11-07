@@ -114,3 +114,32 @@ func test_the_voices_stand_at_the_walls() -> void:
 		check(StreetVoices.SOUNDS.has(v.kind), "a voice of kind %s has no sound" % v.kind)
 		kinds[v.kind] = true
 	check(kinds.size() >= 4, "only %d kinds of voice behind the walls" % kinds.size())
+
+## The people on the terrace streets walk their own street: every point of a
+## route lies on a lane (never through a house), the height is the ground's, and
+## the route comes back to where it started.
+func test_the_walkers_keep_to_their_streets() -> void:
+	var houses: Array = B.plan()
+	var routes: Array = B.walker_routes()
+	check(routes.size() >= 4, "only %d walkers on the terrace streets" % routes.size())
+	var lanes: Array = B.streets() + B.stairs()
+	var streets := {}
+	for r: Dictionary in routes:
+		var points: Array[Vector3] = r.points
+		check(points.size() >= 8, "%s has only %d waypoints" % [r.key, points.size()])
+		if points.size() < 2:
+			continue
+		check(points[0].distance_to(points[-1]) < 0.6, "%s does not come back to its start" % r.key)
+		var span := 0.0
+		for i in points.size():
+			var p := points[i]
+			check(absf(p.y - Topo.surface(p.x, p.z)) < 0.05, "%s walks %.2f m off the ground at %s" % [r.key, p.y - Topo.surface(p.x, p.z), p])
+			check(B._dist_to(lanes, Vector2(p.x, p.z)) < B.LANE_HALF + 0.6, "%s steps off the lane at %s" % [r.key, p])
+			check(not B.on_house(houses, p.x, p.z, 0.0), "%s walks through a house at %s" % [r.key, p])
+			if i > 0:
+				var step := Vector2(points[i - 1].x - p.x, points[i - 1].z - p.z).length()
+				check(step < 3.5, "%s jumps %.1f m in one waypoint" % [r.key, step])
+				span += step
+		check(span > 12.0, "%s only covers %.1f m" % [r.key, span])
+		streets[snappedf(points[0].x, 1.0)] = true
+	check(streets.size() >= 3, "the walkers share only %d streets" % streets.size())
