@@ -164,3 +164,17 @@ func test_the_porches_hold_work_that_can_be_seen() -> void:
 	for pose: String in ["weave", "mender", "sit"]:
 		check(Figure.POSES.has(pose), "no %s pose for the porch work" % pose)
 		check(Figure.SEAT.has(pose), "the %s pose has no seat height" % pose)
+
+## The lamps of the back lanes hang on the plaster beside a door, a hand off the
+## frame, at the height a lamp is carried - and there are enough of them to walk
+## from one to the next, but not one on every wall.
+func test_the_back_lanes_have_their_own_lamps() -> void:
+	var houses: Array = B.plan()
+	var lamps: Array = B.lane_lamps(houses)
+	check(lamps.size() >= 6, "only %d lamps in the back lanes" % lamps.size())
+	check(lamps.size() <= B.LANE_LAMPS_MAX, "%d lamps: more than the cap" % lamps.size())
+	for l: Dictionary in lamps:
+		var at: Vector3 = l.pos
+		check(absf(at.y - Topo.surface(at.x, at.z)) < 0.01, "a lane lamp stands off the ground at %s" % at)
+		check(B.on_house(houses, at.x, at.z, 0.5), "a lane lamp hangs off a wall at %s" % at)
+		check(B._dist_to(B.streets(), Vector2(at.x, at.z)) > B.LANE_HALF - 0.3, "a lane lamp stands in the lane at %s" % at)
