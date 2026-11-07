@@ -1,7 +1,9 @@
 extends District
 ## Fisherman's camp on the beach below the agora: a small boat hauled up the
 ## shingle, a net drying on two poles, baskets of the morning catch, a stone
-## to sit on and a driftwood fire. Glaukos mends a net across his knees.
+## to sit on and a driftwood fire. Glaukos sits on his stone gutting the catch
+## on a board, a fish at a time for about seventy seconds (FISHER_ROUTE), then
+## gets up, takes another from the baskets by the boat and sits down again.
 
 const NPC := preload("res://scripts/npc/npc.gd")
 
@@ -10,11 +12,28 @@ const BOAT := Vector2(69.6, 16.4)
 const RACK := [Vector2(63.6, 11.0), Vector2(66.6, 11.0)]
 const FIRE := Vector2(64.4, 17.0)
 const SINKERS := Vector2(65.7, 13.6)
+## The morning catch in two baskets by the boat.
+const CATCH := [Vector2(67.4, 13.2), Vector2(67.9, 14.0)]
+## The gutting board on a flat stone before his knees, the knife side to his
+## right; the gutted fish go into a flat basket at his left.
+const BOARD := Vector2(64.98, 14.6)
+const BOARD_TOP := 0.3
+const GUTTED := Vector2(65.55, 15.35)
+const GUTTED_MAX := 5
+## His round: [x, z, pose, pause s, facing yaw deg]. Seventy seconds at the
+## board facing west up the beach, then a few steps to the first catch basket,
+## bent over it a moment (facing it), and back.
+const FISHER_ROUTE := [
+	[65.6, 14.6, "gut", 70.0, 90.0],
+	[66.85, 13.75, "pick", 2.5, -45.0],
+]
+const FISHER_BOARD := 0
+const FISHER_CATCH := 1
 ## Cormorants on the beach some fifty metres south of the Swallow, above the
 ## surf: a patch of sand they walk, and two rocks they dry their wings on.
-## Glaukos's errand: a hook dropped at the foot of the drying net, on this side
-## of it (the net is solid to the ray).
-const LOST_HOOK := Vector2(65.1, 11.4)
+## Glaukos's errand: a hook dropped behind his boat, on the sea side of the
+## hull, where nobody standing at the camp can see it.
+const LOST_HOOK := Vector2(70.0, 17.36)
 const CORMORANT_SAND := Vector2(65.0, 40.2)
 const CORMORANT_SAND_R := 2.2
 const CORMORANT_ROCKS := [Vector3(66.9, 0.0, 38.9), Vector3(67.4, 0.0, 41.6)]
@@ -51,50 +70,81 @@ func _ready() -> void:
 	spawn_inspectable("net_sinkers", Vector3(SINKERS.x, ground(SINKERS) + 0.36, SINKERS.y), 20.0)
 
 
+## The drying rack: two poles and a bar, and a net thrown over the bar. It
+## hangs down both sides a metre or so, its foot sagging between the poles and
+## splayed a little, so it reads as cloth over a pole and not as a fence.
 func _rack(kit: MeshKit) -> void:
 	var top := 1.85
 	var a: Vector2 = RACK[0]
 	var b: Vector2 = RACK[1]
-	var ya := ground(a)
-	var yb := ground(b)
+	var bar_y := rack_bar_y()
 	for p: Vector2 in RACK:
-		kit.solid_box("wood", Vector3(p.x, ground(p) + top / 2.0, p.y), Vector3(0.1, top + 0.2, 0.1), ["bottom"])
-	var bar_y := (ya + yb) / 2.0 + top - 0.08
+		# every pole up to the bar, whatever the shingle does under it
+		var g := ground(p)
+		var h := bar_y + 0.12 - g
+		kit.solid_box("wood", Vector3(p.x, g + h / 2.0, p.y), Vector3(0.1, h, 0.1), ["bottom"])
 	kit.box("wood", Vector3((a.x + b.x) / 2.0, bar_y, a.y), Vector3(b.x - a.x + 0.3, 0.07, 0.07), [])
-	# The net hangs over the bar and sags in the middle; cut-out, seen from both sides.
-	var mid := (a.x + b.x) / 2.0
-	var low := 0.35
-	var pts := [Vector3(a.x + 0.05, ya + low + 0.15, a.y), Vector3(mid, (ya + yb) / 2.0 + low, a.y),
-		Vector3(b.x - 0.05, yb + low + 0.15, a.y)]
-	for i in 2:
-		var p0: Vector3 = pts[i]
-		var p1: Vector3 = pts[i + 1]
-		kit.quad("net", p0, p1, Vector3(p1.x, bar_y, a.y), Vector3(p0.x, bar_y, a.y))
-	kit.add_collider(Vector3(mid, bar_y - 0.6, a.y), Vector3(b.x - a.x, 1.2, 0.1))
+	var n := NET_COLUMNS
+	for side: float in [-1.0, 1.0]:
+		for i in n:
+			var u0 := float(i) / n
+			var u1 := float(i + 1) / n
+			var x0 := lerpf(a.x + 0.08, b.x - 0.08, u0)
+			var x1 := lerpf(a.x + 0.08, b.x - 0.08, u1)
+			var t0 := Vector3(x0, bar_y, a.y + side * 0.03)
+			var t1 := Vector3(x1, bar_y, a.y + side * 0.03)
+			var f0 := Vector3(x0, bar_y - net_drop(u0), a.y + side * NET_SPLAY)
+			var f1 := Vector3(x1, bar_y - net_drop(u1), a.y + side * NET_SPLAY)
+			# the outer face of each side, wound outwards (cutout, seen from both)
+			if side > 0.0:
+				kit.quad("net", f0, f1, t1, t0)
+			else:
+				kit.quad("net", f1, f0, t0, t1)
+	kit.add_collider(Vector3((a.x + b.x) / 2.0, bar_y - NET_HANG / 2.0, a.y), Vector3(b.x - a.x, NET_HANG, 0.1 + NET_SPLAY * 2.0))
+
+
+const NET_COLUMNS := 8
+## How far the net hangs below the bar at the poles, and how much more it sags
+## in the middle; how far its foot stands out from the bar on each side.
+const NET_HANG := 0.95
+const NET_SAG := 0.3
+const NET_SPLAY := 0.12
+
+
+## The bar's height: the poles stand on different shingle, the bar is level.
+static func rack_bar_y() -> float:
+	return maxf(ground(RACK[0]), ground(RACK[1])) + 1.77
+
+
+## How far below the bar the net's foot hangs, u along the bar (0..1).
+static func net_drop(u: float) -> float:
+	return NET_HANG + NET_SAG * 4.0 * u * (1.0 - u)
 
 
 func _seat_and_nets(kit: MeshKit, rng: RandomNumberGenerator) -> void:
 	var g := ground(SEAT)
 	kit.blob("rock", Vector3(SEAT.x + 0.05, g + 0.16, SEAT.y), Vector3(0.32, 0.26, 0.3), 0.15, rng)
 	kit.add_collider(Vector3(SEAT.x, g + 0.2, SEAT.y), Vector3(0.6, 0.4, 0.6))
-	# The net over his knees runs west, down to the shingle, and lies there in folds.
-	var kx := SEAT.x - 0.55
-	var knee := g + 0.5
-	for z0: float in [-0.45, 0.0]:
-		var z1 := z0 + 0.45
-		kit.quad("net", Vector3(SEAT.x - 0.15, g + 0.42, SEAT.y + z0), Vector3(kx, knee, SEAT.y + z0),
-				Vector3(kx, knee, SEAT.y + z1), Vector3(SEAT.x - 0.15, g + 0.42, SEAT.y + z1))
-		kit.quad("net", Vector3(kx, knee, SEAT.y + z0), on_ground(kx - 0.35, SEAT.y + z0 - 0.1),
-				on_ground(kx - 0.35, SEAT.y + z1 + 0.1), Vector3(kx, knee, SEAT.y + z1))
-	var x0 := kx - 0.35
+	# The net he is not mending today lies heaped on the shingle west of him,
+	# out of the way of the board.
+	var x0 := SEAT.x - 0.9
 	kit.quad("net", on_ground(x0, SEAT.y - 0.55), on_ground(x0 - 1.1, SEAT.y - 0.75),
 			on_ground(x0 - 1.0, SEAT.y + 0.8), on_ground(x0, SEAT.y + 0.55))
+	kit.quad("net", on_ground(x0 - 0.25, SEAT.y - 0.35, 0.06), on_ground(x0 - 0.85, SEAT.y - 0.45, 0.05),
+			on_ground(x0 - 0.8, SEAT.y + 0.5, 0.05), on_ground(x0 - 0.2, SEAT.y + 0.35, 0.07))
+	# the gutting board on a flat stone (boxes, no rng: the rocks after it stay put)
+	var bg := ground(BOARD)
+	kit.box("rock", Vector3(BOARD.x, bg + (BOARD_TOP - 0.05) / 2.0, BOARD.y), Vector3(0.4, BOARD_TOP - 0.05, 0.36), ["bottom"])
+	kit.box("wood", Vector3(BOARD.x, bg + BOARD_TOP - 0.025, BOARD.y), Vector3(0.36, 0.05, 0.56), ["bottom"])
+	# the flat basket for the gutted fish
+	var gb := Vector3(GUTTED.x, ground(GUTTED), GUTTED.y)
+	kit.lathe("basket", PackedVector2Array([Vector2(0.26, 0.0), Vector2(0.3, 0.12), Vector2(0.31, 0.14)]), 8, gb, 2.0, true, "basket")
 
 
 func _baskets(kit: MeshKit, rng: RandomNumberGenerator) -> void:
 	# Two baskets of the catch by the boat, and an upturned one by his side
 	# (the sinkers lie on it).
-	for p: Vector2 in [Vector2(67.4, 13.2), Vector2(67.9, 14.0)]:
+	for p: Vector2 in CATCH:
 		var c := Vector3(p.x, ground(p), p.y)
 		kit.lathe("basket", PackedVector2Array([Vector2(0.24, 0.0), Vector2(0.3, 0.3), Vector2(0.32, 0.36)]), 8, c, 2.0,
 				true, "basket")
@@ -160,16 +210,111 @@ func _fire() -> void:
 	add_child(glow)
 
 
+var _fisher: Npc
+var _board_fish: MeshInstance3D
+var _hand_fish: MeshInstance3D
+var _gutted: Array[MeshInstance3D] = []
+
+
+static func _fish_mesh() -> ArrayMesh:
+	var kit := MeshKit.new()
+	kit.box("fish", Vector3.ZERO, Vector3(0.3, 0.05, 0.07), [])
+	kit.box("fish", Vector3(-0.17, 0, 0), Vector3(0.05, 0.04, 0.09), [])  # tail
+	return kit.commit()
+
+
+## His round as Npc patrol data, home at the stone.
+static func set_fisher_round(f: Npc) -> void:
+	var home := Vector3(FISHER_ROUTE[0][0], 0, FISHER_ROUTE[0][1])
+	var pts := PackedVector3Array()
+	var poses := PackedStringArray()
+	var pauses := PackedFloat32Array()
+	var faces := PackedFloat32Array()
+	for r: Array in FISHER_ROUTE:
+		pts.append(Vector3(r[0], 0, r[1]) - home)
+		poses.append(r[2])
+		pauses.append(r[3])
+		faces.append(r[4])
+	f.patrol = pts
+	f.patrol_poses = poses
+	f.patrol_pauses = pauses
+	f.patrol_faces = faces
+	f.patrol_speed = 0.5
+	# he keeps at the work while watched; a talk holds the world anyway
+	f.stops_for_player = false
+
+
 func _fisherman() -> void:
 	var f: Npc = NPC.new()
 	f.npc_id = "fisher"
 	f.name_key = "NPC_FISHER_NAME"
 	f.dialogue = load("res://data/dialogues/fisher.dialogue") as DialogueResource
-	f.pose = "mender"
+	f.pose = "gut"
 	f.body_mat = "chiton_dark"
 	f.position = Vector3(SEAT.x, ground(SEAT), SEAT.y)
 	f.rotation.y = deg_to_rad(90.0)  # faces west, up the beach towards the city
+	set_fisher_round(f)
 	add_child(f)
+	_fisher = f
+	var mesh := _fish_mesh()
+	# the knife in his right hand, the blade on past the fist
+	var knife := MeshInstance3D.new()
+	var kk := MeshKit.new()
+	kk.box("bronze", Vector3(0, -0.36, 0.0), Vector3(0.02, 0.13, 0.008), [])
+	kk.box("wood", Vector3(0, -0.28, 0.0), Vector3(0.03, 0.06, 0.03), [])
+	knife.mesh = kk.commit()
+	(f.joints["r_elbow"] as Node3D).add_child(knife)
+	# the fish on the board, across it, head to his left
+	_board_fish = MeshInstance3D.new()
+	_board_fish.mesh = mesh
+	_board_fish.position = Vector3(BOARD.x, ground(BOARD) + BOARD_TOP + 0.03, BOARD.y)
+	_board_fish.rotation.y = deg_to_rad(90.0)
+	add_child(_board_fish)
+	# a fresh one by the gills, carried back from the basket, hanging from the hand
+	_hand_fish = MeshInstance3D.new()
+	_hand_fish.mesh = mesh
+	_hand_fish.position = Vector3(0, -0.44, 0)
+	_hand_fish.rotation.z = deg_to_rad(90.0)
+	_hand_fish.visible = false
+	(f.joints["l_elbow"] as Node3D).add_child(_hand_fish)
+	# the gutted ones laid in the flat basket, side by side
+	for i in GUTTED_MAX:
+		var g := MeshInstance3D.new()
+		g.mesh = mesh
+		g.position = Vector3(GUTTED.x - 0.16 + i * 0.08, ground(GUTTED) + 0.09 + (i % 2) * 0.01, GUTTED.y)
+		g.rotation.y = deg_to_rad(90.0 + (i % 3 - 1) * 8.0)
+		g.visible = false
+		add_child(g)
+		_gutted.append(g)
+	f.departed.connect(_on_fisher_departed)
+	f.reached.connect(_on_fisher_reached)
+
+
+func _on_fisher_departed(i: int) -> void:
+	if i == FISHER_BOARD:
+		# done with this one: into the basket with the others
+		_board_fish.visible = false
+		for g in _gutted:
+			if not g.visible:
+				g.visible = true
+				break
+	elif i == FISHER_CATCH:
+		_hand_fish.visible = true
+
+
+func _on_fisher_reached(i: int) -> void:
+	if i == FISHER_BOARD:
+		_hand_fish.visible = false
+		_board_fish.visible = true
+
+
+## How many gutted fish lie in the basket (for the tests).
+func gutted_count() -> int:
+	return _gutted.filter(func(g: MeshInstance3D) -> bool: return g.visible).size()
+
+
+func fisher() -> Npc:
+	return _fisher
 
 
 ## The rocks the cormorants stand on: their tops, on the beach's own height.

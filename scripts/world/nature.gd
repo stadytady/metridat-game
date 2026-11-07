@@ -51,6 +51,23 @@ func _shrubs(rng: RandomNumberGenerator) -> void:
 	(node.get_node("Mesh") as GeometryInstance3D).visibility_range_end = 180.0
 
 
+const SEA_ROCK_JITTER := 0.35
+
+
+## A rock standing out in the strait: [centre, radii]. Out here a trough falls
+## two metres below sea level, so the foot goes far deeper than that; else the
+## rock shows its underside in every trough and seems to hang over the water.
+static func sea_rock(x: float, z: float, r: float) -> Array[Vector3]:
+	return [Vector3(x, -r * 0.2 - 1.5, z), Vector3(r, r * 1.6 + 1.5, r * 0.9)]
+
+
+## How far below its centre a blob with these radii surely reaches: the
+## icosahedron's lowest vertices sit at 0.85 of the radius, and the jitter can
+## pull them in by its share.
+static func blob_reach_down(radii: Vector3, jitter: float) -> float:
+	return radii.y * 0.851 * (1.0 - jitter)
+
+
 func _shore(rng: RandomNumberGenerator) -> void:
 	var kit := MeshKit.new()
 	var z := -140.0
@@ -75,8 +92,8 @@ func _shore(rng: RandomNumberGenerator) -> void:
 		var sx := rng.randf_range(75, 110)
 		var sz := rng.randf_range(-90, 90)
 		var r := rng.randf_range(1.5, 4.0)
-		# Sunk deep: wave troughs reach about a metre below sea level.
-		(MeshKit.new() if Topo.on_pier(sx, sz, r + 4.0) else kit).blob("rock", Vector3(sx, -r * 0.2, sz), Vector3(r, r * 1.6, r * 0.9), 0.35, rng)
+		var rock := sea_rock(sx, sz, r)
+		(MeshKit.new() if Topo.on_pier(sx, sz, r + 4.0) else kit).blob("rock", rock[0], rock[1], SEA_ROCK_JITTER, rng)
 	add_child(kit.build("Shore"))
 
 
