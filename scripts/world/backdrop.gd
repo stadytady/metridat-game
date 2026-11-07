@@ -35,6 +35,9 @@ var _cottage_at := Transform3D.IDENTITY
 ## The householder in the cottage: a woman with her hair under a kerchief.
 var _woman: Npc
 var _smoke: Array[GPUParticles3D] = []
+## Lamps on the walls of the back lanes: with the cottage's one they make the
+## town a scatter of fires at night instead of one lit street and a black map.
+var _lane_lamps: Array[WallLamp] = []
 var _atm: Node
 
 
@@ -352,6 +355,88 @@ static func porch_scenes(houses: Array) -> Array:
 	return out
 
 
+## Wall lamps beside the doors of the back lanes: one house in nine, seeded, and
+## never in the walked street's sight, so a night walk is a walk from one pool of
+## lamplight to the next instead of a black corridor. [{pos, yaw}]
+const LANE_LAMP_EVERY := 9
+const LANE_LAMPS_MAX := 14
+
+static func lane_lamps(houses: Array) -> Array:
+	var out := []
+	for hs: Dictionary in houses:
+		if out.size() >= LANE_LAMPS_MAX:
+			break
+		if not hs.opts.get("door", false):
+			continue
+		var seed := hash(int(hs.opts.get("seed", 0)) * 29 + 11)
+		if posmod(seed, LANE_LAMP_EVERY) != 0:
+			continue
+		var basis := Basis.from_euler(Vector3(0, hs.yaw, 0))
+		# beside the door, on the plaster, a hand off the corner of the frame
+		var at := Vector3(hs.pos.x, 0, hs.pos.y) + basis * Vector3(float(hs.opts.get("door_x", 0.0)) + 0.95, 0, hs.d / 2.0 + 0.07)
+		at.y = Topo.surface(at.x, at.z)
+		out.append({"pos": at, "yaw": hs.yaw})
+	return out
+
+
+## A second place to draw water: a well head in a back lane, on a terrace where
+## the houses leave a gap, with a woman standing at it and her jar beside her.
+## The one on the forecourt has the round and the dialogue; this one is what a
+## lane needs - a corner where people come, not just a wall to walk past.
+## {} when no spot along the terraces is free.
+static func fountain_at(houses: Array) -> Dictionary:
+	var runs := streets()
+	for r in TERRACES_X.size():
+		if r >= runs.size():
+			break
+		var run: PackedVector2Array = runs[r]
+		var i := 14
+		while i < run.size() - 10:
+			var p := run[i]
+			var next := run[mini(i + 1, run.size() - 1)]
+			var t := (next - p).normalized()
+			var side := Vector2(-t.y, t.x)
+			for s: float in [1.0, -1.0]:
+				var at := p + side * s * 1.55
+				if Topo.terrain(at.x, at.y) < 2.6 or absf(at.y) > WALL_Z - 8.0:
+					continue
+				if Topo.is_reserved(at.x, at.y, 2.0) or on_house(houses, at.x, at.y, 0.9):
+					continue
+				return {"pos": Vector3(at.x, Topo.surface(at.x, at.y), at.y),
+						"dir": Vector3(side.x * s, 0, side.y * s)}
+			i += 7
+	return {}
+
+
+## The well head in the lane, with the woman who has come for water.
+func _fountain(houses: Array) -> void:
+	var spot := fountain_at(houses)
+	if spot.is_empty():
+		return
+	var at: Vector3 = spot.pos
+	var dir: Vector3 = spot.dir
+	var kit := MeshKit.new()
+	Arch.well_head(kit, at)
+	add_child(kit.build("LaneWell"))
+	var jar := Props.instance("amphora")
+	jar.scale = Vector3.ONE * 0.8
+	jar.position = at + dir * 0.75 + Vector3(0, 0.02, 0)
+	add_child(jar)
+	# the woman: standing with her hands on the rope, the way the carrier draws
+	var woman: Npc = Npc.new()
+	woman.name = "LaneCarrier"
+	woman.npc_id = "water_carrier"
+	woman.talkable = false
+	woman.stops_for_player = false
+	woman.solid = false
+	woman.pose = "draw"
+	woman.position = at + dir * 0.95
+	# she stands on the far side and looks back at the curb: local -z must point
+	# along -dir, so the yaw is atan2(dir.x, dir.z) and no half turn on top
+	woman.rotation.y = atan2(dir.x, dir.z)
+	add_child(woman)
+
+
 func _ready() -> void:
 	_atm = get_parent().get_node_or_null("Atmosphere")
 	var kit := MeshKit.new()
@@ -374,8 +459,21 @@ func _ready() -> void:
 	_voices(houses)
 	_walkers()
 	_porches(houses)
+	_lane_lamps_at(houses)
+	_fountain(houses)
 	if _cottage_lamp != null:
 		_cottage_lamp.set_lit(false)
+
+
+## The lamps of the back lanes, hung on the plaster beside a door. Their own
+## process lights them with the town's dusk, like the cottage's one.
+func _lane_lamps_at(houses: Array) -> void:
+	for l: Dictionary in lane_lamps(houses):
+		var lamp := WallLamp.new()
+		lamp.position = l.pos + Vector3(0, 1.62, 0)
+		lamp.rotation.y = l.yaw
+		add_child(lamp)
+		_lane_lamps.append(lamp)
 
 
 ## The porch scenes: the prop batched into the city mesh, the person on their own
@@ -724,6 +822,8 @@ func _process(_delta: float) -> void:
 	_glow.visible = hour >= GLOW_FROM
 	if _cottage_lamp != null:
 		_cottage_lamp.set_lit(hour >= WallLamp.DUSK)
+	for lamp: WallLamp in _lane_lamps:
+		lamp.set_lit(hour >= WallLamp.DUSK)
 	var day := hour < 0.95
 	for s in _smoke:
 		if s.emitting != day:
