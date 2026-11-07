@@ -268,6 +268,13 @@ func _route() -> Array:
 	r.append(Vector2(-86.0, 6.6))
 	r.append(Vector2(-86.0, 10.4))
 	r.append("goddess_head")
+	# down the gate walk onto the long walk, and west along it to the goddess who
+	# closes it: the terracotta at her plinth is the reason to walk the park
+	r.append(Vector2(-86.0, 19.0))
+	r.append(Vector2(-94.6, 19.0))
+	r.append(Vector2(-96.2, 19.6))
+	r.append("goddess_votive")
+	r.append(Vector2(-86.0, 19.0))
 	r.append(Vector2(-86.0, 6.6))
 	r.append(Vector2(c.x + 3.0, -4.6))
 	r.append("sherd_kerch")
@@ -320,7 +327,10 @@ func _route() -> Array:
 	r.append("pick:astragal")
 	r.append(Vector2(12.5, 4.5))
 	r.append("give:astragal")
-	r.append(Vector2(20.0, 3.5))
+	# across the square well south of the stall: its counter is the one place the
+	# bot still catches a shoulder on when the timing shifts by a few seconds
+	r.append(Vector2(16.2, 2.6))
+	r.append(Vector2(20.0, 2.4))
 	r.append(Vector2(30.0, 3.0))
 	# down the footpath to Myrto's house: talk at the oven, look into both rooms
 	r.append(Vector2(26.0, 9.6))
@@ -328,6 +338,10 @@ func _route() -> Array:
 	r.append(Vector2(27.3, 18.2))
 	r.append("talk:baker")
 	r.append("take:loom_weight")
+	# the cut block in the yard, its mason's mark still on the corner
+	r.append(Vector2(24.6, 17.8))
+	r.append("mason_mark")
+	r.append(Vector2(27.3, 18.2))
 	for door: float in [22.9, 29.1]:
 		r.append(Vector2(door, 20.7))
 		r.append(Vector2(door, 23.4))
