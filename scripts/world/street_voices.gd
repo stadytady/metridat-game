@@ -28,6 +28,9 @@ const REACH := 18.0
 const VOLUME := -13.0
 ## Pause between two playings, seconds: a range, so the city has no metronome.
 const GAP := Vector2(4.5, 11.0)
+## After dark the yard dogs bark about twice as often: a night town is not a
+## silent one, it is one where only the dogs and the children are still up.
+const NIGHT_BARK := 0.55
 
 ## The houses to hang voices on; set before the node enters the tree.
 var houses: Array = []
@@ -94,4 +97,5 @@ func _process(delta: float) -> void:
 			_wait[i] = 0.5
 			continue
 		_players[i].play()
-		_wait[i] = _gaps[i]
+		# at night the yard dogs have more to say than by day
+		_wait[i] = _gaps[i] * (NIGHT_BARK if (quiet and _kinds[i] == "bark") else 1.0)
