@@ -13,6 +13,7 @@ var _only: PackedStringArray = []
 var _at := ""
 var _at_yaw := 0.0
 var _at_name := ""
+var _at_pitch := 0.0
 
 
 func _ready() -> void:
@@ -34,6 +35,9 @@ func _ready() -> void:
 			_at_yaw = a.substr(6).to_float()
 		elif a.begins_with("--name="):
 			_at_name = a.substr(7)
+		elif a.begins_with("--pitch="):
+			# degrees below the horizon, for things on the ground close by
+			_at_pitch = a.substr(8).to_float()
 	if "--shots" in OS.get_cmdline_user_args():
 		_shots.call_deferred()
 	elif "--walkthrough" in OS.get_cmdline_user_args():
@@ -137,7 +141,7 @@ func _shot_at(player: CharacterBody3D) -> void:
 	var eye := Vector3(x, Topo.surface(x, z) + 1.6, z)
 	player.global_position = eye - Vector3(0, 1.6, 0)
 	var yaw := deg_to_rad(_at_yaw)
-	player.look_at_point(eye + Vector3(-sin(yaw), 0, -cos(yaw)) * 14.0)
+	player.look_at_point(eye + Vector3(-sin(yaw), -tan(deg_to_rad(_at_pitch)), -cos(yaw)) * 14.0)
 	player.camera.position.y = 0.0
 	await _frames(10)
 	var name := _at_name if _at_name != "" else "at_%d_%d" % [roundi(x), roundi(z)]
@@ -369,9 +373,14 @@ func _route() -> Array:
 	r.append("take:hook")
 	r.append(Vector2(64.6, 13.0))
 	r.append("net_sinkers")
-	# the hook among the nets under the rack, and back to Glaukos
-	r.append(Vector2(65.0, 12.4))
+	# the hook behind his boat, on the sea side: round the board and the fire,
+	# along the boat, and back to Glaukos
+	r.append(Vector2(64.3, 15.6))
+	r.append(Vector2(66.4, 17.7))
+	r.append(Vector2(68.4, 18.1))
 	r.append("pick:hook")
+	r.append(Vector2(66.4, 17.7))
+	r.append(Vector2(64.3, 15.6))
 	r.append(Vector2(63.6, 14.4))
 	r.append("give:hook")
 	r.append(Vector2(56.0, 6.0))
