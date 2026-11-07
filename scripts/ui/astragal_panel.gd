@@ -1,12 +1,14 @@
 extends CanvasLayer
 ## The knucklebones table: five bones a hand, three throws, the higher sum takes
 ## the throw. Opened by E at the children on the agora; E throws, Esc leaves.
-## The rules live in AstragalGame, so this file is layout and input only.
+## The rules live in AstragalGame; the bones are seen flying and coming down in
+## AstragalTable, and the sums and the log fill in once they lie still.
 
 signal closed
 
 const CLATTER := preload("res://assets/audio/astragal.wav")
 const GOLD := Color("#d9a75a")
+const DASH := "\u2014"  # an empty cell; written as an escape so no editor can mangle it
 
 var _game := AstragalGame.new()
 var _panel: PanelContainer
@@ -18,6 +20,12 @@ var _log: VBoxContainer
 var _foot: Label
 var _clatter: AudioStreamPlayer
 var _shown_throws := 0
+var _table: AstragalTable
+## The E that opened the table is still down: wait for it to come up before a
+## key throws, or the first throw goes off by itself as the table opens.
+var _armed := false
+## The throw in the air, shown in the sums once its bones have landed.
+var _pending: Dictionary = {}
 
 
 func _ready() -> void:
@@ -37,6 +45,14 @@ func _ready() -> void:
 	var title := UiStyle.label(tr("UI_ASTRAGAL_TITLE"), 40, GOLD)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(title)
+	_table = AstragalTable.new()
+	_table.name = "Table"
+	_table.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	col.add_child(_table)
+	_table.landed.connect(func(_side: int) -> void:
+		_clatter.pitch_scale = randf_range(0.94, 1.08)
+		_clatter.play())
+	_table.settled.connect(_on_settled)
 	var grid := GridContainer.new()
 	grid.columns = 3
 	grid.add_theme_constant_override("h_separation", 28)
@@ -46,13 +62,13 @@ func _ready() -> void:
 	grid.add_child(_head("UI_ASTRAGAL_YOU"))
 	grid.add_child(_head("UI_ASTRAGAL_THEM"))
 	grid.add_child(UiStyle.label("", 24, UiStyle.MUTED))
-	_bones_mine = _body("-")
-	_bones_theirs = _body("-")
+	_bones_mine = _body(DASH)
+	_bones_theirs = _body(DASH)
 	grid.add_child(_bones_mine)
 	grid.add_child(_bones_theirs)
 	grid.add_child(UiStyle.label(tr("UI_ASTRAGAL_SUM"), 24, UiStyle.MUTED))
-	_sum_mine = _body("-")
-	_sum_theirs = _body("-")
+	_sum_mine = _body(DASH)
+	_sum_theirs = _body(DASH)
 	grid.add_child(_sum_mine)
 	grid.add_child(_sum_theirs)
 	_log = VBoxContainer.new()
@@ -92,6 +108,7 @@ func open() -> void:
 	_panel.position = ((Vector2(1920, 1080) - _panel.size) / 2.0).max(Vector2(40, 40))
 	Game.ui_blocking = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	_armed = not Input.is_action_pressed(&"interact")
 	_refresh()
 
 
@@ -113,27 +130,37 @@ func _faces(bones: Array[int]) -> String:
 
 
 func _refresh() -> void:
-	if _game.throws.is_empty():
-		_bones_mine.text = "вЂ”"
-		_bones_theirs.text = "вЂ”"
-		_sum_mine.text = "вЂ”"
-		_sum_theirs.text = "вЂ”"
+	var settled := _game.throws.size() - (0 if _pending.is_empty() else 1)
+	if settled <= 0:
+		_bones_mine.text = DASH
+		_bones_theirs.text = DASH
+		_sum_mine.text = DASH
+		_sum_theirs.text = DASH
 	else:
-		var last: Dictionary = _game.throws[-1]
+		var last: Dictionary = _game.throws[settled - 1]
 		_bones_mine.text = _faces(last.mine)
 		_bones_theirs.text = _faces(last.theirs)
 		_sum_mine.text = str(last.sum_mine)
 		_sum_theirs.text = str(last.sum_theirs)
-	_log.visible = not _game.throws.is_empty()
-	_foot.text = tr("UI_ASTRAGAL_AGAIN") if _game.over else tr("UI_ASTRAGAL_KEYS")
+	_log.visible = settled > 0
+	_foot.text = tr("UI_ASTRAGAL_AGAIN") if _game.over and _pending.is_empty() else tr("UI_ASTRAGAL_KEYS")
 
 
 func _throw() -> void:
 	var entry := _game.play_throw()
 	if entry.is_empty():
 		return
-	_clatter.pitch_scale = randf_range(0.94, 1.08)
-	_clatter.play()
+	_pending = entry
+	_refresh()
+	_table.throw_hands(entry.mine, entry.theirs, _game.throws.size())
+
+
+## Both hands lie still: now the throw counts on the table.
+func _on_settled() -> void:
+	var entry := _pending
+	if entry.is_empty():
+		return
+	_pending = {}
 	var line := UiStyle.label("", 22, UiStyle.TEXT)
 	var mark := "UI_ASTRAGAL_ROUND_WIN" if entry.winner == "me" else (
 			"UI_ASTRAGAL_ROUND_LOSE" if entry.winner == "them" else "UI_ASTRAGAL_ROUND_DRAW")
@@ -151,17 +178,32 @@ func _throw() -> void:
 		_panel.position = ((Vector2(1920, 1080) - _panel.size) / 2.0).max(Vector2(40, 40))
 
 
+## Whether a throw is still in the air (the walkthrough and tests wait on it).
+func throwing() -> bool:
+	return not _pending.is_empty()
+
+
 func _process(_delta: float) -> void:
 	if not _panel.visible:
 		return
 	if Input.is_action_just_pressed(&"pause"):
 		close()
 		return
-	if Input.is_action_just_pressed(&"interact"):
+	_key(Input.is_action_pressed(&"interact"), Input.is_action_just_pressed(&"interact"))
+
+
+## E: held down since the table opened it does nothing; once let go, a press
+## throws (or starts a new game after the third throw). Not while bones fly.
+func _key(down: bool, just: bool) -> void:
+	if not down:
+		_armed = true
+		return
+	if _armed and just and _pending.is_empty():
 		if _game.over:
 			for c in _log.get_children():
 				c.queue_free()
 			_game.restart()
+			_table.clear()
 			_refresh()
 		else:
 			_throw()

@@ -88,8 +88,36 @@ func _shots() -> void:
 	# the prologue's voyage in; only on request, it changes the hour and the game state
 	if "voyage" in _only:
 		await _voyage_shots()
+	# the knucklebones table: bones in the air, then lying with the sums in
+	if "astragal" in _only:
+		await _astragal_shots()
 	_report_perf()
 	get_tree().quit()
+
+
+## The knucklebones table mid-throw and after the bones have come to rest.
+func _astragal_shots() -> void:
+	var p: CanvasLayer = load("res://scripts/ui/astragal_panel.gd").new()
+	_main().add_child(p)
+	p.open()
+	p._armed = true
+	await _frames(5)
+	p._key(true, true)
+	# drive the table's clock by hand: the shots run at whatever speed lavapipe manages
+	p._table._t = 0.0
+	for pair: Array in [[0.32, "astragal_fly"], [1.45, "astragal_children"]]:
+		p._table._t = float(pair[0]) - 1.0 / 60.0
+		p._table._process(1.0 / 60.0)
+		p._table.set_process(false)
+		await _frames(4)
+		_save(pair[1])
+		p._table.set_process(true)
+	while p.throwing():
+		p._table._process(0.05)
+		await get_tree().process_frame
+	await _frames(4)
+	_save("astragal_done")
+	p.close()
 
 
 ## The voyage in at a few moments of it, and the cut to the pier.
