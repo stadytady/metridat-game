@@ -178,3 +178,17 @@ func test_the_back_lanes_have_their_own_lamps() -> void:
 		check(absf(at.y - Topo.surface(at.x, at.z)) < 0.01, "a lane lamp stands off the ground at %s" % at)
 		check(B.on_house(houses, at.x, at.z, 0.5), "a lane lamp hangs off a wall at %s" % at)
 		check(B._dist_to(B.streets(), Vector2(at.x, at.z)) > B.LANE_HALF - 0.3, "a lane lamp stands in the lane at %s" % at)
+
+## The lane's own well: a second place to draw water, standing on the walkable
+## ground of a terrace street, out of the houses, with its carrier beside it.
+func test_the_lane_has_its_own_well() -> void:
+	var houses: Array = B.plan()
+	var spot: Dictionary = B.fountain_at(houses)
+	check(not spot.is_empty(), "no free spot for the lane's well")
+	if spot.is_empty():
+		return
+	var at: Vector3 = spot.pos
+	check(absf(at.y - Topo.surface(at.x, at.z)) < 0.01, "the lane's well stands off the ground")
+	check(not B.on_house(houses, at.x, at.z, 0.5), "the lane's well stands in a house at %s" % at)
+	check(not Topo.is_reserved(at.x, at.z, 1.0), "the lane's well stands on the walked ground")
+	check(B._dist_to(B.streets(), Vector2(at.x, at.z)) < B.LANE_HALF + 2.0, "the lane's well is not by a street at %s" % at)

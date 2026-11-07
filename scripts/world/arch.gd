@@ -494,6 +494,24 @@ static func basket_work(kit: MeshKit, xf: Transform3D) -> void:
 	kit.xform = Transform3D.IDENTITY
 
 
+## A well head on its own, for a lane that has none: stone curb, two posts, the
+## cross beam and the pulley, a rope hanging into the shaft, and the stones round
+## the mouth darkened by spilled water. The carrier at it is somebody else's
+## business - Life owns the one with the round.
+static func well_head(kit: MeshKit, at: Vector3) -> void:
+	kit.lathe("limestone", PackedVector2Array([Vector2(0.6, 0.0), Vector2(0.62, 0.12), Vector2(0.54, 0.2),
+			Vector2(0.54, 0.74), Vector2(0.62, 0.8), Vector2(0.6, 0.86)]), 10, at, 2.0, false, "dark", true)
+	kit.solid_box("limestone", at + Vector3(0, 0.43, 0), Vector3(0.9, 0.86, 0.9), ["bottom"])
+	for sx: float in [-0.78, 0.78]:
+		kit.solid_box("wood", at + Vector3(sx, 1.1, 0), Vector3(0.12, 2.2, 0.12), ["bottom"])
+	kit.box("wood", at + Vector3(0, 2.15, 0), Vector3(1.8, 0.12, 0.12), [])
+	kit.xform = Transform3D(Basis(Vector3.FORWARD, PI / 2.0), at + Vector3(0, 1.98, 0))
+	kit.lathe("wood", PackedVector2Array([Vector2(0.14, -0.04), Vector2(0.14, 0.04)]), 8, Vector3.ZERO, 1.0, false, "wood", true)
+	kit.xform = Transform3D.IDENTITY
+	kit.box("cloth", at + Vector3(0, 1.4, -0.12), Vector3(0.03, 1.2, 0.03), [])  # the rope down the shaft
+	kit.box("dark", at + Vector3(0, 0.01, 0.75), Vector3(1.0, 0.02, 0.5), [])      # the wet stones about it
+
+
 static func bench(kit: MeshKit, xf: Transform3D, length: float) -> void:
 	kit.xform = xf
 	kit.solid_box("limestone", Vector3(0, 0.42, 0), Vector3(length, 0.14, 0.5), ["bottom"])
