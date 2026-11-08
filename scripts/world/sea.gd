@@ -11,9 +11,15 @@ extends Node3D
 ## coarser towards the horizon, where fog hides it anyway.
 const SHORE_Z := Vector2(-512.0, 512.0)
 const SHORE_SAMPLES := 256
-## psx_water defaults: dir.x, dir.y, wavelength, amplitude.
-const WAVES := [Vector4(1.0, 0.25, 42.0, 0.55), Vector4(0.75, -0.65, 24.0, 0.28), Vector4(0.3, 1.0, 14.0, 0.16),
-	Vector4(1.0, -0.1, 8.0, 0.09)]
+## The wind comes in off the strait (from the east, +x) and blows inland: the
+## swell rolls towards the shore and the hearth smoke leans up the hill. One
+## direction for both, so the sea and the roofs agree.
+const ONSHORE := Vector2(-1.0, 0.0)
+## psx_water defaults: dir.x, dir.y (the way the crests travel), wavelength,
+## amplitude. Every train runs shoreward (dir.x < 0), the long swell most nearly
+## along ONSHORE.
+const WAVES := [Vector4(-1.0, -0.25, 42.0, 0.55), Vector4(-0.75, 0.65, 24.0, 0.28), Vector4(-0.3, -1.0, 14.0, 0.16),
+	Vector4(-1.0, 0.1, 8.0, 0.09)]
 const SPEED := 0.75
 const AMPLITUDE := 1.0
 ## The harbour by the pier is sheltered: the swell there is a third of the open strait's.

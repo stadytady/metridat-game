@@ -1151,7 +1151,8 @@ static func _smoke_plume(k: Dictionary) -> GPUParticles3D:
 	pm.initial_velocity_min = rise.x
 	pm.initial_velocity_max = rise.y
 	pm.spread = float(k.spread)
-	pm.gravity = Vector3(float(k.lean), 0.1, 0)  # the breeze off the strait leans it
+	# the breeze off the strait leans it inland, the way the swell rolls (Sea.ONSHORE)
+	pm.gravity = Vector3(Sea.ONSHORE.x, 0, Sea.ONSHORE.y) * float(k.lean) + Vector3(0, 0.1, 0)
 	pm.scale_min = 0.6
 	pm.scale_max = 1.3
 	# each puff swells as it rises, then shrinks away: a ragged plume, not a column
