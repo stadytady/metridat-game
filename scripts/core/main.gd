@@ -1,12 +1,15 @@
 extends Node
-## Root. The world renders into a SubViewport at PS1-like internal resolution
-## (~960x540 on a 1080p screen), which the container scales up with nearest
-## filtering and a 15-bit dither pass. UI layers are drawn at native resolution
-## on top.
+## Root. The world renders into a SubViewport at a low internal resolution
+## (1280x720 for a 16:9 window), which the container scales up with a 15-bit
+## dither pass and "sharp bilinear" sampling (psx_post): every low-res pixel
+## stays one flat colour and only the one screen pixel on a seam is blended, so
+## a scale of 1.5 does not turn into columns 1, 2, 1, 2 screen pixels wide. UI
+## layers are drawn at native resolution on top.
 
-## Target height of the low-res image; the shrink stays an integer, so the real
-## height is 540 at 1080p, 480 at 1440p and 360 at 720p.
-const INTERNAL_HEIGHT := 480.0
+## Height of the low-res image. The window's canvas is 1080 units tall
+## (canvas_items stretch), so this is a scale of 1.5 on the canvas: 1.5 screen
+## pixels per low-res pixel at 1080p, exactly 2 at 1440p and 3 at 4K.
+const INTERNAL_HEIGHT := 720.0
 
 ## Render the world at the window's full resolution (the trailer without PS1 effects).
 var native := false
@@ -62,10 +65,25 @@ func _ready() -> void:
 		title.open()
 
 
+## How big the world's image is for a window (canvas) of this size, and the
+## scale it is drawn at: never upscaled past the window, never below 1.
+static func render_scale(window: Vector2, full: bool) -> float:
+	return 1.0 if full else maxf(1.0, window.y / INTERNAL_HEIGHT)
+
+
+static func render_size(window: Vector2, full: bool) -> Vector2i:
+	var s := render_scale(window, full)
+	return Vector2i(ceili(window.x / s - 0.001), ceili(window.y / s - 0.001))
+
+
 func _fit() -> void:
-	# Integer shrink keeps every low-res pixel the same size on screen.
-	var h := get_viewport().get_visible_rect().size.y
-	screen.stretch_shrink = 1 if native else maxi(1, roundi(h / INTERNAL_HEIGHT))
+	var win := get_viewport().get_visible_rect().size
+	var s := render_scale(win, native)
+	# The container draws the viewport at its own size, scaled by s: a
+	# non-integer stretch_shrink is not possible, a scale is.
+	screen.stretch = false
+	viewport.size = render_size(win, native)
+	screen.scale = Vector2(s, s)
 	RenderingServer.global_shader_parameter_set(&"psx_resolution", Vector2(viewport.size))
 
 
