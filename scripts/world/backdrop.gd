@@ -1074,13 +1074,14 @@ func _terraces(houses: Array) -> void:
 ## colour at the mouth and as it thins, size of a puff, how many, how long they
 ## live, how fast they rise, how wide they spread, how hard the breeze leans
 ## them, and how much they come in bursts (0 a steady stream).
+## Colours are linear (the particles' vertex colour): 0.2 shows as a mid grey.
 const SMOKE_KINDS := {
-	"wisp": {"near": Color(0.52, 0.51, 0.5), "far": Color(0.42, 0.42, 0.42), "size": 0.26, "amount": 10,
-		"life": 6.0, "rise": Vector2(0.4, 0.6), "spread": 8.0, "lean": 0.32, "bursts": 0.0},
-	"thick": {"near": Color(0.22, 0.21, 0.2), "far": Color(0.3, 0.29, 0.28), "size": 0.62, "amount": 16,
+	"wisp": {"near": Color(0.36, 0.36, 0.36), "far": Color(0.26, 0.26, 0.27), "size": 0.3, "amount": 24,
+		"life": 5.5, "rise": Vector2(0.4, 0.6), "spread": 7.0, "lean": 0.32, "bursts": 0.0},
+	"thick": {"near": Color(0.035, 0.033, 0.03), "far": Color(0.09, 0.085, 0.08), "size": 0.62, "amount": 18,
 		"life": 4.0, "rise": Vector2(0.15, 0.3), "spread": 30.0, "lean": 0.12, "bursts": 0.0},
-	"puffs": {"near": Color(0.4, 0.34, 0.28), "far": Color(0.33, 0.3, 0.27), "size": 0.45, "amount": 9,
-		"life": 3.6, "rise": Vector2(0.3, 0.5), "spread": 16.0, "lean": 0.2, "bursts": 0.75},
+	"puffs": {"near": Color(0.16, 0.1, 0.06), "far": Color(0.14, 0.11, 0.085), "size": 0.42, "amount": 14,
+		"life": 3.6, "rise": Vector2(0.3, 0.55), "spread": 22.0, "lean": 0.2, "bursts": 0.7},
 }
 
 
