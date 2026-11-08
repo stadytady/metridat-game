@@ -234,12 +234,26 @@ func _flies(centre: Vector3) -> void:
 ## Braziers at the four corners of the paving and a lamp beside each column: they
 ## wait for dusk, then take fire together, the way the theatre answers its lamps.
 func _night_fires_at(c: Vector2, h: Vector2, y: float, cols: Array, xf: Transform3D) -> void:
-	for p: Vector2 in [Vector2(c.x - h.x + 1.4, c.y - h.y + 1.4), Vector2(c.x + h.x - 1.4, c.y - h.y + 1.4),
-			Vector2(c.x - h.x + 1.4, c.y + h.y - 1.4), Vector2(c.x + h.x - 1.4, c.y + h.y - 1.4)]:
+	for p: Vector2 in corner_fires(c, h):
 		_fire(Vector3(p.x, y, p.y), "torch_post", false)
 	for i in cols.size():
 		var p: Vector3 = xf * (cols[i] as Vector3)
 		_fire(p + Vector3(0, 0, 0.55), "lampstand", true)
+
+
+## The braziers at the paving's corners. The south-east one fell on the foot of
+## the sanctuary stair, in the middle of the way up: such a corner slides along
+## the east edge, into the square, until it is clear of the way.
+static func corner_fires(c: Vector2, h: Vector2) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	for p: Vector2 in [Vector2(c.x - h.x + 1.4, c.y - h.y + 1.4), Vector2(c.x + h.x - 1.4, c.y - h.y + 1.4),
+			Vector2(c.x - h.x + 1.4, c.y + h.y - 1.4), Vector2(c.x + h.x - 1.4, c.y + h.y - 1.4)]:
+		var q := p
+		var step := Vector2(0, 0.5 if q.y < c.y else -0.5)
+		while Topo.sanct_way_distance(q.x, q.y) < Topo.SANCT_WAY_CLEAR + 0.3 and absf(q.y - c.y) > 0.5:
+			q += step
+		out.append(q)
+	return out
 
 
 func _fire(pos: Vector3, kind: String, quiet: bool) -> void:

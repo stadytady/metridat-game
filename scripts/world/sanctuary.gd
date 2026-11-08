@@ -91,11 +91,29 @@ func _sacred_way(kit: MeshKit) -> void:
 		prev = p
 	kit.xform = Transform3D.IDENTITY
 	# cypresses along both sides of the climb
+	for c: Dictionary in climb_cypresses():
+		place("cypress", c.pos, c.yaw, Vector3.ONE * float(c.scale), 0.2, 2.0)
+
+
+## The cypresses lining the climb: {pos, yaw, scale}. They stand on a slope, so
+## the trunk starts at the lowest ground under its spread (Topo.lowest_ground):
+## set on the ground at its middle, the downhill side hung in the air.
+const CYPRESS_SPREAD := 0.7
+
+
+static func climb_cypresses() -> Array[Dictionary]:
+	var s0 := Topo.SANCT_STAIR[0]
+	var s1 := Topo.SANCT_STAIR[1]
+	var dir := Vector3(s1.x - s0.x, 0, s1.z - s0.z).normalized()
 	var perp := Vector3(-dir.z, 0, dir.x)
+	var out: Array[Dictionary] = []
 	for t: float in [0.3, 0.6, 0.9]:
 		for side: float in [-1.0, 1.0]:
 			var q := s0.lerp(s1, t) + perp * side * 3.1
-			place("cypress", Vector3(q.x, Topo.terrain(q.x, q.z) - 0.1, q.z), t * 90.0, Vector3.ONE * (1.25 + 0.1 * side * t), 0.2, 2.0)
+			var s := 1.25 + 0.1 * side * t
+			q.y = Topo.lowest_ground(q.x, q.z, CYPRESS_SPREAD * s) - 0.1
+			out.append({"pos": q, "yaw": t * 90.0, "scale": s})
+	return out
 
 
 ## Height of the stair axis at fraction u from the foot.

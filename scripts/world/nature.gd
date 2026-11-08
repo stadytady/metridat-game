@@ -16,12 +16,12 @@ func _ready() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 99
 	for p: Vector2 in TREE_SPOTS:
-		place("olive_tree", Vector3(p.x, Topo.terrain(p.x, p.y) - 0.1, p.y), rng.randf_range(0, 360),
+		place("olive_tree", Vector3(p.x, Topo.lowest_ground(p.x, p.y, 0.5) - 0.1, p.y), rng.randf_range(0, 360),
 				Vector3.ONE * rng.randf_range(0.85, 1.25), 0.2, 2.0)
 	for i in 10:
 		var z := rng.randf_range(-70, 70)
 		var x := rng.randf_range(-130, -98)
-		place("cypress", Vector3(x, Topo.terrain(x, z) - 0.1, z), 0.0, Vector3.ONE * rng.randf_range(0.8, 1.2), 0.2, 2.0)
+		place("cypress", Vector3(x, Topo.lowest_ground(x, z, 0.7) - 0.1, z), 0.0, Vector3.ONE * rng.randf_range(0.8, 1.2), 0.2, 2.0)
 	_shrubs(rng)
 	_shore(rng)
 	_boundary()

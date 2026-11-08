@@ -20,18 +20,28 @@ func _ready() -> void:
 	var a := Topo.AGORA_CENTER - Vector2(Topo.AGORA_HALF.x - 1.2, 0)
 	for sz: float in [-3.2, 3.2]:
 		_lamp("torch_post", Vector3(a.x, Topo.AGORA_H, a.y + sz))
-	var s0 := Topo.SANCT_STAIR[0]
-	var s1 := Topo.SANCT_STAIR[1]
-	var dir := Vector3(s1.x - s0.x, 0, s1.z - s0.z).normalized()
-	var perp := Vector3(-dir.z, 0, dir.x) * (Topo.SANCT_STAIR_HALF + 0.5)
-	for p: Vector3 in [s0 - dir * 0.8, s1 + dir * 0.8]:
-		for sgn: float in [-1.0, 1.0]:
-			var q := p + perp * sgn
-			_lamp("torch_post", Vector3(q.x, Topo.surface(q.x, q.z), q.z))
+	for q: Vector3 in stair_torches():
+		_lamp("torch_post", q)
 	# two torches flanking the temple door (Hecate's torches)
 	var sc := Topo.SANCT_CENTER
 	for sx: float in [-1.9, 1.9]:
 		_lamp("torch_post", Vector3(sc.x + sx, Topo.SANCT_H, -25.7))
+
+
+## The torches of the sanctuary stair, either side of the bottom and the top
+## step, just outside its width: they flank the way, not stand on it (the
+## brazier that stood on it was the square's, see Agora.corner_fires).
+static func stair_torches() -> Array[Vector3]:
+	var s0 := Topo.SANCT_STAIR[0]
+	var s1 := Topo.SANCT_STAIR[1]
+	var dir := Vector3(s1.x - s0.x, 0, s1.z - s0.z).normalized()
+	var perp := Vector3(-dir.z, 0, dir.x) * (Topo.SANCT_STAIR_HALF + 0.5)
+	var out: Array[Vector3] = []
+	for p: Vector3 in [s0 - dir * 0.8, s1 + dir * 0.8]:
+		for sgn: float in [-1.0, 1.0]:
+			var q := p + perp * sgn
+			out.append(Vector3(q.x, Topo.surface(q.x, q.z), q.z))
+	return out
 
 
 func _lamp(kind: String, pos: Vector3) -> void:
