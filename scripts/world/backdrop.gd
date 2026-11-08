@@ -1064,13 +1064,46 @@ func _terraces(houses: Array) -> void:
 	add_child(kit.build("Terraces"))
 
 
+## Three hearths, three smokes, so the roofs do not all breathe alike:
+## "wisp" - dry wood under a pot: a thin pale thread that climbs high and
+##   leans with the breeze;
+## "thick" - green wood or dung cakes smouldering: a dark, slow, heavy plume
+##   that spreads wide and does not climb far;
+## "puffs" - an oven being fed: brownish smoke that comes in bursts, a puff
+##   and a pause, each time someone throws in brushwood.
+## colour at the mouth and as it thins, size of a puff, how many, how long they
+## live, how fast they rise, how wide they spread, how hard the breeze leans
+## them, and how much they come in bursts (0 a steady stream).
+const SMOKE_KINDS := {
+	"wisp": {"near": Color(0.52, 0.51, 0.5), "far": Color(0.42, 0.42, 0.42), "size": 0.26, "amount": 10,
+		"life": 6.0, "rise": Vector2(0.4, 0.6), "spread": 8.0, "lean": 0.32, "bursts": 0.0},
+	"thick": {"near": Color(0.22, 0.21, 0.2), "far": Color(0.3, 0.29, 0.28), "size": 0.62, "amount": 16,
+		"life": 4.0, "rise": Vector2(0.15, 0.3), "spread": 30.0, "lean": 0.12, "bursts": 0.0},
+	"puffs": {"near": Color(0.4, 0.34, 0.28), "far": Color(0.33, 0.3, 0.27), "size": 0.45, "amount": 9,
+		"life": 3.6, "rise": Vector2(0.3, 0.5), "spread": 16.0, "lean": 0.2, "bursts": 0.75},
+}
+
+
+## Which smoke a house's hearth gives: from the house's own seed, not from
+## plan()'s rng, so the city does not shift.
+static func smoke_kind(hs: Dictionary) -> String:
+	var kinds := SMOKE_KINDS.keys()
+	return kinds[posmod(hash(int(hs.opts.get("seed", 0))) >> 9, kinds.size())]
+
+
+## The houses that smoke: every SMOKE_EVERY-th, as _hearths builds them.
+static func smoking(houses: Array) -> Array:
+	var out := []
+	for i in houses.size():
+		if i % SMOKE_EVERY == 3:
+			out.append(houses[i])
+	return out
+
+
 ## Smoke from the hearths under some roofs, through the day.
 func _hearths(houses: Array) -> void:
 	var pots := MeshKit.new()
-	for i in houses.size():
-		if i % SMOKE_EVERY != 3:
-			continue
-		var hs: Dictionary = houses[i]
+	for hs: Dictionary in smoking(houses):
 		var basis := Basis.from_euler(Vector3(0, hs.yaw, 0))
 		var gable: bool = hs.opts.roof == "gable"
 		var ridge := minf(hs.d * 0.22, 1.4) if gable else 0.0
@@ -1083,37 +1116,46 @@ func _hearths(houses: Array) -> void:
 					base, 2.0, false, "dark", true)
 		else:
 			pots.lathe("clay", PackedVector2Array([Vector2(0.4, -0.05), Vector2(0.36, mouth)]), 8, base, 2.0, false, "dark", true)
-		var top := base + Vector3(0, mouth, 0)
-		var smoke := Lamp._make_flame(0.4)
-		var pm: ParticleProcessMaterial = smoke.process_material
-		var g := Gradient.new()
-		g.set_color(0, Color(0.36, 0.34, 0.32))
-		g.set_color(1, Color(0.27, 0.26, 0.25))
-		(pm.color_ramp as GradientTexture1D).gradient = g
-		pm.initial_velocity_min = 0.25
-		pm.initial_velocity_max = 0.45
-		pm.spread = 18.0
-		pm.gravity = Vector3(0.2, 0.1, 0)  # the breeze off the strait leans it a little
-		pm.scale_min = 0.6
-		pm.scale_max = 1.3
-		# each puff swells as it rises, then shrinks away: a ragged plume, not a column
-		var curve := Curve.new()
-		curve.add_point(Vector2(0.0, 0.4))
-		curve.add_point(Vector2(0.5, 1.0))
-		curve.add_point(Vector2(1.0, 0.2))
-		var ct := CurveTexture.new()
-		ct.curve = curve
-		pm.scale_curve = ct
-		(smoke.draw_pass_1.surface_get_material(0) as StandardMaterial3D).blend_mode = BaseMaterial3D.BLEND_MODE_MIX
-		smoke.amount = 12
-		smoke.lifetime = 4.5
-		smoke.position = top
-		smoke.visibility_aabb = AABB(Vector3(-3, 0, -3), Vector3(6, 6, 6))
-		smoke.emitting = true
-		smoke.visible = true
+		var smoke := _smoke_plume(SMOKE_KINDS[smoke_kind(hs)])
+		smoke.set_meta(&"kind", smoke_kind(hs))
+		smoke.position = base + Vector3(0, mouth, 0)
 		add_child(smoke)
 		_smoke.append(smoke)
 	add_child(pots.build("SmokePots"))
+
+
+## One plume of the given kind (SMOKE_KINDS).
+static func _smoke_plume(k: Dictionary) -> GPUParticles3D:
+	var smoke := Lamp._make_flame(float(k.size))
+	var pm: ParticleProcessMaterial = smoke.process_material
+	var g := Gradient.new()
+	g.set_color(0, k.near)
+	g.set_color(1, k.far)
+	(pm.color_ramp as GradientTexture1D).gradient = g
+	var rise: Vector2 = k.rise
+	pm.initial_velocity_min = rise.x
+	pm.initial_velocity_max = rise.y
+	pm.spread = float(k.spread)
+	pm.gravity = Vector3(float(k.lean), 0.1, 0)  # the breeze off the strait leans it
+	pm.scale_min = 0.6
+	pm.scale_max = 1.3
+	# each puff swells as it rises, then shrinks away: a ragged plume, not a column
+	var curve := Curve.new()
+	curve.add_point(Vector2(0.0, 0.4))
+	curve.add_point(Vector2(0.5, 1.0))
+	curve.add_point(Vector2(1.0, 0.2))
+	var ct := CurveTexture.new()
+	ct.curve = curve
+	pm.scale_curve = ct
+	(smoke.draw_pass_1.surface_get_material(0) as StandardMaterial3D).blend_mode = BaseMaterial3D.BLEND_MODE_MIX
+	smoke.amount = int(k.amount)
+	smoke.lifetime = float(k.life)
+	smoke.explosiveness = float(k.bursts)
+	smoke.randomness = 0.3
+	smoke.visibility_aabb = AABB(Vector3(-3, 0, -3), Vector3(6, 7, 6))
+	smoke.emitting = true
+	smoke.visible = true
+	return smoke
 
 
 ## The house nearest the sea on the right hand as you come down: the one you can
