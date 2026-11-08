@@ -218,6 +218,29 @@ static func in_rect(x: float, z: float, c: Vector2, half: Vector2, margin: float
 	return absf(x - c.x) <= half.x + margin and absf(z - c.y) <= half.y + margin
 
 
+## The lowest ground within r of (x, z): where a trunk on a slope must start,
+## or its downhill side stands on air.
+static func lowest_ground(x: float, z: float, r: float) -> float:
+	var low := terrain(x, z)
+	for k in 8:
+		var a := TAU * float(k) / 8.0
+		low = minf(low, terrain(x + cos(a) * r, z + sin(a) * r))
+	return low
+
+
+## The way up to the sanctuary, from a little before the foot of the stair to
+## its top: lamps, braziers and trunks keep clear of it by SANCT_WAY_CLEAR.
+const SANCT_WAY_CLEAR := 2.2
+const SANCT_WAY_LEAD := 4.0
+
+
+static func sanct_way_distance(x: float, z: float) -> float:
+	var s0 := SANCT_STAIR[0]
+	var s1 := SANCT_STAIR[1]
+	var dir := Vector3(s1.x - s0.x, 0, s1.z - s0.z).normalized()
+	return _segment(x, z, s0 - dir * SANCT_WAY_LEAD, s1).x
+
+
 ## Walkable surface height where props stand: paving if paved, else terrain.
 static func surface(x: float, z: float) -> float:
 	if in_rect(x, z, AGORA_CENTER, AGORA_HALF):
