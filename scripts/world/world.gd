@@ -74,6 +74,9 @@ static func viewpoints() -> Dictionary:
 		# sentry on his roof (tools/shots.sh DIR --only=watch,watch_roof --time=1)
 		"watch": [Vector3(-80.0, Topo.terrain(-80.0, 40.0) + 1.6, 40.0), Vector3(-72.2, Topo.terrain(-80.0, 40.0) + 1.0, 69.0)],
 		"watch_roof": [roof + Vector3(2.6, 1.6, -2.4), roof + Vector3(0, 1.2, 1.9)],
+		# the coin striker's room by the mule's pen: in at the door, and from the street
+		"mint": [Mint.frame() * Vector3(1.2, 2.3, -0.9), Mint.frame() * Vector3(-0.5, 1.2, -3.3)],
+		"mint_street": [Vector3(-3.5, Topo.street_height(-3.5) + 1.6, -1.2), Vector3(1.5, Topo.street_height(1.5) + 1.8, 7.5)],
 		"sanctuary": [Vector3(40, Topo.SANCT_H + 1.6, -22), Vector3(50, 10, -31)],
 		"surf": [Vector3(Topo.waterline_x(12) - 4.0, Topo.terrain(Topo.waterline_x(12) - 4.0, 12) + 1.6, 12),
 				Vector3(Topo.waterline_x(12) + 40.0, 0.0, -18)],

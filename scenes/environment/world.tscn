@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3]
+[gd_scene load_steps=28 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/world.gd" id="1_world"]
 [ext_resource type="Script" path="res://scripts/world/atmosphere.gd" id="2_atm"]
@@ -26,6 +26,7 @@
 [ext_resource type="Script" path="res://scripts/world/harbour.gd" id="24_harbour"]
 [ext_resource type="Script" path="res://scripts/world/steppe.gd" id="25_steppe"]
 [ext_resource type="Script" path="res://scripts/world/park.gd" id="26_park"]
+[ext_resource type="Script" path="res://scripts/world/mint.gd" id="27_mint"]
 
 [node name="World" type="Node3D"]
 script = ExtResource("1_world")
@@ -95,6 +96,9 @@ script = ExtResource("25_steppe")
 
 [node name="Harbour" type="Node3D" parent="."]
 script = ExtResource("24_harbour")
+
+[node name="Mint" type="Node3D" parent="."]
+script = ExtResource("27_mint")
 
 [node name="Lamps" type="Node3D" parent="."]
 script = ExtResource("14_lamps")
