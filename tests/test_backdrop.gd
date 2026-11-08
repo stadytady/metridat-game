@@ -292,3 +292,27 @@ func test_the_watchman_has_somewhere_to_pace() -> void:
 		check(not B.on_house(houses, p.x, p.z, 0.4), "the watchman walks through a wall at %s" % p)
 	if route.size() >= 2:
 		check(route[0].distance_to(route[1]) > 4.0, "the watchman paces only %.1f m" % route[0].distance_to(route[1]))
+
+
+## Three smokes over the roofs, not one: each kind rises from some house, and
+## each looks and moves its own way.
+func test_the_roofs_smoke_three_ways() -> void:
+	var houses: Array = B.plan()
+	var count := {}
+	for hs: Dictionary in B.smoking(houses):
+		var k: String = B.smoke_kind(hs)
+		check(B.SMOKE_KINDS.has(k), "a hearth gives an unknown smoke %s" % k)
+		check(k == B.smoke_kind(hs), "a house changes its smoke between two looks")
+		count[k] = int(count.get(k, 0)) + 1
+	for k: String in B.SMOKE_KINDS:
+		check(int(count.get(k, 0)) >= 2, "the %s smoke rises from %d roofs: %s" % [k, int(count.get(k, 0)), count])
+	var wisp: Dictionary = B.SMOKE_KINDS["wisp"]
+	var thick: Dictionary = B.SMOKE_KINDS["thick"]
+	var puffs: Dictionary = B.SMOKE_KINDS["puffs"]
+	check((wisp.near as Color).get_luminance() > (thick.near as Color).get_luminance() + 0.15, "the thin smoke is not paler than the thick")
+	check(float(thick.size) > float(wisp.size) * 1.8 and float(thick.spread) > float(wisp.spread) * 2.0, "the thick smoke is not broader than the thin")
+	check((wisp.rise as Vector2).y * float(wisp.life) > (thick.rise as Vector2).y * float(thick.life) * 1.5, "the thin smoke does not climb higher than the thick")
+	check(float(puffs.bursts) > 0.5 and float(wisp.bursts) == 0.0 and float(thick.bursts) == 0.0, "only the oven's smoke comes in puffs")
+	var plume: GPUParticles3D = B._smoke_plume(puffs)
+	check(is_equal_approx(plume.explosiveness, float(puffs.bursts)) and plume.amount == int(puffs.amount), "the plume is not built from its kind")
+	plume.free()
