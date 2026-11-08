@@ -1,4 +1,4 @@
-extends OmniLight3D
+extends Light3D
 ## Fire light flicker: layered sines, cheap and deterministic.
 
 @export var base_energy := 2.2
