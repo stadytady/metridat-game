@@ -37,6 +37,7 @@ func _zone(title: String, c: Vector2, half: Vector2, y: float, h: float = 6.0) -
 ## name -> [eye position, look-at point]
 static func viewpoints() -> Dictionary:
 	var sp := Topo.spawn_point()
+	var roof: Vector3 = load("res://scripts/world/backdrop.gd").wall_towers()[2]  # north wall, x = -30
 	return {
 		"hill": [sp + Vector3(0, 1.6, 0), Vector3(20, 6, 0)],
 		"hill_wide": [sp + Vector3(-2, 2.5, 6), Vector3(60, -6, -10)],
@@ -69,6 +70,10 @@ static func viewpoints() -> Dictionary:
 		"dream_mound": [Vector3(1.0, 61.7, 2668), Vector3(0, 61.5, 2680)],
 		"dream_stair": [preload("res://scripts/world/dream.gd").ORIGIN + Vector3(0, 1.6, preload("res://scripts/world/dream.gd").DOOR_Z + 0.3), preload("res://scripts/world/dream.gd").ORIGIN + Vector3(0, -preload("res://scripts/world/dream.gd").DEPTH + 0.8, preload("res://scripts/world/dream.gd").stair_end())],
 		"dream_tomb": [preload("res://scripts/world/dream.gd").ORIGIN + preload("res://scripts/world/dream.gd").chamber_center() + Vector3(-0.9, 1.6, -1.7), preload("res://scripts/world/dream.gd").ORIGIN + preload("res://scripts/world/dream.gd").chamber_center() + Vector3(0, 0.6, 0.9)],
+		# the night watch on the town wall: the north wall from the park's edge, and a
+		# sentry on his roof (tools/shots.sh DIR --only=watch,watch_roof --time=1)
+		"watch": [Vector3(-80.0, Topo.terrain(-80.0, 40.0) + 1.6, 40.0), Vector3(-72.2, Topo.terrain(-80.0, 40.0) + 1.0, 69.0)],
+		"watch_roof": [roof + Vector3(2.6, 1.6, -2.4), roof + Vector3(0, 1.2, 1.9)],
 		"sanctuary": [Vector3(40, Topo.SANCT_H + 1.6, -22), Vector3(50, 10, -31)],
 		"surf": [Vector3(Topo.waterline_x(12) - 4.0, Topo.terrain(Topo.waterline_x(12) - 4.0, 12) + 1.6, 12),
 				Vector3(Topo.waterline_x(12) + 40.0, 0.0, -18)],

@@ -14,6 +14,9 @@ var _at := ""
 var _at_yaw := 0.0
 var _at_name := ""
 var _at_pitch := 0.0
+## Where the wall's relay stands in the watch shots: the fourth and fifth posts
+## have their torches up (WallWatch.calls), the tower in "watch_roof" among them.
+const WATCH_SHOT_CLOCK := 10.9
 
 
 func _ready() -> void:
@@ -74,6 +77,11 @@ func _shots() -> void:
 		player.global_position = eye - Vector3(0, 1.6, 0)
 		player.look_at_point(vps[name][1])
 		player.camera.position.y = 0.0
+		if name.begins_with("watch"):
+			# mid-relay, so the night shots show torches going up along the wall
+			var watch: WallWatch = _main().world.find_child("WallWatch", true, false)
+			if watch != null and watch.lit:
+				watch.clock = WATCH_SHOT_CLOCK
 		await _frames(8)
 		var img := get_viewport().get_texture().get_image()
 		var path := _out.path_join("%s.png" % name)
@@ -1148,6 +1156,15 @@ func _check_night() -> void:
 			if d > 0.1 or n.pose_now() != "sit":
 				_fail.append("child %d not sitting at home: %.2f m off, pose %s" % [i, d, n.pose_now()])
 		print("children: %d home by the hearth" % home.size())
+	# The watch on the town wall: a fire on every tower, and the torches answer.
+	var watch: WallWatch = _main().world.find_child("WallWatch", true, false)
+	if watch == null:
+		_fail.append("no watch on the town wall")
+	else:
+		var dark := watch.fire_count() - watch.fires_lit()
+		if watch.fire_count() < 8 or dark > 0 or not watch.lit:
+			_fail.append("wall watch: %d of %d tower fires dark after dusk" % [dark, watch.fire_count()])
+		print("wall watch: %d tower fires, relay clock %.0f s" % [watch.fire_count(), watch.clock])
 	# The lamp beside the cottage door follows the same dusk.
 	var wall_lamps := get_tree().get_nodes_in_group(&"wall_lamp")
 	for w: Node in wall_lamps:

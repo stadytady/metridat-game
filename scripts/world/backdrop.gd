@@ -11,6 +11,10 @@ extends District
 ## dusk lamps show in some windows.
 
 const WALL_Z := 78.0
+## The watchman's lantern: horn panes (size), and the cone it throws down.
+const LANTERN_PANES := Vector3(0.12, 0.17, 0.12)
+const LANTERN_RANGE := 5.0
+const LANTERN_ANGLE := 62.0
 ## Terrace streets: about every ten metres down the slope, each following the
 ## contour through that point; north-south runs at these x on the flatter
 ## ground east of the agora.
@@ -631,6 +635,10 @@ func _ready() -> void:
 	_fountain(houses)
 	_animals(houses)
 	_watchman_at(houses)
+	var watch := WallWatch.new()
+	watch.name = "WallWatch"
+	watch.atm = _atm
+	add_child(watch)
 	if _cottage_lamp != null:
 		_cottage_lamp.set_lit(false)
 
@@ -775,8 +783,8 @@ func _load(n: Npc, load: String) -> void:
 
 ## A watchman with a lantern, out only after dusk: he paces the stretch of street
 ## by the first crossing herm. The model is an ordinary Npc; the lantern hangs on
-## his right hand - a clay dish, a flame of its own and a small warm light - so
-## the back street has one moving fire in it at night.
+## his right hand and throws a pool of light round his feet, so the back
+## street has one moving fire in it at night.
 func _watchman_at(houses: Array) -> void:
 	var route := watch_route(houses)
 	if route.size() < 2:
@@ -808,28 +816,34 @@ func _watchman_at(houses: Array) -> void:
 	_watchman = n
 
 
-## The lantern itself: a dish on a hook, a flame and a light that flickers.
+## The lantern itself: horn panes round the flame under a bronze cap, so it
+## lights the stones at his feet and not the walls and the sky over him - Aeneas
+## Tacticus (26) has night rounds carry their light screened that way. A spot
+## pointing down, not a lamp shining every way.
 func _lantern() -> Node3D:
 	var root := Node3D.new()
 	root.name = "Lantern"
 	root.position = Vector3(0, -0.3, 0)
 	var kit := MeshKit.new()
-	kit.lathe("clay", PackedVector2Array([Vector2(0.03, 0.0), Vector2(0.09, 0.05), Vector2(0.1, 0.09)]), 8,
-			Vector3.ZERO, 1.0, true)
+	# the ring he holds it by, the cap, the horn panes and the foot
+	kit.box("bronze", Vector3(0, 0.02, 0), Vector3(0.015, 0.07, 0.015), [])
+	kit.box("bronze", Vector3(0, -0.05, 0), Vector3(0.15, 0.03, 0.15), [])
+	kit.box("window_glow", Vector3(0, -0.15, 0), LANTERN_PANES, [])
+	kit.box("bronze", Vector3(0, -0.245, 0), Vector3(0.13, 0.02, 0.13), [])
 	var mi := MeshInstance3D.new()
 	mi.mesh = kit.commit()
 	root.add_child(mi)
-	var flame := Lamp._make_flame(0.06)
-	flame.position = Vector3(0, 0.12, 0)
-	root.add_child(flame)
-	var light := OmniLight3D.new()
-	light.position = Vector3(0, 0.18, 0)
-	light.light_color = Color(1.0, 0.62, 0.3)
-	light.omni_range = 6.0
+	var light := SpotLight3D.new()
+	light.name = "Light"
+	light.position = Vector3(0, -0.2, 0)
+	light.rotation_degrees = Vector3(-90, 0, 0)  # a spot shines down its -z
+	light.light_color = Color(1.0, 0.64, 0.32)
+	light.spot_range = LANTERN_RANGE
+	light.spot_angle = LANTERN_ANGLE
 	light.shadow_enabled = false
 	light.set_script(preload("res://scripts/world/flicker.gd"))
-	light.base_energy = 1.2
-	light.amount = 0.35
+	light.base_energy = 2.4
+	light.amount = 0.4
 	root.add_child(light)
 	return root
 
@@ -1199,20 +1213,55 @@ func _process(_delta: float) -> void:
 			s.emitting = day
 
 
+## The town wall's run along x, its segment length, and every how many segments
+## a tower stands.
+const WALL_X0 := -110.0
+const WALL_X1 := 62.0
+const WALL_SEG := 10.0
+const TOWER_EVERY := 4
+## A tower's footprint (square), and how far its flat roof stands over the top
+## of the curtain on either side: on a slope the uphill curtain used to rise
+## over the roof, and a sentry stood in a pit below the wall walk.
+const TOWER_SIZE := 6.0
+const TOWER_OVER := 1.5
+## How far the curtain's top stands over the higher of its two ends.
+const CURTAIN_UP := 4.0
+
+
 func _walls(kit: MeshKit) -> void:
 	for side: float in [1.0, -1.0]:
-		var x := -110.0
-		var seg := 0
-		while x < 62.0:
-			var x2 := x + 10.0
+		var x := WALL_X0
+		while x < WALL_X1:
+			var x2 := x + WALL_SEG
 			var a := Vector3(x, Topo.terrain(x, side * WALL_Z), side * WALL_Z)
 			var b := Vector3(x2, Topo.terrain(x2, side * WALL_Z), side * WALL_Z)
 			var base := minf(a.y, b.y) - 1.5
-			var top := maxf(a.y, b.y) + 4.0
+			var top := maxf(a.y, b.y) + CURTAIN_UP
 			kit.solid_box("limestone", Vector3((x + x2) / 2.0, (base + top) / 2.0, side * WALL_Z), Vector3(10.2, top - base, 1.8), ["bottom"])
-			if seg % 4 == 0:
-				var tb := a.y - 1.5
-				kit.solid_box("limestone", Vector3(x, tb + 3.6, side * WALL_Z), Vector3(6.0, 7.2, 6.0), ["bottom"])
-				kit.box("roof", Vector3(x, tb + 7.3, side * WALL_Z), Vector3(6.4, 0.25, 6.4), ["bottom"])
 			x = x2
+	for t: Vector3 in wall_towers():
+		var tb := Topo.terrain(t.x, t.z) - 1.5
+		var body := t.y - 0.25 - tb
+		kit.solid_box("limestone", Vector3(t.x, tb + body / 2.0, t.z), Vector3(TOWER_SIZE, body, TOWER_SIZE), ["bottom"])
+		kit.box("roof", Vector3(t.x, t.y - 0.125, t.z), Vector3(TOWER_SIZE + 0.4, 0.25, TOWER_SIZE + 0.4), ["bottom"])
+
+
+## The towers of the town wall: the middle of each flat roof, as _walls builds
+## them. The night watch (WallWatch) stands on these.
+static func wall_towers() -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	for side: float in [1.0, -1.0]:
+		var x := WALL_X0
+		var seg := 0
+		while x < WALL_X1:
+			if seg % TOWER_EVERY == 0:
+				# over the curtain on both sides: each reaches its higher end + CURTAIN_UP
+				var z := side * WALL_Z
+				var high := Topo.terrain(x, z)
+				for dx: float in [-WALL_SEG, WALL_SEG]:
+					if x + dx >= WALL_X0 - 0.01 and x + dx <= WALL_X1 + WALL_SEG:
+						high = maxf(high, Topo.terrain(x + dx, z))
+				out.append(Vector3(x, high + CURTAIN_UP + TOWER_OVER, z))
+			x += WALL_SEG
 			seg += 1
+	return out
