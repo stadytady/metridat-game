@@ -44,11 +44,12 @@ float shore_x(float z) {
 // Sum of directional waves; returns height, writes the normalised crest (-1..1).
 float waves(vec2 p, float t, float shoal, out float c) {
 	const vec4 W[4] = vec4[](
-		// dir.x, dir.y, wavelength, amplitude
-		vec4(1.0, 0.25, 42.0, 0.55),
-		vec4(0.75, -0.65, 24.0, 0.28),
-		vec4(0.3, 1.0, 14.0, 0.16),
-		vec4(1.0, -0.1, 8.0, 0.09));
+		// dir.x, dir.y (the way the crests travel: shoreward, -x), wavelength,
+		// amplitude; Sea.WAVES is the same list on the CPU
+		vec4(-1.0, -0.25, 42.0, 0.55),
+		vec4(-0.75, 0.65, 24.0, 0.28),
+		vec4(-0.3, -1.0, 14.0, 0.16),
+		vec4(-1.0, 0.1, 8.0, 0.09));
 	float h = 0.0;
 	float total = 0.0;
 	for (int i = 0; i < 4; i++) {
