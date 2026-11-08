@@ -92,6 +92,8 @@ func _shots() -> void:
 	if "astragal" in _only:
 		await _astragal_shots()
 	# the people of the back streets, one frame each from in front of them
+	if "smoke" in _only:
+		await _smoke_shots(player)
 	if "lanefolk" in _only:
 		await _lanefolk_shots(player)
 	_report_perf()
@@ -127,6 +129,27 @@ func _lanefolk_shots(player: CharacterBody3D) -> void:
 			player.camera.position.y = 0.0
 			await _frames(6)
 			_save("lane_%s_%d" % [n.name, shot])
+
+
+## One plume of each smoke kind over the roofs, from the air beside it, so the
+## three can be told apart (--only=smoke).
+func _smoke_shots(player: CharacterBody3D) -> void:
+	var bd: Node = _main().world.find_child("Backdrop", true, false)
+	if bd == null:
+		return
+	var done := {}
+	for s: GPUParticles3D in bd._smoke:
+		var kind := String(s.get_meta(&"kind", ""))
+		if done.has(kind):
+			continue
+		done[kind] = true
+		var at := s.global_position + Vector3(0, 1.4, 0)
+		var eye := at + Vector3(6.5, 1.0, 6.5)
+		player.global_position = eye - Vector3(0, 1.6, 0)
+		player.look_at_point(at)
+		player.camera.position.y = 0.0
+		await _frames(150)  # let the plume fill out
+		_save("smoke_%s" % kind)
 
 
 ## The knucklebones table mid-throw and after the bones have come to rest.
