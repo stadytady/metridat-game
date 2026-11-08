@@ -25,6 +25,11 @@ const RIG := {
 const POSES := {
 	"stand": {},
 	# on a low stool, leaning over the wheel, hands forward on the clay
+	# on a stool at the anvil: the left fist holds the punch upright on the die,
+	# the right swings the hammer (Mint.hammer_lift adds the swing on top)
+	"strike": {"chest": Vector3(-16, 0, 0), "head": Vector3(-24, 0, 0),
+		"l_shoulder": Vector3(60, 0, 25), "l_elbow": Vector3(20, 0, 0), "r_shoulder": Vector3(10, 0, -40), "r_elbow": Vector3(48, 0, 0),
+		"l_hip": Vector3(90, 0, 6), "r_hip": Vector3(90, 0, -6), "l_knee": Vector3(-95, 0, 0), "r_knee": Vector3(-95, 0, 0)},
 	"potter": {"pelvis": Vector3(0, 0, 0), "chest": Vector3(-22, 0, 0), "head": Vector3(-12, 0, 0),
 		"l_shoulder": Vector3(55, 0, 8), "r_shoulder": Vector3(55, 0, -8), "l_elbow": Vector3(35, 0, 0), "r_elbow": Vector3(35, 0, 0),
 		"l_hip": Vector3(90, 0, 4), "r_hip": Vector3(90, 0, -4), "l_knee": Vector3(-95, 0, 0), "r_knee": Vector3(-95, 0, 0)},
@@ -103,7 +108,7 @@ const POSES := {
 ## Pelvis height for a pose (seated figures sit on something low).
 const SEAT := {"stand": 0.92, "potter": 0.46, "turner": 0.32, "mender": 0.4, "sleep": 0.12, "baker": 0.5, "carry": 0.92, "declaim": 0.92, "draw": 0.92,
 	"walk": 0.92, "think": 0.92, "spin": 0.92, "pick": 0.86, "stoke": 0.5, "sit_think": 0.34,
-	"head_carry": 0.92, "pour": 0.92, "sit": 0.3, "weave": 0.54, "gut": 0.4}
+	"head_carry": 0.92, "pour": 0.92, "sit": 0.3, "weave": 0.54, "gut": 0.4, "strike": 0.46}
 
 
 ## How a person looks: "woman", "beard" (0 none, 1 short, 2 full), "hair"
