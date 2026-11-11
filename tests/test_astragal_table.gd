@@ -83,7 +83,9 @@ func test_the_table_waits_for_the_key_that_opened_it() -> void:
 	for k in 120:
 		p._table._process(1.0 / 30.0)
 	var counted: int = p._log.get_child_count()
-	var sum_ok: bool = thrown == 1 and p._sum_mine.text == str(p._game.throws[0].sum_mine)
+	# the panel names Aphrodite's throw and the dog instead of a sum (about one
+	# throw in twenty), so compare with what it should say, not with the number
+	var sum_ok: bool = thrown == 1 and p._sum_mine.text == p._sum_text(p._game.throws[0].sum_mine, p._game.throws[0].kind_mine)
 	p.free()
 	Game.ui_blocking = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE

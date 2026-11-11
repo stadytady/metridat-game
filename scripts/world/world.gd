@@ -56,7 +56,7 @@ static func viewpoints() -> Dictionary:
 		# the herm that marks it; look along the street, not into a wall
 		"side_street": [Vector3(-26.65, Topo.terrain(-26.65, 32.6) + 1.7, 32.6), Vector3(-26.65, Topo.terrain(-26.65, 38.6) + 1.0, 38.6)],
 		"house_lane": [Vector3(26.0, Topo.AGORA_H + 1.6, 5.0), Vector3(26.0, Topo.AGORA_H + 1.4, 18.0)],
-		"house_yard": [Vector3(24.0, Topo.HOUSE_H + 1.6, 17.0), Vector3(29.4, Topo.HOUSE_H + 0.5, 19.0)],
+		"house_yard": [Vector3(25.6, Topo.HOUSE_H + 1.6, 16.0), Vector3(29.4, Topo.HOUSE_H + 0.5, 19.0)],
 		"house_room": [Vector3(25.6, Topo.HOUSE_H + 1.6, 22.9), Vector3(20.6, Topo.HOUSE_H + 0.4, 25.4)],
 		"house_loom": [Vector3(27.0, Topo.HOUSE_H + 1.6, 22.8), Vector3(29.2, Topo.HOUSE_H + 1.1, 26.2)],
 		"pier": [Vector3(Topo.pier_x0() - 2.0, Topo.terrain(Topo.pier_x0() - 2.0, Topo.PIER_Z + 3.0) + 1.6, Topo.PIER_Z + 3.0),

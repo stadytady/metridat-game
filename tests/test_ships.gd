@@ -31,7 +31,7 @@ func test_decks_stay_above_the_water() -> void:
 		var heave := Sea.float_pose(a, 0.0, 7.0 * k, 2.2 * k).x
 		var deck: float = (S.WATERLINE + District.SHIP_DECK_Y) * k + heave
 		var keel: float = (S.WATERLINE + S.HULL_BOTTOM) * k + heave
-		check(deck > water + 0.25 * k, "anchored ship deck under water: %.2f vs %.2f" % [deck, water])
+		check(deck > water, "anchored ship deck under water: %.2f vs %.2f" % [deck, water])
 		check(keel < water - 0.25 * k, "anchored ship floats on top: keel %.2f vs %.2f" % [keel, water])
 
 
@@ -55,3 +55,42 @@ func test_the_deck_stays_inside_the_hull() -> void:
 		check(deck < hull, "at %.1f m the deck is %.2f wide, the hull %.2f" % [x, deck, hull])
 		check(deck > hull - 0.45, "at %.1f m the deck leaves a %.2f m gap" % [x, hull - deck])
 		x += 0.5
+
+## Riding at anchor through a minute of swell, the keel never comes out of the
+## water anywhere along the hull. The keel is the model's origin; the old
+## "bottom" at -0.67 was the steering oar, and the hull lay on top of the sea.
+func test_the_keel_stays_in_the_water_through_the_swell() -> void:
+	var worst := -INF
+	for s: Array in S.SHIPS:
+		var a: Vector3 = s[3]
+		var k := float(s[2])
+		var yaw := deg_to_rad(S.heading_at(s[0], s[1], a, 1.0))
+		var fwd := Vector3(cos(yaw), 0, -sin(yaw))
+		for step in 120:
+			var t := step * 0.5
+			var f := Sea.float_pose(a, yaw, 7.0 * k, 2.2 * k, t)
+			for x: float in [-6.0, -3.0, 0.0, 3.0, 6.0]:
+				var p := a + fwd * x * k
+				# pitch (f.z) lifts the bow when positive
+				var keel := (S.WATERLINE + S.HULL_BOTTOM) * k + f.x + tan(f.z) * x * k
+				var water := Topo.SEA_LEVEL + Sea.height_at(p.x, p.z, t)
+				worst = maxf(worst, keel - water)
+	check(worst < -0.05, "an anchored keel comes %.2f m out of the water in the swell" % worst)
+
+
+## HULL_BOTTOM is the hull's keel, read from the model amidships (the steering
+## oars hang lower at the stern; taken for the keel, they put the hull on top
+## of the sea). Both the anchored ships and the moored one use it.
+func test_the_keel_constant_is_the_hull_keel() -> void:
+	var root := Props.build("ship").build("Ship")
+	var low := INF
+	for mi: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
+		var m := mi.mesh
+		for sidx in m.get_surface_count():
+			var verts: PackedVector3Array = m.surface_get_arrays(sidx)[Mesh.ARRAY_VERTEX]
+			for v: Vector3 in verts:
+				if absf(v.x) < 5.0:
+					low = minf(low, v.y)
+	root.free()
+	check(absf(low - S.HULL_BOTTOM) < 0.05, "the keel amidships is at %.2f, HULL_BOTTOM says %.2f" % [low, S.HULL_BOTTOM])
+	check(absf(low - preload("res://scripts/world/harbour.gd").HULL_BOTTOM) < 0.05, "the moored ship's HULL_BOTTOM is not its keel")

@@ -16,9 +16,12 @@ const SHIPS := [
 
 ## Ride low in the water like the moored ship, with the deck District lays over the
 ## model's own floor — shaped to the hull, not a slab across it.
-const WATERLINE := 0.0
-## The hull's own half beams at deck level, measured from the model; the test keeps
-const HULL_BOTTOM := -0.67
+## The model's keel is at its origin (Props.hull: keel at y = 0); the hull
+## rides this deep, so its bottom is in the sea and not lying on top of it.
+const WATERLINE := -0.5
+## The keel. -0.67 (the model's lowest point) is the steering oar's blade, not
+## the hull: measured by it, ships sat on the water with the whole hull above it.
+const HULL_BOTTOM := 0.0
 ## Under way from this hour, at anchor by that one.
 const SAIL_FROM := 0.12
 const ANCHOR_BY := 0.85
