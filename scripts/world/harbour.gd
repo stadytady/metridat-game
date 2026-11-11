@@ -78,6 +78,7 @@ func _ready() -> void:
 	for g: GeometryInstance3D in _ship.find_children("*", "GeometryInstance3D", true, false):
 		g.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	laid_ship_deck(_ship)
+	set_furl(_ship, 1.0)  # moored until the prologue sends her out
 	_lines = MeshInstance3D.new()
 	_lines.name = "MooringLines"
 	_lines.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -259,12 +260,15 @@ func _end_lantern() -> void:
 func sail(pos: Vector3, yaw: float) -> void:
 	_under_way = [pos, yaw]
 	_gangway_node.visible = false
+	set_furl(_ship, 0.0)
 
 
 func moor() -> void:
 	_under_way = []
 	_ship.position = ship_pos()
 	_gangway_node.visible = true
+	# alongside the pier her canvas is gathered up on the yard
+	set_furl(_ship, 1.0)
 
 
 func ship() -> Node3D:
