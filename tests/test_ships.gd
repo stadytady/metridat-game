@@ -94,3 +94,20 @@ func test_the_keel_constant_is_the_hull_keel() -> void:
 	root.free()
 	check(absf(low - S.HULL_BOTTOM) < 0.05, "the keel amidships is at %.2f, HULL_BOTTOM says %.2f" % [low, S.HULL_BOTTOM])
 	check(absf(low - preload("res://scripts/world/harbour.gd").HULL_BOTTOM) < 0.05, "the moored ship's HULL_BOTTOM is not its keel")
+
+
+## At anchor and alongside the canvas is furled; out on the strait it is set.
+func test_sails_are_furled_at_anchor_and_set_under_way() -> void:
+	check(S.furl_at(0.0) == 0.0, "a ship out on the strait in the afternoon sails furled")
+	check(S.furl_at(0.5) < 0.05, "a ship on her passage has taken her sail in already")
+	check(is_equal_approx(S.furl_at(1.0), 1.0), "a ship at anchor by night has her sail set")
+	var n := Props.instance("ship")
+	Engine.get_main_loop().root.add_child(n)
+	District.set_furl(n, 1.0)
+	var furled := true
+	for g: GeometryInstance3D in n.find_children("*", "GeometryInstance3D", true, false):
+		furled = furled and is_equal_approx(float(g.get_instance_shader_parameter(&"furl")), 1.0)
+	n.free()
+	check(furled, "set_furl does not reach the sail's shader")
+	var shader := FileAccess.get_file_as_string("res://assets/shaders/psx_sail.gdshader")
+	check(shader.contains("instance uniform float furl"), "psx_sail has no furl")
