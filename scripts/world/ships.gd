@@ -39,6 +39,12 @@ static func progress(hour: float) -> float:
 	return smoothstep(SAIL_FROM, ANCHOR_BY, hour)
 
 
+## How furled the sail is: set all the way in, taken in over the last of the
+## passage, so a ship riding at anchor has her canvas gathered up on the yard.
+static func furl_at(hour: float) -> float:
+	return smoothstep(0.9, 1.0, progress(hour))
+
+
 static func position_at(start: Vector3, anchor: Vector3, hour: float) -> Vector3:
 	return start.lerp(anchor, progress(hour))
 
@@ -92,3 +98,7 @@ func _process(delta: float) -> void:
 		n.position = Vector3(p.x, WATERLINE * k + f.x, p.z)
 		n.rotation = Vector3(f.y, yaw, f.z)
 		_lanterns[i].visible = hour >= LANTERN_FROM
+		var f2 := furl_at(hour)
+		if not is_equal_approx(f2, float(n.get_meta(&"furl", -1.0))):
+			n.set_meta(&"furl", f2)
+			set_furl(n, f2)

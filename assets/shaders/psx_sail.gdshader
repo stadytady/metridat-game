@@ -11,6 +11,12 @@ uniform sampler2D albedo_tex : source_color, filter_nearest, repeat_enable;
 uniform vec4 tint : source_color = vec4(1.0);
 uniform vec2 uv_scale = vec2(1.0);
 uniform float affine_amount : hint_range(0.0, 1.0) = 1.0;
+// Furled (1) the canvas is gathered up under the yard in a tight roll; set
+// per ship (an anchored or moored ship has no use for her sail). Model space:
+// the yard of Props.ship runs along z at this height and x.
+instance uniform float furl : hint_range(0.0, 1.0) = 0.0;
+uniform float yard_y = 10.15;
+uniform float yard_x = 0.82;
 // How far the canvas bellies out of the plane, in metres, and how fast it breathes.
 uniform float swell : hint_range(0.0, 0.6) = 0.16;
 uniform float speed : hint_range(0.0, 4.0) = 1.1;
@@ -22,7 +28,10 @@ void vertex() {
 	// strongest in the middle of the canvas, nothing at the bolt ropes
 	float belly = sin(clamp(UV.x, 0.0, 1.0) * 3.14159) * sin(clamp(UV.y, 0.0, 1.0) * 3.14159);
 	float breath = 0.65 + 0.35 * sin(TIME * speed + UV.x * 5.0);
-	vec3 v = VERTEX + NORMAL * belly * swell * breath;
+	vec3 v = VERTEX + NORMAL * belly * swell * breath * (1.0 - furl);
+	// gathered up: everything below the yard pulled into a roll 0.35 m deep under it
+	v.y = mix(v.y, yard_y - (yard_y - v.y) * 0.06, furl);
+	v.x = mix(v.x, yard_x + 0.12, furl);
 	VERTEX = v;
 	vec4 clip = PROJECTION_MATRIX * MODELVIEW_MATRIX * vec4(v, 1.0);
 	vec2 grid = psx_resolution * 0.5;

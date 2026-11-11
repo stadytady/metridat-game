@@ -57,6 +57,12 @@ static func ship_deck_half_beam(x: float) -> float:
 ## A deck that follows the hull instead of a slab laid over it: strips between the
 ## measured beams, and a transom closing each end so the boat is not a scoop.
 ## Built in the model's own units, so a scaled ship node scales the deck with it.
+## Furls (1) or sets (0) a ship's sail: psx_sail reads it per instance.
+static func set_furl(ship: Node3D, amount: float) -> void:
+	for g: GeometryInstance3D in ship.find_children("*", "GeometryInstance3D", true, false):
+		g.set_instance_shader_parameter(&"furl", clampf(amount, 0.0, 1.0))
+
+
 func laid_ship_deck(ship: Node3D, deck_y := SHIP_DECK_Y) -> void:
 	var kit := MeshKit.new()
 	var x := -SHIP_DECK_END
