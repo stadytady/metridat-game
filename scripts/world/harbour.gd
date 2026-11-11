@@ -12,13 +12,17 @@ const SHIP_GAP := 3.7  # the hull is 2.4 m either side of the keel, the yard abo
 ## The hull rides low, like a laden merchantman: keel under the sea, rail well
 ## above it. The model's own floor is its bottom, so a laid deck goes over it at
 ## DECK_Y: the boat sits in the water and still stays dry inside.
-const WATERLINE := 0.0
+## The model's keel is at its origin (Props.hull: keel at y = 0); the hull
+## rides this deep, so its bottom is in the sea and not lying on top of it.
+const WATERLINE := -0.5
 const DECK_Y := 0.9
 ## The mooring lines hang slack: this much below the straight line at the middle.
 const MOORING_SAG := 0.45
 const MOORING_SEGMENTS := 10
 ## The model's keel, from its mesh bounds: the test keeps it under the sea.
-const HULL_BOTTOM := -0.67
+## The keel. -0.67 (the model's lowest point) is the steering oar's blade, not
+## the hull: measured by it, ships sat on the water with the whole hull above it.
+const HULL_BOTTOM := 0.0
 const LANTERN_FROM := DayCycle.LAMPS_ON
 ## The carrier's round: [x, z, pose, pause s, facing yaw deg or NAN]. He takes
 ## an amphora from the cargo, goes along the pier round the skipper, up the
