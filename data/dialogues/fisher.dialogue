@@ -1,5 +1,6 @@
-# Glaukos, on the beach by his net. Three questions: the weights, his father's
-# ice, and the light on the water. Each ends the talk in its own place.
+# Glaukos, on the beach by his net. Three questions: the weights, whether the
+# strait freezes (his father's walk on the ice), and whether the shore is safe
+# at night (the light on the water). No question names what he has not said.
 # Text is a key: the panel translates it, so EN/RU stay in strings.csv.
 # Indent with tabs: DM's INDENT_REGEX is ^\t+.
 
