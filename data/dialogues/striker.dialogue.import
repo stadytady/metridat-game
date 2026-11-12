@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=15
+type="Resource"
+uid="uid://ku84yj5rao2m"
+path="res://.godot/imported/striker.dialogue-e60fe12337f7746ce07b00de6092578e.tres"
+
+[deps]
+
+source_file="res://data/dialogues/striker.dialogue"
+dest_files=["res://.godot/imported/striker.dialogue-e60fe12337f7746ce07b00de6092578e.tres"]
+
+[params]
+
+defaults=true

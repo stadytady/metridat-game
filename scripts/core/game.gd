@@ -11,6 +11,8 @@ const SETTINGS_PATH := "user://settings.cfg"
 
 var mouse_sensitivity := 1.0
 var invert_y := false
+## Master volume, 0 (mute) .. 1; set_volume() applies it to the Master bus.
+var master_volume := 1.0
 var psx_effects := true
 ## "en" or "ru". Empty until settings load: then the system language decides.
 var language := ""
@@ -162,12 +164,31 @@ func load_settings() -> void:
 	if cfg.load(SETTINGS_PATH) == OK:
 		mouse_sensitivity = clampf(float(cfg.get_value("input", "mouse_sensitivity", 1.0)), 0.1, 4.0)
 		invert_y = bool(cfg.get_value("input", "invert_y", false))
+		master_volume = clampf(float(cfg.get_value("audio", "master_volume", 1.0)), 0.0, 1.0)
 		psx_effects = bool(cfg.get_value("video", "psx_effects", true))
 		language = String(cfg.get_value("ui", "language", ""))
 	if language not in LANGUAGES:
 		language = "ru" if OS.get_locale_language() == "ru" else "en"
 	TranslationServer.set_locale(language)
+	apply_volume()
 	settings_changed.emit()
+
+
+## The Master bus level for a volume of 0..1: silence at 0, else decibels.
+static func volume_db(v: float) -> float:
+	return linear_to_db(clampf(v, 0.0001, 1.0))
+
+
+func apply_volume() -> void:
+	var bus := AudioServer.get_bus_index(&"Master")
+	AudioServer.set_bus_mute(bus, master_volume <= 0.0)
+	AudioServer.set_bus_volume_db(bus, volume_db(master_volume))
+
+
+func set_volume(v: float) -> void:
+	master_volume = clampf(v, 0.0, 1.0)
+	apply_volume()
+	save_settings()
 
 
 ## Switches the UI and all texts; Labels holding translation keys update
@@ -183,6 +204,7 @@ func save_settings() -> void:
 	var cfg := ConfigFile.new()
 	cfg.set_value("input", "mouse_sensitivity", mouse_sensitivity)
 	cfg.set_value("input", "invert_y", invert_y)
+	cfg.set_value("audio", "master_volume", master_volume)
 	cfg.set_value("video", "psx_effects", psx_effects)
 	cfg.set_value("ui", "language", language)
 	var err := cfg.save(SETTINGS_PATH)

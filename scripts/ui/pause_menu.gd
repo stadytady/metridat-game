@@ -6,6 +6,8 @@ signal closed
 var _root: Control
 var _sens_label: Label
 var _sens: HSlider
+var _vol_label: Label
+var _vol: HSlider
 var _invert: CheckBox
 var _psx: CheckBox
 var _lang: Array[Button] = []
@@ -24,7 +26,7 @@ func _ready() -> void:
 	panel.add_theme_stylebox_override("panel", UiStyle.panel())
 	panel.custom_minimum_size = Vector2(760, 0)
 	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	panel.position -= Vector2(380, 300)
+	panel.position -= Vector2(380, 340)
 	_root.add_child(panel)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 16)
@@ -45,6 +47,15 @@ func _ready() -> void:
 	_sens.custom_minimum_size = Vector2(560, 32)
 	_sens.value_changed.connect(_on_sens)
 	col.add_child(_sens)
+	_vol_label = UiStyle.label("", 24)
+	col.add_child(_vol_label)
+	_vol = HSlider.new()
+	_vol.min_value = 0.0
+	_vol.max_value = 1.0
+	_vol.step = 0.05
+	_vol.custom_minimum_size = Vector2(560, 32)
+	_vol.value_changed.connect(_on_volume)
+	col.add_child(_vol)
 	_invert = CheckBox.new()
 	_invert.text = "UI_INVERT_Y"
 	_invert.add_theme_font_size_override("font_size", 24)
@@ -93,6 +104,7 @@ func _process(_delta: float) -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_TRANSLATION_CHANGED and _sens_label:
 		_sens_label.text = tr("UI_SENSITIVITY") % Game.mouse_sensitivity
+		_vol_label.text = tr("UI_VOLUME") % roundi(Game.master_volume * 100.0)
 
 
 func is_open() -> bool:
@@ -102,6 +114,8 @@ func is_open() -> bool:
 func open() -> void:
 	_sens.set_value_no_signal(Game.mouse_sensitivity)
 	_sens_label.text = tr("UI_SENSITIVITY") % Game.mouse_sensitivity
+	_vol.set_value_no_signal(Game.master_volume)
+	_vol_label.text = tr("UI_VOLUME") % roundi(Game.master_volume * 100.0)
 	_invert.set_pressed_no_signal(Game.invert_y)
 	for b in _lang:
 		b.set_pressed_no_signal(b.text.to_lower() == Game.language)
@@ -124,3 +138,8 @@ func _on_sens(v: float) -> void:
 	Game.mouse_sensitivity = v
 	_sens_label.text = tr("UI_SENSITIVITY") % v
 	Game.save_settings()
+
+
+func _on_volume(v: float) -> void:
+	Game.set_volume(v)
+	_vol_label.text = tr("UI_VOLUME") % roundi(v * 100.0)

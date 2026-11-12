@@ -3,7 +3,8 @@ extends District
 ## The coin striker's room, on the open ground uphill of the mule's pen: a small
 ## house you can walk into (Arch.cottage), its door on the street. Inside, a
 ## man on a stool at a stone anvil holds the punch upright on the die with his
-## left hand and brings the hammer down with his right; a little clay furnace
+## left hand and brings the hammer down with his right (he is an Npc: Sosias,
+## who puts the hammer down to talk); a little clay furnace
 ## keeps the bronze blanks hot, a tray of struck coins waits on the bench.
 ## Struck coins were made this way - a hot blank between a fixed die in the
 ## anvil and a punch die struck by hand - but who struck Panticapaeum's coins
@@ -34,6 +35,7 @@ const SWING_ELBOW := -30.0
 
 var _atm: Node
 var _joints := {}
+var _npc: Npc
 var _xf := Transform3D.IDENTITY
 var _floor := 0.0
 var _t := 0.0
@@ -83,6 +85,7 @@ static func swing(lift: float) -> Dictionary:
 
 
 func _ready() -> void:
+	process_priority = 1  # after the striker's Npc has posed him, add the swing
 	_atm = get_parent().get_node_or_null("Atmosphere")
 	_xf = frame()
 	var kit := MeshKit.new()
@@ -105,12 +108,21 @@ func _at(p: Vector2, up: float = 0.0) -> Vector3:
 
 
 func _striker() -> void:
-	var root := Node3D.new()
-	root.name = "Striker"
-	# a figure faces its own -z; he sits facing the anvil and the door (+z)
-	root.transform = Transform3D(_xf.basis * Basis(Vector3.UP, PI), _at(STOOL))
-	add_child(root)
-	_joints = Figure.build(root, "chiton", {"beard": 2, "hair": 2, "cloth": "chiton_dark"})
+	# an Npc, so he can be talked to; Mint drives his hammer arm on top of the
+	# pose (after the Npc's own _process: see process_priority in _ready)
+	var npc: Npc = Npc.new()
+	npc.name = "Striker"
+	npc.npc_id = "striker"
+	npc.name_key = "NPC_STRIKER_NAME"
+	npc.dialogue = load("res://data/dialogues/striker.dialogue") as DialogueResource
+	npc.pose = "strike"
+	npc.look = {"beard": 2, "hair": 2, "cloth": "chiton_dark"}
+	# a figure faces its own -z; he sits facing the anvil and the door (+z of the room)
+	npc.position = _at(STOOL)
+	npc.rotation.y = (_xf.basis * Basis(Vector3.UP, PI)).get_euler().y
+	add_child(npc)
+	_npc = npc
+	_joints = npc.joints
 	Figure.apply_pose(_joints, "strike")
 	# the punch: a short bronze rod upright in the left fist
 	var punch := MeshInstance3D.new()
@@ -161,7 +173,8 @@ func _furniture(kit: MeshKit) -> void:
 	var f := _floor
 	# the stool
 	kit.box("wood", Vector3(STOOL.x, f + 0.21, STOOL.y), Vector3(0.36, 0.42, 0.32), ["bottom"], {})
-	kit.add_collider(Vector3(STOOL.x, f + 0.6, STOOL.y), Vector3(0.6, 1.2, 0.7))
+	# no collider of its own: the man sitting on it has one, and a second box
+	# in the same place would take the interaction ray before he does
 	# the anvil: a squared stone block up to the punch's tip, the bronze die set in it
 	var tip := _xf.affine_inverse() * punch_tip()
 	var top := tip.y - 0.03
@@ -234,12 +247,14 @@ func _step(delta: float) -> void:
 		_shelf_light.visible = night
 		_shelf_flame.visible = night
 		_shelf_flame.emitting = night
+	# he puts the hammer down to talk, and for the night
+	var resting := _night or (Game.ui_blocking and _talking())
+	if resting:
+		_arm(0.0)
+		return
 	var t0 := _t
 	_t += delta
-	if _night:
-		Figure.apply_pose(_joints, "strike")
-		return
-	Figure.apply_pose(_joints, "strike", swing(hammer_lift(_t)))
+	_arm(hammer_lift(_t))
 	var n := blows(t0, _t)
 	if n > 0 and delta > 0.0:
 		hits += n
@@ -248,6 +263,24 @@ func _step(delta: float) -> void:
 			_hammer_sound.play()
 
 
+## The hammer arm for a lift, on top of whatever the Npc posed (head and all).
+func _arm(lift: float) -> void:
+	var base: Dictionary = Figure.POSES["strike"]
+	var sw := swing(lift)
+	for j: String in ["r_shoulder", "r_elbow"]:
+		(_joints[j] as Node3D).rotation_degrees = (base[j] as Vector3) + (sw[j] as Vector3)
+
+
+## True while a conversation is open and the player stands in the room.
+func _talking() -> bool:
+	var cam := get_viewport().get_camera_3d() if is_inside_tree() else null
+	return cam != null and cam.global_position.distance_to(_npc.global_position) < 4.0
+
+
 ## Whether the hammer is swinging now (for tests and the walkthrough).
 func working() -> bool:
 	return not _night
+
+
+func striker() -> Npc:
+	return _npc
