@@ -26,8 +26,15 @@ jobs:
         run: |
           tools/install-godot.sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - name: Unit tests and scripted walkthrough
+      - name: Unit tests, QA scenarios and scripted walkthrough
         run: tools/test.sh
+      - name: QA report (index.html, JSON, console log)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: panticapaeum-qa-report
+          path: build/qa
+          if-no-files-found: warn
 
   export:
     needs: test

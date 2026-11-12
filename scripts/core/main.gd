@@ -46,6 +46,16 @@ func _ready() -> void:
 		var trailer: Node = load("res://scripts/core/trailer.gd").new()
 		trailer.name = "Trailer"
 		add_child(trailer)
+	elif Array(OS.get_cmdline_user_args()).any(func(a: String) -> bool: return a.begins_with("--qa=")):
+		# a QA scenario (tests/qa): not exported, so only a source checkout has it
+		var qa_script: GDScript = load("res://tests/qa/qa_runner.gd")
+		if qa_script == null or not qa_script.can_instantiate():
+			print("SCENARIO runner does not load")
+			get_tree().quit(1)
+			return
+		var qa: Node = qa_script.new()
+		qa.name = "QaRunner"
+		add_child(qa)
 	elif "--shots" in OS.get_cmdline_user_args() or "--walkthrough" in OS.get_cmdline_user_args() \
 			or Array(OS.get_cmdline_user_args()).any(func(a: String) -> bool: return a.begins_with("--clip=")):
 		var director: Node = load("res://scripts/core/director.gd").new()
