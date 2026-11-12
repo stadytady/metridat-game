@@ -4,20 +4,36 @@ extends Control
 ## quiet strip. Small caps on the keys, plain words beside them, dots between the
 ## pairs — a legend, not a line of running text.
 
-## [key cap, translation key]. The caps read the same in every language.
+## [action, translation key]. The cap is the action's key, or its pad button
+## while the pad is in hand (Keys.label): it reads the same in every language.
 const ENTRIES := [
-	["WASD", "UI_ACTION_WALK"],
-	["SHIFT", "UI_ACTION_RUN"],
-	["SPACE", "UI_ACTION_JUMP"],
-	["MOUSE", "UI_ACTION_LOOK"],
-	["E", "UI_ACTION_USE"],
-	["J", "UI_ACTION_JOURNAL"],
-	["TAB", "UI_ACTION_GOALS"],
-	["ESC", "UI_ACTION_PAUSE"],
+	[&"move", "UI_ACTION_WALK"],
+	[&"sprint", "UI_ACTION_RUN"],
+	[&"jump", "UI_ACTION_JUMP"],
+	[&"look", "UI_ACTION_LOOK"],
+	[&"interact", "UI_ACTION_USE"],
+	[&"journal", "UI_ACTION_JOURNAL"],
+	[&"goals", "UI_ACTION_GOALS"],
+	[&"pause", "UI_ACTION_PAUSE"],
 ]
 const CAP_PAD := Vector2(9, 3)
 
 var _actions: Array[Label] = []
+var _caps: Array[Label] = []
+
+
+## The cap for an entry's action with these keys on this device.
+static func cap(action: StringName, binds: Dictionary, pad: bool) -> String:
+	if action == &"move":
+		return Keys.move_label(binds, pad)
+	if action == &"look":
+		return Keys.PAD_NAMES[&"look"] if pad else "MOUSE"
+	return Keys.label(action, binds, pad)
+
+
+func _refresh_caps() -> void:
+	for i in mini(_caps.size(), ENTRIES.size()):
+		_caps[i].text = cap(ENTRIES[i][0], Game.key_binds, Game.pad)
 
 
 func _ready() -> void:
@@ -40,6 +56,8 @@ func _ready() -> void:
 		if i > 0:
 			row.add_child(_dot())
 		row.add_child(_pair(ENTRIES[i][0], ENTRIES[i][1]))
+	Game.device_changed.connect(_refresh_caps)
+	Game.settings_changed.connect(_refresh_caps)
 
 
 func _strip_style() -> StyleBoxFlat:
@@ -59,12 +77,15 @@ func _dot() -> Label:
 
 
 ## One key cap and the word for it.
-func _pair(cap: String, action_key: String) -> Control:
+func _pair(action_id: StringName, action_key: String) -> Control:
 	var box := HBoxContainer.new()
 	box.add_theme_constant_override("separation", 7)
 	var cap_panel := PanelContainer.new()
 	cap_panel.add_theme_stylebox_override("panel", _cap_style())
-	cap_panel.add_child(UiStyle.label(cap, 17, UiStyle.BORDER))
+	var cap_label := UiStyle.label(cap(action_id, Game.key_binds, Game.pad), 17, UiStyle.BORDER)
+	cap_label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	_caps.append(cap_label)
+	cap_panel.add_child(cap_label)
 	box.add_child(cap_panel)
 	var action := UiStyle.label(tr(action_key), 18, UiStyle.MUTED)
 	action.size_flags_vertical = Control.SIZE_SHRINK_CENTER

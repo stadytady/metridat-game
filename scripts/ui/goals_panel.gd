@@ -48,7 +48,8 @@ func _ready() -> void:
 	_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	col.add_child(_body)
 	col.add_child(_rule())
-	_hints = UiStyle.label(tr("UI_GOALS_KEYS"), 18, UiStyle.MUTED)
+	_hints = UiStyle.label("", 18, UiStyle.MUTED)
+	Keys.bind(_hints, "UI_GOALS_KEYS")
 	col.add_child(_hints)
 	_refresh()
 
@@ -92,7 +93,7 @@ func _input(event: InputEvent) -> void:
 	elif event.is_action_pressed(&"move_right"):
 		_set_page(1)
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed(&"pause"):
+	elif event.is_action_pressed(&"back"):
 		close()
 
 
@@ -112,7 +113,7 @@ func _refresh() -> void:
 	for row in _body.get_children():
 		_body.remove_child(row)
 		row.queue_free()
-	_hints.text = tr("UI_GOALS_KEYS")
+	Keys.bind(_hints, "UI_GOALS_KEYS")
 	_title.text = tr("UI_GOALS_TITLE")
 	if _page == 0:
 		_quests()

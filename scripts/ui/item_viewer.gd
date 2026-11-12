@@ -149,7 +149,12 @@ func _place_camera() -> void:
 func _process(delta: float) -> void:
 	if not is_visible_in_tree() or _model == null:
 		return
-	if not _dragging:
+	# the right stick turns the find as the mouse drags it
+	var st := Input.get_vector(&"look_left", &"look_right", &"look_up", &"look_down") if InputMap.has_action(&"look_left") else Vector2.ZERO
+	if st != Vector2.ZERO:
+		_yaw += st.x * 2.5 * delta
+		_pitch = clampf(_pitch + st.y * 2.0 * delta, -1.2, 1.2)
+	elif not _dragging:
 		_yaw += SPIN * delta
 	_place_camera()
 

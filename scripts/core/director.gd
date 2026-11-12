@@ -282,10 +282,20 @@ func _ui_shots(player: CharacterBody3D) -> void:
 	await _frames(6)
 	_save("ui_journal")
 	jrn.close()
-	_main().get_node("PauseMenu").open()
+	var pause: Node = _main().get_node("PauseMenu")
+	pause.open()
 	await _frames(6)
 	_save("ui_pause")
-	_main().get_node("PauseMenu").close()
+	pause.show_keys()
+	await _frames(6)
+	_save("ui_controls")
+	# the same page and the dialogue hint as a pad player sees them
+	Game.set_pad(true)
+	pause.show_keys()
+	await _frames(6)
+	_save("ui_controls_pad")
+	Game.set_pad(false)
+	pause.close()
 
 
 ## THE END over black (the dream's last screen), for a look at it.

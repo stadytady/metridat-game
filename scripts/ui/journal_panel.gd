@@ -12,6 +12,10 @@ var _rows: VBoxContainer
 ## Keeps the list inside the screen however many finds the city has.
 var _scroll: ScrollContainer
 var _opened_frame := -1
+## Found rows, in order, and the one picked with the stick or the arrows (-1:
+## none yet; the mouse needs none).
+var _found_rows: Array[Control] = []
+var _sel := -1
 
 
 func _ready() -> void:
@@ -33,7 +37,8 @@ func _ready() -> void:
 	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_scroll.custom_minimum_size = Vector2(0, 0)
 	_scroll.add_child(_rows)
-	var foot := UiStyle.label("UI_JOURNAL_KEYS", 20, UiStyle.MUTED)
+	var foot := UiStyle.label("", 20, UiStyle.MUTED)
+	Keys.bind(foot, "UI_JOURNAL_KEYS")
 	foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	for n: Control in [_title, _scroll, foot]:
 		col.add_child(n)
@@ -70,6 +75,7 @@ func _fill() -> void:
 	for c in _rows.get_children():
 		_rows.remove_child(c)
 		c.queue_free()
+	_found_rows.clear()
 	for d in ordered(Game.registry):
 		var found: bool = Game.found.has(d.id)
 		var row := VBoxContainer.new()
@@ -87,6 +93,9 @@ func _fill() -> void:
 			row.add_child(hint)
 		row.set_meta(&"hint", not found)
 		if found:
+			row.set_meta(&"discovery", d)
+			row.set_meta(&"title", title)
+			_found_rows.append(row)
 			row.mouse_filter = Control.MOUSE_FILTER_STOP
 			row.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 			row.gui_input.connect(_on_row_input.bind(d))
@@ -108,6 +117,10 @@ func _notification(what: int) -> void:
 
 func open() -> void:
 	_fill()
+	# on the pad there is no pointer: start on the first found row
+	_sel = -1
+	if Game.pad:
+		select(0)
 	_panel.visible = true
 	_opened_frame = Engine.get_process_frames()
 	Game.ui_blocking = true
@@ -129,6 +142,25 @@ func view(d: Discovery) -> void:
 	get_parent().get_node("InfoPanel").show_discovery(d)
 
 
+## Picks found row i (clamped), lights its title and scrolls it into view.
+func select(i: int) -> void:
+	if _found_rows.is_empty():
+		_sel = -1
+		return
+	if _sel >= 0 and _sel < _found_rows.size():
+		(_found_rows[_sel].get_meta(&"title") as Label).add_theme_color_override("font_color", UiStyle.TEXT)
+	_sel = clampi(i, 0, _found_rows.size() - 1)
+	var row := _found_rows[_sel]
+	(row.get_meta(&"title") as Label).add_theme_color_override("font_color", UiStyle.BORDER)
+	if row.is_inside_tree():
+		_scroll.ensure_control_visible(row)
+
+
+## The picked row's find, or null.
+func selected() -> Discovery:
+	return _found_rows[_sel].get_meta(&"discovery") if _sel >= 0 and _sel < _found_rows.size() else null
+
+
 func _on_row_input(event: InputEvent, d: Discovery) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		view(d)
@@ -142,5 +174,11 @@ func _process(_delta: float) -> void:
 	# The J that opened it must not close it in the same frame.
 	if Engine.get_process_frames() <= _opened_frame + 1:
 		return
-	if Input.is_action_just_pressed(&"journal") or Input.is_action_just_pressed(&"pause"):
+	if Input.is_action_just_pressed(&"journal") or Input.is_action_just_pressed(&"back"):
 		close()
+	elif Input.is_action_just_pressed(&"move_back"):
+		select(_sel + 1)
+	elif Input.is_action_just_pressed(&"move_forward"):
+		select(maxi(_sel - 1, 0))
+	elif Input.is_action_just_pressed(&"interact") and selected() != null:
+		view(selected())

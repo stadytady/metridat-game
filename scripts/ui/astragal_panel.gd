@@ -74,7 +74,8 @@ func _ready() -> void:
 	_log = VBoxContainer.new()
 	_log.add_theme_constant_override("separation", 6)
 	col.add_child(_log)
-	_foot = UiStyle.label(tr("UI_ASTRAGAL_KEYS"), 20, UiStyle.MUTED)
+	_foot = UiStyle.label("", 20, UiStyle.MUTED)
+	Keys.bind(_foot, "UI_ASTRAGAL_KEYS")
 	_foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(_foot)
 	_clatter = AudioStreamPlayer.new()
@@ -152,7 +153,7 @@ func _refresh() -> void:
 		_sum_mine.text = _sum_text(last.sum_mine, last.kind_mine)
 		_sum_theirs.text = _sum_text(last.sum_theirs, last.kind_theirs)
 	_log.visible = settled > 0
-	_foot.text = tr("UI_ASTRAGAL_AGAIN") if _game.over and _pending.is_empty() else tr("UI_ASTRAGAL_KEYS")
+	Keys.bind(_foot, "UI_ASTRAGAL_AGAIN" if _game.over and _pending.is_empty() else "UI_ASTRAGAL_KEYS")
 
 
 func _throw() -> void:
@@ -196,7 +197,7 @@ func throwing() -> bool:
 func _process(_delta: float) -> void:
 	if not _panel.visible:
 		return
-	if Input.is_action_just_pressed(&"pause"):
+	if Input.is_action_just_pressed(&"back"):
 		close()
 		return
 	_key(Input.is_action_pressed(&"interact"), Input.is_action_just_pressed(&"interact"))
