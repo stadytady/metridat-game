@@ -167,6 +167,19 @@ func _ready() -> void:
 			open_doors())
 
 
+## The meadow's one tint (vertex colour on the grass).
+const GROUND_TINT := 0.85
+
+
+## UVs for a ground cell from its plan position, metres scaled as MeshKit's
+## own quads are, so neighbouring cells meet with the texture running on.
+static func ground_uvs(corners: Array) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	for p: Vector3 in corners:
+		out.append(Vector2(p.x, -p.z))
+	return out
+
+
 func _ground(kit: MeshKit, rng: RandomNumberGenerator) -> void:
 	# Flat where one walks, low dark hills beyond the walls; the fog eats the rest.
 	var step := 4.0
@@ -183,9 +196,14 @@ func _ground(kit: MeshKit, rng: RandomNumberGenerator) -> void:
 			var b := Vector3(x0 + step, hill.call(x0 + step, z0), z0)
 			var c := Vector3(x0 + step, hill.call(x0 + step, z0 + step), z0 + step)
 			var d := Vector3(x0, hill.call(x0, z0 + step), z0 + step)
-			kit.color = Color.WHITE * rng.randf_range(0.75, 0.95)
-			kit.color.a = 1.0
-			kit.quad("grass" if rng.randf() < 0.7 else "earth", d, c, b, a)
+			# One material, one tint, UVs laid on the plan (x, z): a cell of
+			# its own colour, earth or grass, or its own UV frame left a 4 m
+			# rectangle with a hard edge in the meadow. The two rng draws stay,
+			# so the stones and trees placed after keep their spots.
+			rng.randf_range(0.75, 0.95)
+			rng.randf()
+			kit.color = Color(GROUND_TINT, GROUND_TINT, GROUND_TINT, 1.0)
+			kit.quad("grass", d, c, b, a, ground_uvs([d, c, b, a]))
 	kit.color = Color.WHITE
 	# a paved forecourt before the portal, open where the passage goes down
 	var fz := 79.6

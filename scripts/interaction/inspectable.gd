@@ -32,6 +32,7 @@ func _ready() -> void:
 	if discovery:
 		Game.register(discovery)
 		Game.discovered.connect(_on_discovered)
+		Game.state_restored.connect(func() -> void: _marker.visible = not Game.found.has(discovery.id))
 
 
 func _make_marker() -> MeshInstance3D:

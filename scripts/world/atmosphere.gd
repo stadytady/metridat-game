@@ -76,6 +76,10 @@ func _ready() -> void:
 	Game.prologue_changed.connect(func(_on: bool) -> void:
 		t = Game.time_target()
 		apply(t))
+	# a saved walk comes back at its own hour, not gliding there from noon
+	Game.state_restored.connect(func() -> void:
+		t = Game.time_target()
+		apply(t))
 
 
 func _process(delta: float) -> void:

@@ -319,3 +319,5 @@ LOC_STRIKER_CHOICE_3,Do you work at night too?,И ночью работаешь?
 LOC_STRIKER_NIGHT_1,"Not by lamplight. Miss by a hair in the dark and the coin goes back into the pot, and the hair comes out of my pay.","При лампе не бью. Промахнёшься в потёмках на волос — монета идёт обратно в тигель, а волос вычтут из платы."
 LOC_STRIKER_NIGHT_2,"After dusk I sit by the furnace and let my arm go quiet. The street likes me better then, too.","С темнотой сижу у печи и жду, пока рука затихнет. Улица меня в это время тоже больше любит."
 UI_VOLUME,Volume  %d%%,Громкость  %d%%
+UI_CONTINUE,Continue,Продолжить
+UI_NEW_GAME,New walk,Новая прогулка

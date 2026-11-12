@@ -37,6 +37,7 @@ func _ready() -> void:
 	_marker = _make_marker()
 	add_child(_marker)
 	Game.quest_changed.connect(func(_id: String, _state: int) -> void: _refresh())
+	Game.state_restored.connect(_refresh)
 	_refresh()
 
 

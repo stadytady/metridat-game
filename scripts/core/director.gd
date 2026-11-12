@@ -74,6 +74,8 @@ func _shots() -> void:
 		if not _only.is_empty() and name not in _only:
 			continue
 		var eye: Vector3 = vps[name][0]
+		# the last place's name is still fading in the corner: put it out
+		_main().get_node("HUD").clear_toast()
 		player.global_position = eye - Vector3(0, 1.6, 0)
 		player.look_at_point(vps[name][1])
 		player.camera.position.y = 0.0

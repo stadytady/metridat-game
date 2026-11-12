@@ -66,6 +66,7 @@ func _ready() -> void:
 	_actor()
 	_braziers()
 	Game.lamp_lit.connect(_on_lamp_lit)
+	Game.state_restored.connect(_sync_braziers)
 	_sync_braziers()
 
 
