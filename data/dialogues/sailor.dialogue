@@ -1,5 +1,6 @@
 # Damon, skipper of the Swallow, on the pier. Four questions: the cargo, the
-# strait, the light beyond the ships, and passage out of the city.
+# strait, where they spend the night (the light beyond the ships), and passage
+# out of the city. No question names what he has not said.
 # Text is a key: the panel translates it, so EN/RU stay in strings.csv.
 # Indent with tabs: DM's INDENT_REGEX is ^\t+.
 

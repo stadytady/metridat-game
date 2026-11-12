@@ -55,8 +55,8 @@ UI_DIALOGUE_KEYS,[E] next   [ESC] leave,[E] дальше   [ESC] уйти
 NPC_POTTER_NAME,Kallias the potter,Каллий-гончар
 NPC_BOY_NAME,the boy at the wheel,мальчик у круга
 NPC_POTTER_1,"Mind the wet clay, friend. Kallias, potter. If you kicked a broken jug on the street on your way down — don't confess, everybody does.","Осторожно, глина сырая. Каллий, гончар. Если по дороге пнул на улице битый кувшин — не признавайся, все пинают."
-NPC_POTTER_2,"The painted cups for rich tables come from far away. I make what breaks: jugs, cooking pots, lamps, roof tiles. Breaking is good for business.","Расписные чаши для богатых столов везут издалека. А я делаю то, что бьётся: кувшины, горшки, светильники, черепицу. Для дела это хорошо."
-NPC_POTTER_3,"The little goddesses for the shrine? Pressed in a mould. One good figure, and you can make a hundred. She has never complained.","Богинь для святилища? Оттискиваю в форме. Одна удачная статуэтка — и можно сделать сотню. Она ещё ни разу не жаловалась."
+NPC_POTTER_2,"Painted cups for rich tables come from overseas. I make what breaks: jugs, cooking pots, lamps, roof tiles. That's good for business.","Расписные чаши для богатых столов везут из-за моря. А я делаю то, что бьётся: кувшины, горшки, светильники, черепицу. Для дела это хорошо."
+NPC_POTTER_3,"Pressed in a mould. One good figure, and you can make a hundred from it. She has never complained.",Оттискиваю в форме. Одна удачная статуэтка — и по ней можно сделать сотню. Она ещё ни разу не жаловалась.
 NPC_POTTER_4,"The boy turns, I shape, and when the kiln is full we fire it all night. Myrto says my smoke spoils her bread. Her bread was spoiled long before my smoke.","Мальчик крутит, я формую, а когда печь полна — обжигаем всю ночь. Мирто говорит, мой дым портит ей лепёшки. Её лепёшки испортились задолго до моего дыма."
 D_MOULD_FIGURINE_TITLE,Mould for a terracotta figurine,Форма для терракотовой статуэтки
 D_MOULD_FIGURINE_DESCRIPTION,"A two-piece clay mould, opened: the front half holds the hollow of a seated goddess, the back half lies beside it. A fresh figurine, still soft, waits to dry.","Двусоставная глиняная форма, раскрытая: в передней половине — углубление в виде сидящей богини, задняя лежит рядом. Рядом сохнет свежая, ещё мягкая статуэтка."
@@ -65,9 +65,9 @@ D_MOULD_FIGURINE_NARRATIVE,Kallias and his workshop are the game's invention. He
 NPC_FISHER_NAME,Glaukos the fisherman,Главк-рыбак
 NPC_FISHER_1,"Mind the net, it's still wet. Glaukos. If you came for fish, you're late: the catch went to the salters at dawn.","Осторожно, сеть ещё мокрая. Я Главк. Если за рыбой — опоздал: улов на рассвете ушёл засольщикам."
 NPC_FISHER_2,"Spring is the good time. The shoals come through the strait, every boat in the city is out, day and night, and nobody sleeps or minds it.","Весна — хорошее время. Косяки идут через пролив, все лодки города на воде днём и ночью, никто не спит — и никто не жалуется."
-NPC_FISHER_3,"My father swore he once walked across to the other shore in winter, on the ice. He also swore a fish ate his sandal. Believe what you like.","Отец клялся, что однажды зимой перешёл на тот берег по льду. Ещё он клялся, что у него рыба съела сандалию. Верь чему хочешь."
+NPC_FISHER_3,"In a hard winter, yes. My father swore he once walked across to the other shore on the ice. He also swore a fish ate his sandal. Believe what you like.","В лютую зиму бывает. Отец клялся, что однажды перешёл на тот берег по льду. Ещё он клялся, что у него рыба съела сандалию. Верь чему хочешь."
 NPC_FISHER_4,"The weights? Kallias's broken pots: knock a sherd round, bore a hole, and it holds the net down. Have a look, they're on the basket.","Грузила? Битые горшки Каллия: обколешь черепок по кругу, просверлишь дырку — и сеть держит. Глянь, они на корзине."
-NPC_FISHER_5,"And one more thing: don't stay on the shore after dark. Some nights a light walks on the water where there is no boat, and every dog in the city starts howling at once. My grandfather said it was her, going to the crossroads. I leave a fish on the stone and go home.","И ещё: после темноты на берегу не задерживайся. Бывает, по воде идёт огонёк, а лодки там нет, и все собаки в городе разом начинают выть. Дед говорил — это она идёт к перекрёсткам. Я оставляю рыбу на камне и ухожу домой."
+NPC_FISHER_5,"Don't stay on the shore after dark. Some nights a light walks on the water where there's no boat, and every dog in the city starts howling at once. My grandfather said it was her, going to the crossroads. I leave a fish on the stone and go home.","После темноты на берегу не задерживайся. Бывает, по воде идёт огонёк, а лодки там нет, и все собаки в городе разом начинают выть. Дед говорил — это она идёт к перекрёсткам. Я оставляю рыбу на камне и ухожу домой."
 NPC_BAKER_NAME,Myrto,Мирто
 NPC_BAKER_1,"Come in, come in, but keep clear of the oven, it bites. I am Myrto. Kallias said a stranger was walking about, staring at everything.","Заходи, заходи, только к печи не прижимайся — кусается. Я Мирто. Каллий говорил, что по городу ходит чужой и всё разглядывает."
 NPC_BAKER_2,"You pat the dough thin, slap it on the inside wall and count to twenty. Count to thirty and it burns. My mother counted to forty, and her bread was always black.","Тесто хлопаешь тонко, лепишь на стенку изнутри и считаешь до двадцати. До тридцати — сгорит. Мать считала до сорока, у неё лепёшки всегда были чёрные."
@@ -83,7 +83,7 @@ NPC_ACTOR_NAME,"Phaidros the actor","Федр, актёр"
 NPC_ACTOR_1,"Hush, I am in the middle of dying. Oh — only you. Phaidros, actor: tonight a king, tomorrow a slave, the day after a queen.","Тише, я как раз умираю. А, это ты. Федр, актёр: сегодня царь, завтра раб, послезавтра царица."
 NPC_ACTOR_2,"The masks on the stand? The bearded one is the king, the pale one his queen. Put one on and your own face stops mattering. A great relief, believe me.","Маски на стойке? Бородатая — царь, бледная — его царица. Надел — и твоё лицо больше не важно. Поверь, это большое облегчение."
 NPC_ACTOR_3,"Down there they bake, fish and fire pots. Up here we pretend. The city needs both, though only one of them pays.","Там внизу пекут, ловят рыбу, обжигают горшки. А здесь мы притворяемся. Городу нужно и то и другое, хотя платят только за одно."
-NPC_ACTOR_4,"The seats are low, I know. But the best scenery is behind me: the whole strait. No poet can write a sunset like that.","Сиденья низкие, знаю. Зато лучшие декорации у меня за спиной — весь пролив. Такой закат ни один поэт не напишет."
+NPC_ACTOR_4,And the best scenery is behind me: the whole strait. No poet could write a sunset like that.,А лучшие декорации у меня за спиной — весь пролив. Такой закат ни один поэт не напишет.
 NPC_ACTOR_5,"When you go down, tell Kallias I am still waiting for my lamp. We rehearse after dark too, and I am tired of dying in the dark.","Будешь внизу — передай Каллию, что я всё ещё жду свой светильник. Мы репетируем и после заката, а умирать в темноте мне надоело."
 D_NET_SINKERS_TITLE,Clay net sinkers,Глиняные грузила для сети
 D_NET_SINKERS_DESCRIPTION,"A handful of pierced clay discs chipped from broken pots, two small pyramidal weights and a scrap of knotted net, left on an upturned basket.","Горсть просверленных глиняных кружков, обколотых из черепков, две маленькие пирамидальные гирьки и обрывок сети с узлами — на перевёрнутой корзине."
@@ -120,40 +120,40 @@ LOC_FEDR_AGAIN,"You came back. Good: I die better with an audience. The same sho
 LOC_FEDR_CHOICE_MASKS,"Whose faces are those masks?","Чьи это лица на масках?"
 LOC_FEDR_CHOICE_VIEW,"What can you see from up here?","Что видно отсюда сверху?"
 LOC_FEDR_AFTER,"Enough talk. The chorus waits, and the sun will not. Go down before the lamps are lit, or stay and watch me die twice.","Хватит слов. Хор ждёт, а солнце — нет. Спускайся, пока не зажгли светильники, или останься и посмотри, как я умру дважды."
-LOC_POTTER_CHOICE_1,"And the painted cups?","А расписные чаши?"
-LOC_POTTER_CHOICE_2,"What breaks most often?","А что бьётся чаще всего?"
+LOC_POTTER_CHOICE_1,Why not make painted cups yourself?,А сам расписные не делаешь?
+LOC_POTTER_CHOICE_2,What breaks most often?,А что бьётся чаще всего?
 LOC_BAKER_CHOICE_1,"Is this your house?","Это твой дом?"
-LOC_BAKER_CHOICE_2,"And if you count past thirty?","А если считать дольше тридцати?"
+LOC_BAKER_CHOICE_2,How do you bake your bread?,Как ты печёшь лепёшки?
 LOC_FISHER_CHOICE_1,"What holds the net down?","Чем сеть пригружена?"
-LOC_FISHER_CHOICE_2,"And your father's walk across the ice?","А отец правда шёл по льду?"
-LOC_SAILOR_CHOICE_1,"And what goes back in the hold?","А обратно что в трюме?"
-LOC_SAILOR_CHOICE_2,"Does the strait really have moods?","У пролива правда свой нрав?"
+LOC_FISHER_CHOICE_2,Does the strait ever freeze?,А пролив замерзает?
+LOC_SAILOR_CHOICE_1,What do you carry?,Что возите?
+LOC_SAILOR_CHOICE_2,What is the strait like?,А пролив какой?
 LOC_FEDR_CHOICE_SEATS,"Why play for empty seats?","Зачем играть перед пустыми скамейками?"
-LOC_FEDR_MASKS_1,"Two masks, one face between them. The bearded king is the old men in the front row; the pale one is what they are afraid of.","Две маски, а лицо между ними одно. Бородатый царь — это старики в первом ряду; бледная — то, чего они боятся."
-LOC_FEDR_SEATS_1,"Because the seats are empty and the play is not. A chorus needs mouths; an actor only needs the dying, and the dying is mine.","Потому что скамьи пусты, а представление — нет. Хору нужны рты, а актёру нужна только смерть, и смерть моя."
-LOC_POTTER_CHOICE_3,"And the little goddesses?","А богини для святилища?"
-LOC_POTTER_CUPS_1,"From overseas. Thin walls, black gloss, a hare running round the rim. Put one on your table and you are somebody.","Из-за моря. Стенки тонкие, чёрный лак, по краю бежит заяц. Поставишь такую на стол — и ты уже кто-то."
-LOC_POTTER_CUPS_2,"I cannot make that gloss. It wants a kiln that breathes evenly a day and a night; mine is a hole in the yard with a fire in it.","Такого лака я не сделаю. Ему нужна печь, что ровно дышит сутки; у меня — яма во дворе с огнём."
-LOC_POTTER_CUPS_3,"But cups break, and the man who owns one still needs a jug for water. Let the hare run on the table. My pot stands by the fire and does the work.","Но чаши бьются, а её хозяину всё равно нужен кувшин для воды. Пусть заяц бежит по столу. Мой горшок стоит у огня и делает дело."
-LOC_POTTER_BREAK_1,"A tile every storm, a jug every third carrying, lamps whenever somebody dances. A potter's best customer is gravity.","Черепица — каждый шторм, кувшин — каждый третий перенос, светильники — когда кто-то пляшет. Лучший заказчик гончара — тяжесть."
-LOC_POTTER_GODS_1,"She has never complained, and I have sold a hundred. If she ever does complain, I will make her a bigger one.","Она ни разу не пожаловалась, а я продал сотню. Если пожалуется — сделаю ей ту, что побольше."
-LOC_BAKER_CHOICE_3,"Does his smoke really spoil your bread?","Его дым правда портит тебе хлеб?"
-LOC_BAKER_HOUSE_1,"Two rooms, a yard and a loom I never finish. The loom was my mother's; the bread is mine. That is the whole inheritance.","Две комнаты, двор и станок, который я никогда не до тку. Станок материнский, хлеб мой. Вот и всё наследство."
-LOC_BAKER_COUNT_1,"Past thirty it is charcoal. My mother counted to forty because she was talking to the neighbour, and we ate black bread for years.","После тридцати — уголь. Мать считала до сорока, потому что болтала с соседкой, и мы годами ели чёрный хлеб."
-LOC_BAKER_SMOKE_1,"His smoke? His smoke goes up. My oven is in the yard, on the ground, where the bread is.","Его дым? Его дым идёт вверх. А моя печь — во дворе, на земле, где хлеб."
-LOC_BAKER_SMOKE_2,"Tell him that. Or don't. We have been shouting it at each other for eleven years and the bread is still good.","Передай ему это. Или не передавай. Мы кричим друг другу это одиннадцать лет, а хлеб всё ещё хорош."
-LOC_FISHER_CHOICE_3,"What is that light on the water at night?","Что за огонёк на воде по ночам?"
-LOC_FISHER_WEIGHTS_1,"Kallias's sherds. He knows it: nothing for the broken ones, full price for a good jug, and over a year it comes out even.","Черепки Каллия. Он и сам знает: за битые — ничего, за хороший кувшин — полную цену, и за год выходит поровну."
+LOC_FEDR_MASKS_1,"Two masks, but one face behind them, and it's mine. The old men in the front row see their king; the women see what he does to her.","Две маски, а лицо за ними одно — моё. Старики в первом ряду видят своего царя, женщины — что он с ней делает."
+LOC_FEDR_SEATS_1,"Because the seats are empty and the play isn't. A part you don't rehearse every day falls apart by the festival, audience or no audience.","Потому что скамьи пусты, а пьеса — нет. Роль, которую не гоняешь каждый день, к празднику развалится, есть зрители или нет."
+LOC_POTTER_CHOICE_3,Do you make the little goddesses for the shrine too?,А богинь для святилища тоже ты делаешь?
+LOC_POTTER_CUPS_1,"Thin walls, black gloss, a hare running round the rim. Put one on your table and you're somebody.","Стенки тонкие, чёрный лак, по краю бежит заяц. Поставишь такую на стол — и ты уже человек."
+LOC_POTTER_CUPS_2,I can't get that gloss. It wants a kiln that burns evenly a day and a night; mine is a pit in the yard with a fire in it.,"Такого лака у меня не выйдет. Ему нужна печь, что ровно горит сутки, а у меня яма во дворе с огнём."
+LOC_POTTER_CUPS_3,"But cups break, and a man who owns one still needs a jug for water. Let the hare run round his table. My pot stands by his fire and does the work.","Но чаши бьются, а хозяину всё равно нужен кувшин для воды. Пусть заяц бегает у него по столу. Мой горшок стоит у огня и делает дело."
+LOC_POTTER_BREAK_1,"Tiles in every storm, a jug every third trip to the well, lamps whenever somebody dances at a wedding. Whatever falls, the ground buys from me.","Черепица — в каждый шторм, кувшин — на каждой третьей ходке к колодцу, светильники — когда на свадьбе пляшут. Что упало, то у меня и купят заново."
+LOC_POTTER_GODS_1,"The women buy them two at a time: one for the shrine, one for the house. The mould is the only thing in this yard I'd carry out of a fire.","Женщины берут по две: одну в святилище, другую домой. Форма — единственное в этом дворе, что я вынес бы из пожара."
+LOC_BAKER_CHOICE_3,Do you get along with Kallias the potter?,А с Каллием-гончаром вы ладите?
+LOC_BAKER_HOUSE_1,"Two rooms, a yard, and a loom I never get to finish. The loom was my mother's, the oven is mine. That's the whole inheritance.","Две комнаты, двор и станок, на котором я никак не дотку. Станок материн, печь моя. Вот и всё наследство."
+LOC_BAKER_COUNT_1,"My mother didn't count wrong, mind you. She talked to the neighbour over the wall and forgot where she was. We ate black bread for years and praised it.","Мать, заметь, считать умела. Просто болтала с соседкой через забор и сбивалась. Мы годами ели чёрный хлеб и хвалили."
+LOC_BAKER_SMOKE_1,"Until the wind turns. When it blows off the land, all his kiln smoke comes down into my yard, straight into the oven, and the bread tastes of pots.","Пока ветер не повернёт. Как подует с суши — весь дым от его печи ко мне во двор, прямо в печь, и лепёшки потом пахнут горшками."
+LOC_BAKER_SMOKE_2,"Tell him that. Or don't. We've been shouting it at each other for eleven years, and he still buys my bread.","Передай ему. Или не передавай. Мы кричим об этом друг на друга одиннадцать лет, а лепёшки он у меня всё равно берёт."
+LOC_FISHER_CHOICE_3,Is it quiet here at night?,А ночью здесь спокойно?
+LOC_FISHER_WEIGHTS_1,"He doesn't charge for the broken ones: breaking is his trade, picking up is mine. I pay full price for a good jug, and it comes out even.","Он за битые денег не берёт: бить — его дело, подбирать — моё. А за хороший кувшин я плачу ему сполна, так и выходит поровну."
 LOC_FISHER_WEIGHTS_2,"Twelve on a net like this. Count them when you haul and when you mend. Lose one and the net drags crooked and takes nothing.","Двенадцать на такую сеть. Считай их, когда тянешь и когда чинишь. Потеряешь одно — сеть пойдёт криво и ничего не возьмёт."
-LOC_FISHER_ICE_1,"I was a boy. He came home in the frost with wet boots and would not say a word. That is what I remember — not the story.","Я был мальцом. Он вернулся в мороз с мокрыми сапогами и не сказал ни слова. Вот что я помню, а не сказку."
-LOC_FISHER_OMEN_1,"I have seen it twice. Both times the dogs knew first. Whatever it is, it is not looking for me, and I do not wait to be looked at.","Я видел его дважды. Оба раза первыми знали собаки. Что бы это ни было, оно ищет не меня, и я не жду, пока посмотрят на меня."
-LOC_SAILOR_CHOICE_3,"And the light beyond the ships?","А огонь за кораблями?"
-LOC_SAILOR_CHOICE_4,"And if I wanted to leave?","А если я захочу уйти?"
-LOC_SAILOR_CARGO_1,"Salt, wool, roof tiles, and a crate of somebody's ancestors going home. We do not ask about the crate.","Соль, шерсть, черепица и ящик чьих-то предков, едущий домой. Про ящик мы не спрашиваем."
+LOC_FISHER_ICE_1,"I was a boy. He came home in the frost soaked to the waist and wouldn't say a word. That's what I remember, not the story.","Я был мальцом. Он вернулся в мороз мокрый по пояс и не сказал ни слова. Вот это я и помню, а не байку."
+LOC_FISHER_OMEN_1,"I've seen it twice. Both times the dogs knew first. Whatever it is, it isn't looking for me, and I don't wait around to be noticed.","Я его видел дважды. Оба раза собаки почуяли первыми. Что бы это ни было, ищет оно не меня, и я не жду, пока заметит."
+LOC_SAILOR_CHOICE_3,Where do you spend the night?,А ночуете где?
+LOC_SAILOR_CHOICE_4,And if I wanted to sail with you?,А если я захочу уйти с вами?
+LOC_SAILOR_CARGO_1,"Under the sacks there's salt, wool and roof tiles. And a box with somebody's grandfather in it, going home to his family. We don't ask about the box.","Под мешками — соль, шерсть да черепица. И ещё ящик с чьим-то дедом: везём родне. Про ящик мы не спрашиваем."
 LOC_SAILOR_STRAIT_1,"Moods, yes. Flat as a floor at dawn, then a wind off the far shore by noon. You learn to read it the way a farmer reads sky.","Нрав, да. На рассвете — как пол, к полудню — ветер с того берега. Учишься читать его, как земледелец читает небо."
 LOC_SAILOR_LIGHT_1,"We keep the lantern lit and the men below. A lamp that answers no hail is not a lamp.","Держим фонарь зажжённым, а людей — внизу. Огонь, который не отвечает на оклик, — не огонь."
 LOC_SAILOR_LIGHT_2,"My grandfather called it the toll. Something out there takes its share of the crossing, and the sea keeps the rest.","Дед называл это пошлиной. Что-то там берёт свою долю с перехода, а остальное оставляет море."
-LOC_SAILOR_LEAVE_1,"Then be here at first light with nothing to carry that you would miss. We sail on the morning wind, not on a promise.","Тогда будь здесь на рассвете и не бери с собой ничего, о чём будешь жалеть. Мы уходим с утренним ветром, а не с обещанием."
+LOC_SAILOR_LEAVE_1,"Pay what you can spare, sleep on the sacks. Just don't bring anything you'd miss: we sail on the morning wind, not on a promise.","Плата — сколько не жалко, место — на мешках. Только не бери ничего, о чём будешь жалеть: мы уходим с утренним ветром, а не с обещанием."
 UI_ACHIEVEMENT,Achievement: %s,Достижение: %s
 ACH_FIRST_FIND_NAME,The first find,Первая находка
 ACH_FIRST_FIND_DESC,"Inspect the first find.","Осмотреть первую находку."
@@ -264,7 +264,7 @@ LOC_Q_HOOK_1,"I've lost a hook. Good bronze, the best I had.","Я потерял
 LOC_Q_HOOK_2,"I was caulking the boat this morning. It must have dropped by her, on the sea side. My eyes are not what they were.","Утром я конопатил лодку. Наверное, обронил возле неё, со стороны моря. Глаза у меня уже не те."
 LOC_Q_HOOK_DONE,"That's it, that's my hook. Tomorrow it goes back on the line.","Он самый, мой крючок. Завтра снова на леску."
 NPC_CARRIER_NAME,Agathe the water carrier,Водоноска Агата
-NPC_CARRIER_1,"The water in this well is sweet, not like the one down by the harbour.","Вода в этом колодце сладкая, не то что у гавани."
+NPC_CARRIER_1,"Good day. Drink if you like: the water in this well is sweet, not like the one down by the harbour.","Здравствуй. Пей, если хочешь: вода в этом колодце сладкая, не то что у гавани."
 LOC_CARRIER_CHOICE_WATER,Do you carry it far?,Далеко носишь?
 LOC_CARRIER_WATER_1,"To the big jar under the stoa, then home. Ten times a day, more in summer.","До большого пифоса под стоей, потом домой. Раз десять на дню, летом больше."
 LOC_CARRIER_WATER_2,My mother carried it before me. Her neck was as straight as a column.,"До меня носила мать. Шея у неё была прямая, как колонна."
@@ -277,9 +277,9 @@ LOC_BOY_CHOICE_WOOD,And the wood for the kiln?,А дрова для печи?
 LOC_BOY_WOOD_1,That's me too. The kiln eats more than the mule does.,"Тоже я. Печь ест больше, чем мул."
 LOC_BOY_WOOD_2,"When the pots come out whole, Kallias gives me an obol. When they crack, he doesn't.","Когда горшки выходят целыми, Каллий даёт мне обол. Когда трескаются — нет."
 LOC_Q_ASTRA_ASK,Why so glum?,Ты чего такой грустный?
-LOC_Q_ASTRA_1,I've lost a knucklebone! One of my five. You can't play with four.,Я потерял астрагал! Один из пяти. С четырьмя не поиграешь.
+LOC_Q_ASTRA_1,"I've lost a knucklebone! You play with four, and now I've only got three.","Я потерял астрагал! Играют четырьмя, а у меня теперь три."
 LOC_Q_ASTRA_2,We were playing on the steps of the stoa. It must have rolled off somewhere there.,"Мы играли на ступенях стои. Наверное, он там куда-то укатился."
-LOC_Q_ASTRA_DONE,My knucklebone! All five again. Thank you!,Мой астрагал! Снова все пять. Спасибо!
+LOC_Q_ASTRA_DONE,My knucklebone! All four again. Thank you!,Мой астрагал! Снова все четыре. Спасибо!
 UI_PROLOGUE_NIGHT,Night at the stern of the Swallow,Ночь на корме «Ласточки»
 UI_PROLOGUE_DAWN,"At first light, up the hill","На рассвете — наверх, на холм"
 D_GODDESS_VOTIVE_TITLE,A terracotta at the plinth,Терракота у подножия
