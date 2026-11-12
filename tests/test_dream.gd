@@ -94,3 +94,17 @@ func test_mound_is_cut_only_for_the_passage() -> void:
 	for ang: float in [lo, hi]:
 		var i: int = int(floor(fposmod(ang, TAU) / TAU * D.MOUND_SEGMENTS))
 		check(D.mound_cut(i, 0), "the doorway's edge at %.1f deg is under the mound's earth" % rad_to_deg(ang))
+
+
+## The meadow has no patchwork: neighbouring ground cells meet with the same
+## UVs on their shared corners (the texture runs on), and every cell is grass of
+## one tint (a cell of its own material or colour was a 4 m rectangle with a
+## hard edge).
+func test_the_meadow_has_no_seams() -> void:
+	var D := preload("res://scripts/world/dream.gd")
+	var a: PackedVector2Array = D.ground_uvs([Vector3(0, 0.3, 4), Vector3(4, 0.5, 4), Vector3(4, 0.2, 0), Vector3(0, 0.1, 0)])
+	var b: PackedVector2Array = D.ground_uvs([Vector3(4, 0.5, 4), Vector3(8, 0.9, 4), Vector3(8, 0.4, 0), Vector3(4, 0.2, 0)])
+	check(a[1].is_equal_approx(b[0]) and a[2].is_equal_approx(b[3]), "two cells meet with different UVs: %s / %s" % [a, b])
+	var src := FileAccess.get_file_as_string("res://scripts/world/dream.gd")
+	check(not src.contains('"grass" if rng.randf()'), "the meadow still picks grass or earth per cell")
+	check(src.contains('kit.quad("grass", d, c, b, a, ground_uvs('), "the meadow cells do not take plan UVs")

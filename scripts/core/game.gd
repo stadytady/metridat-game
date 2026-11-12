@@ -6,6 +6,10 @@ signal discovered(discovery: Discovery, is_new: bool)
 signal inspect_closed
 signal location_entered(title: String)
 signal settings_changed
+## A saved walk was put back (SaveGame.apply): redraw from Game's state, quietly.
+signal state_restored
+## Save now (the pause menu's Quit asks before the tree goes away).
+signal save_requested
 
 const SETTINGS_PATH := "user://settings.cfg"
 
@@ -149,8 +153,10 @@ func total() -> int:
 	return registry.values().filter(func(d: Discovery) -> bool: return not d.epilogue).size()
 
 
+## Only finds the world still has: a saved walk can name one a later version
+## took out, and it must not count (or crash the count).
 func found_count() -> int:
-	return found.keys().filter(func(id: StringName) -> bool: return not registry[id].epilogue).size()
+	return found.keys().filter(func(id: StringName) -> bool: return registry.has(id) and not registry[id].epilogue).size()
 
 
 func mark_found(d: Discovery) -> void:

@@ -85,7 +85,9 @@ func _ready() -> void:
 		_lang.append(b)
 	col.add_child(lang_row)
 	var quit := UiStyle.button("UI_QUIT")
-	quit.pressed.connect(func() -> void: get_tree().quit())
+	quit.pressed.connect(func() -> void:
+		Game.save_requested.emit()
+		get_tree().quit())
 	col.add_child(quit)
 	var foot := UiStyle.label("UI_FOOTNOTE", 18, UiStyle.MUTED)
 	col.add_child(foot)

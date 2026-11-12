@@ -6,6 +6,8 @@ extends CanvasLayer
 ## Skipped in automation (shots, walkthrough, trailer).
 
 signal started
+## START on a saved walk: Main puts it back instead of running the prologue.
+signal continued
 
 const TITLE := "PANTICAPAEUM"
 const GOLD := Color("#d9a75a")
@@ -13,6 +15,11 @@ const SHADOW := Color(0.05, 0.03, 0.02, 0.9)
 
 var _root: Control
 var _start: Button
+var _new: Button
+## A saved walk is waiting: START reads "Continue", and "New walk" starts over.
+var has_save := false
+## Which save "New walk" forgets (tests point it elsewhere, not at the player's).
+var save_path := SaveGame.PATH
 var _bands: Array[Control] = []
 var _fading := false
 
@@ -64,6 +71,14 @@ func _ready() -> void:
 	_start.pressed.connect(start)
 	_start.focus_mode = Control.FOCUS_ALL
 	col.add_child(_start)
+	_new = UiStyle.button("UI_NEW_GAME")
+	_new.custom_minimum_size = Vector2(320, 48)
+	_new.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_new.add_theme_font_size_override("font_size", 24)
+	_new.pressed.connect(start_over)
+	_new.focus_mode = Control.FOCUS_ALL
+	_new.visible = false
+	col.add_child(_new)
 	_root.visible = false
 
 
@@ -122,7 +137,10 @@ func is_open() -> bool:
 	return _root.visible
 
 
-func open() -> void:
+func open(saved := false) -> void:
+	has_save = saved
+	_start.text = "UI_CONTINUE" if saved else "UI_START"
+	_new.visible = saved
 	_root.visible = true
 	_root.modulate.a = 1.0
 	_fading = false
@@ -140,7 +158,10 @@ func start() -> void:
 	Game.ui_blocking = false
 	Game.mark_ui_closed()
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	started.emit()
+	if has_save:
+		continued.emit()
+	else:
+		started.emit()
 	var tw := create_tween()
 	tw.tween_property(_root, "modulate:a", 0.0, 0.6)
 	tw.tween_callback(func() -> void:
@@ -148,11 +169,25 @@ func start() -> void:
 		_fading = false)
 
 
+## "New walk": forget the saved one and start from the pier.
+func start_over() -> void:
+	if not _root.visible or _fading:
+		return
+	SaveGame.erase(save_path)
+	has_save = false
+	start()
+
+
 func _input(event: InputEvent) -> void:
 	# The title lives in the root viewport (not the world's), so it gets input.
 	if not _root.visible or _fading:
 		return
-	var click: bool = event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT
+	var click: bool = event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT \
+			and not (_new.visible and _new.get_global_rect().has_point((event as InputEventMouseButton).position))
 	if click or event.is_action_pressed(&"interact") or event.is_action_pressed(&"jump") or event.is_action_pressed(&"ui_accept"):
-		start()
+		# a key on "New walk" (focused with the arrows) means it, not Continue
+		if not click and _new.visible and _new.has_focus():
+			start_over()
+		else:
+			start()
 		get_viewport().set_input_as_handled()

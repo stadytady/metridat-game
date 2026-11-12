@@ -11,6 +11,9 @@ extends Node
 ## pixels per low-res pixel at 1080p, exactly 2 at 1440p and 3 at 4K.
 const INTERNAL_HEIGHT := 720.0
 
+## True once a played walk has started: automation never writes a save.
+var _saving := false
+
 ## Render the world at the window's full resolution (the trailer without PS1 effects).
 var native := false
 
@@ -61,8 +64,13 @@ func _ready() -> void:
 			var prologue := Prologue.new()
 			prologue.name = "Prologue"
 			add_child(prologue)
-			prologue.begin())
-		title.open()
+			prologue.begin()
+			_start_saving())
+		title.continued.connect(func() -> void:
+			$HUD.set_visible_ui(true)
+			_restore(SaveGame.read())
+			_start_saving())
+		title.open(SaveGame.exists())
 
 
 ## How big the world's image is for a window (canvas) of this size, and the
@@ -110,3 +118,43 @@ func _input(event: InputEvent) -> void:
 	elif event is InputEventMouseButton and event.pressed and not Game.ui_blocking \
 			and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and not get_tree().paused:
 		capture_mouse(true)
+
+
+## Puts a saved walk back: the state first (Game, lamps, markers), then the
+## player where they stood.
+func _restore(data: Dictionary) -> void:
+	if data.is_empty():
+		return
+	SaveGame.apply(data)
+	var p := player()
+	p.global_position = data.get("pos", p.global_position)
+	p.rotation.y = float(data.get("yaw", p.rotation.y))
+
+
+## From the first step of a played walk on (never in automation): save on every
+## find, errand and lamp, every SaveGame.AUTOSAVE_SECONDS, and on quit.
+func _start_saving() -> void:
+	_saving = true
+	Game.discovered.connect(func(_d: Discovery, _new: bool) -> void: save_now())
+	Game.quest_changed.connect(func(_id: String, _s: int) -> void: save_now())
+	Game.lamp_lit.connect(func(_l: int, _t: int) -> void: save_now())
+	Game.save_requested.connect(save_now)
+	var timer := Timer.new()
+	timer.wait_time = SaveGame.AUTOSAVE_SECONDS
+	timer.autostart = true
+	timer.timeout.connect(save_now)
+	add_child(timer)
+
+
+## Writes the walk now, unless it is in the prologue or the dream: those are
+## left and entered behind their own fades, and a walk is resumed in the city.
+func save_now() -> void:
+	if not _saving or Game.prologue or Game.dreaming:
+		return
+	var p := player()
+	SaveGame.write(SaveGame.snapshot(p.global_position, p.rotation.y))
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		save_now()

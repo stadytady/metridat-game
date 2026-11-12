@@ -71,6 +71,7 @@ func _ready() -> void:
 
 	Game.discovered.connect(_on_discovered)
 	Game.lamp_lit.connect(_on_lamp_lit)
+	Game.state_restored.connect(_update_counter)
 	Game.location_entered.connect(func(title: String) -> void: show_toast(title))
 	Game.quest_changed.connect(_on_quest)
 	# Achievements get the Steam-style card, not the plain toast. It needs a canvas
@@ -168,6 +169,16 @@ func show_toast(key: String, prefix_key: String = "") -> void:
 	_toast_tween.tween_property(_toast, "modulate:a", 1.0, 0.4)
 	_toast_tween.tween_interval(3.5)
 	_toast_tween.tween_property(_toast, "modulate:a", 0.0, 1.2)
+
+
+## Puts the toast out at once: the shots jump from place to place faster than
+## it fades, and a frame of one place carried the name of the one before.
+func clear_toast() -> void:
+	if _toast_tween:
+		_toast_tween.kill()
+	_toast.modulate.a = 0.0
+	_toast_key = ""
+	_toast_prefix = ""
 
 
 func _toast_text() -> String:

@@ -88,6 +88,17 @@ func interact() -> void:
 	Game.lamp_lit.emit(Game.lamps_lit(), Game.lamps.size())
 
 
+## Lit without the catch of the flame or a signal: a saved walk being put back.
+func light_quietly() -> void:
+	if lit:
+		return
+	lit = true
+	_light.visible = true
+	_flame.emitting = true
+	_flame.visible = true
+	_sound.play(randf() * 4.0)
+
+
 ## True while the burning bed is playing; the walkthrough listens for silence.
 func looping() -> bool:
 	return _sound.playing
