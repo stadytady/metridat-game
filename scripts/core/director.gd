@@ -357,6 +357,9 @@ const STUCK_SECONDS := 4.0
 ## Set once all finds are made: from then on the bot lights every lamp it passes.
 var _lighting := false
 var _fail := PackedStringArray()
+var _qa_log: Object
+var _qa_out := ""
+var _qa_t0 := 0
 
 
 func _inspectables() -> Dictionary:
@@ -540,6 +543,12 @@ func _route() -> Array:
 
 
 func _walkthrough() -> void:
+	_qa_t0 = Time.get_ticks_msec()
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--qa-out="):
+			_qa_out = a.substr(9)
+			_qa_log = load("res://tests/qa/qa_log.gd").install()
+			_qa_log.context = "walkthrough"
 	var main := _main()
 	var player: CharacterBody3D = main.player()
 	player.bot_enabled = true
@@ -553,7 +562,11 @@ func _walkthrough() -> void:
 	await _check_prologue(player)
 	await _check_journal(Game.total())
 	var min_y := INF
+	# per-step timings and failures for the QA report (--qa-out)
+	var timeline: Array[Dictionary] = []
 	for step in _route():
+		var step_t0 := Time.get_ticks_msec()
+		var step_fails := _fail.size()
 		if Game.found_count() == Game.total():
 			_lighting = true
 		if step is Vector2:
@@ -574,6 +587,8 @@ func _walkthrough() -> void:
 		else:
 			await _inspect(player, items, step)
 		min_y = minf(min_y, player.global_position.y)
+		timeline.append({"step": str(step), "ms": Time.get_ticks_msec() - step_t0,
+				"failures": Array(_fail.slice(step_fails))})
 	player.bot_move = Vector2.ZERO
 	if min_y < 0.0:
 		_fail.append("player went below sea level (min y %.2f)" % min_y)
@@ -590,7 +605,24 @@ func _walkthrough() -> void:
 	for f in _fail:
 		print("FAIL ", f)
 	print("WALKTHROUGH ", "PASS" if _fail.is_empty() else "FAIL")
+	_write_qa(timeline)
 	get_tree().quit(0 if _fail.is_empty() else 1)
+
+
+## With --qa-out=DIR, the pass as JSON for tools/qa_report.py: every route step
+## with its time and failures, the engine's errors, how far it got. tests/ is
+## not exported, so the log is loaded by path and only when asked for.
+func _write_qa(timeline: Array[Dictionary]) -> void:
+	if _qa_log == null:
+		return
+	var qa: GDScript = load("res://tests/qa/qa_log.gd")
+	var errors: Array = _qa_log.records()
+	var script_errors := errors.filter(func(r: Dictionary) -> bool: return r.type == "script").size()
+	qa.write_json(_qa_out.path_join("walkthrough.json"), {
+		"kind": "walkthrough", "status": "ok" if _fail.is_empty() and script_errors == 0 else "fail",
+		"ms": Time.get_ticks_msec() - _qa_t0, "failures": Array(_fail), "steps": timeline, "errors": errors,
+		"found": Game.found_count(), "total": Game.total(), "lamps": Game.lamps_lit(), "lamps_total": Game.lamps.size(),
+	})
 
 
 func _walk_to(player: CharacterBody3D, target: Vector2) -> bool:
