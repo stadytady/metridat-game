@@ -393,6 +393,12 @@ func _route() -> Array:
 	# She stops for anyone within Npc.ATTENTION, wherever her round has taken
 	# her, behind the well-head too: wait out of her sight until she is back at
 	# the rope, then step up from the lane.
+	# Sosias the coin striker, in his room uphill of the mule's pen: up his
+	# steps, in at the door, a word over the anvil, and back to the street.
+	r.append(Vector2(-1.0, 2.6))
+	r.append(Vector2(-1.0, 6.0))
+	r.append("talk:striker")
+	r.append(Vector2(-1.0, 2.6))
 	r.append(Vector2(12.5, 0.0))
 	r.append("await:water_carrier:0")
 	r.append(Vector2(5.0, -0.6))
@@ -408,7 +414,12 @@ func _route() -> Array:
 	r.append("coin_stater")
 	r.append(Vector2(24.3, 5.7))
 	r.append("grain_pithos")
-	# potter's workshop in the south-west corner, around the stall
+	# potter's workshop in the south-west corner, around the stall. The boy is
+	# on his round between the wheel, the woodpile and the kiln, and stops
+	# wherever he is for anyone within Npc.ATTENTION: wait out of his sight
+	# until he is back at the wheel, or the bot has to reach him behind the kiln.
+	r.append(Vector2(25.5, 4.0))
+	r.append("await:turner:0")
 	r.append(Vector2(22.0, 4.5))
 	r.append(Vector2(13.4, 4.8))
 	r.append(Vector2(13.4, 7.0))
@@ -422,6 +433,7 @@ func _route() -> Array:
 	# the boy's knucklebone on the stoa's step, and back to him with it
 	r.append(Vector2(14.5, -3.9))
 	r.append("pick:astragal")
+	r.append("await:turner:0")
 	r.append(Vector2(12.5, 4.5))
 	r.append("give:astragal")
 	# across the square well south of the stall: its counter is the one place the

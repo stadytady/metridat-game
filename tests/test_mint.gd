@@ -78,3 +78,30 @@ func test_he_rests_at_dusk_and_the_lamps_are_lit() -> void:
 	check(struck >= 3 and struck <= 4, "in 4 s he struck %d blows" % struck)
 	check(lit, "at dusk the lamps are dark or he still swings")
 	check(quiet, "he strikes after dusk")
+
+
+func test_he_can_be_talked_to() -> void:
+	var m: Mint = M.new()
+	Engine.get_main_loop().root.add_child(m)
+	var npc := m.striker()
+	var ok := npc != null and npc.npc_id == "striker" and npc.talkable and npc.dialogue != null and npc.marker != null
+	var named := npc != null and tr(npc.name_key) != npc.name_key
+	# talking stops the hammer: no blows while a panel is open with the player in the room
+	var cam := Camera3D.new()
+	m.add_child(cam)
+	cam.global_position = npc.global_position + Vector3(0, 1.5, -2.0)
+	cam.make_current()
+	Game.ui_blocking = true
+	var before := m.hits
+	for k in 40:
+		m._step(0.1)
+	var silent := m.hits == before
+	Game.ui_blocking = false
+	for k in 40:
+		m._step(0.1)
+	var again := m.hits > before
+	m.free()
+	check(ok, "the striker is not an Npc one can talk to")
+	check(named, "the striker has no name")
+	check(silent, "he keeps hammering through the conversation")
+	check(again, "he does not pick the hammer up again")

@@ -1,0 +1,17 @@
+# Sosias, the coin striker in his room by the mule's pen. Three questions: why
+# one blow, whether he keeps any coin, and whether he works at night. No errand.
+# Text is a key: the panel translates it, so EN/RU stay in strings.csv.
+# Indent with tabs: DM's INDENT_REGEX is ^\t+.
+
+~ start
+Sosias: NPC_STRIKER_1
+- LOC_STRIKER_CHOICE_1
+	Sosias: LOC_STRIKER_WORK_1
+	Sosias: LOC_STRIKER_WORK_2
+- LOC_STRIKER_CHOICE_2
+	Sosias: LOC_STRIKER_PAY_1
+	Sosias: LOC_STRIKER_PAY_2
+- LOC_STRIKER_CHOICE_3
+	Sosias: LOC_STRIKER_NIGHT_1
+	Sosias: LOC_STRIKER_NIGHT_2
+=> END

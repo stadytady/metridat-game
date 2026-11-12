@@ -307,3 +307,15 @@ UI_ASTRAGAL_LOSE,The children win,Мальчишки выиграли
 UI_ASTRAGAL_DRAW,Nobody wins,Никто не выиграл
 UI_ASTRAGAL_VENUS,Aphrodite,Афродита
 UI_ASTRAGAL_DOG,The dog,Собака
+NPC_STRIKER_NAME,Sosias the coin striker,"Сосий, чеканщик"
+NPC_STRIKER_1,"Don't stand in the door, you're in my light. Sosias. I strike the city's coin: a blank from the furnace, one blow, next.","Не стой в дверях, свет загораживаешь. Сосий. Бью монету для города: кружок из печи, один удар, следующий."
+LOC_STRIKER_CHOICE_1,Why only one blow?,Почему один удар?
+LOC_STRIKER_WORK_1,"The blank lies on the die in the anvil, the punch goes on top, and the hammer comes down once. Hit it twice and the satyr has two noses.","Кружок ложится на штемпель в наковальне, сверху ставлю второй и бью один раз. Ударишь дважды — у сатира будет два носа."
+LOC_STRIKER_WORK_2,"The dies crack before I do. The man who cuts a new one asks more than I earn in a month, so I hit straight.","Штемпели трескаются раньше меня. Резчик за новый берёт больше, чем я зарабатываю за месяц, вот и бью ровно."
+LOC_STRIKER_CHOICE_2,Do you keep any for yourself?,А себе монету оставляешь?
+LOC_STRIKER_PAY_1,"The blanks are weighed out to me in the morning and the coins are weighed back at night. If the scales disagree, it's my back that answers.","Утром мне кружки отвешивают, вечером монету взвешивают снова. Не сойдутся весы — отвечать моей спине."
+LOC_STRIKER_PAY_2,All I carry home is the ringing in my ears. My wife says I nod in time even in my sleep.,"Домой я уношу только звон в ушах. Жена говорит, я и во сне киваю в такт."
+LOC_STRIKER_CHOICE_3,Do you work at night too?,И ночью работаешь?
+LOC_STRIKER_NIGHT_1,"Not by lamplight. Miss by a hair in the dark and the coin goes back into the pot, and the hair comes out of my pay.","При лампе не бью. Промахнёшься в потёмках на волос — монета идёт обратно в тигель, а волос вычтут из платы."
+LOC_STRIKER_NIGHT_2,"After dusk I sit by the furnace and let my arm go quiet. The street likes me better then, too.","С темнотой сижу у печи и жду, пока рука затихнет. Улица меня в это время тоже больше любит."
+UI_VOLUME,Volume  %d%%,Громкость  %d%%
