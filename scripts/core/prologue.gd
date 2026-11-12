@@ -232,13 +232,13 @@ func _process(delta: float) -> void:
 	if _outro_t >= 0.0:
 		_outro_t += delta
 		if _outro_t > SKIP_GUARD and (Input.is_action_just_pressed(&"interact") or Input.is_action_just_pressed(&"jump") \
-				or Input.is_action_just_pressed(&"pause")):
+				or Input.is_action_just_pressed(&"pause") or Input.is_action_just_pressed(&"back")):
 			_outro_skip = true
 		return
 	if not voyage_running():
 		return
 	if Input.is_action_just_pressed(&"interact") or Input.is_action_just_pressed(&"jump") \
-			or Input.is_action_just_pressed(&"pause"):
+			or Input.is_action_just_pressed(&"pause") or Input.is_action_just_pressed(&"back"):
 		skip()
 		return
 	_voyage_t += delta
@@ -422,7 +422,7 @@ func _build_overlay() -> void:
 	_skip_hint.offset_right = -24.0
 	_skip_hint.offset_bottom = -16.0
 	_skip_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_skip_hint.text = tr("UI_VOYAGE_SKIP")
+	Keys.bind(_skip_hint, "UI_VOYAGE_SKIP")
 	_skip_hint.add_theme_font_size_override("font_size", 16)
 	_skip_hint.add_theme_color_override("font_color", Color(0.94, 0.88, 0.76, 0.6))
 	layer.add_child(_skip_hint)

@@ -9,6 +9,7 @@ var _hint: KeysBar
 var _toast_tween: Tween
 var _perf: Label
 var _target: Node
+var _legend_tween: Tween
 var _lamps: Label
 var _dusk_shown := false
 var _toast_key := ""
@@ -65,13 +66,16 @@ func _ready() -> void:
 	_hint.position += Vector2(-760, -58)
 	_hint.size = Vector2(1520, 40)
 	root.add_child(_hint)
-	var t := create_tween()
-	t.tween_interval(14.0)
-	t.tween_property(_hint, "modulate:a", 0.0, 2.0)
+	show_legend(14.0)
+	# picking up the pad (or putting it down) shows the legend again, in its buttons
+	Game.device_changed.connect(func() -> void: show_legend(6.0))
 
 	Game.discovered.connect(_on_discovered)
 	Game.lamp_lit.connect(_on_lamp_lit)
 	Game.state_restored.connect(_update_counter)
+	# a moved key or the pad picked up: the prompt and the toast name the new key
+	Game.device_changed.connect(_refill)
+	Game.settings_changed.connect(_refill)
 	Game.location_entered.connect(func(title: String) -> void: show_toast(title))
 	Game.quest_changed.connect(_on_quest)
 	# Achievements get the Steam-style card, not the plain toast. It needs a canvas
@@ -124,7 +128,7 @@ func bind_interactor(interactor: Node) -> void:
 
 func _on_target(target: Node) -> void:
 	_target = target
-	_prompt.text = target.get_prompt() if target != null else ""
+	_prompt.text = Keys.fill(target.get_prompt()) if target != null else ""
 
 
 func _update_counter() -> void:
@@ -181,10 +185,28 @@ func clear_toast() -> void:
 	_toast_prefix = ""
 
 
+## Shows the controls legend for `hold` seconds, then fades it out.
+func show_legend(hold: float) -> void:
+	if _legend_tween:
+		_legend_tween.kill()
+	_hint.modulate.a = 1.0
+	_legend_tween = create_tween()
+	_legend_tween.tween_interval(hold)
+	_legend_tween.tween_property(_hint, "modulate:a", 0.0, 2.0)
+
+
+func _refill() -> void:
+	if _prompt == null:
+		return
+	_on_target(_target if is_instance_valid(_target) else null)
+	if _toast_key != "":
+		_toast.text = _toast_text()
+
+
 func _toast_text() -> String:
 	if _toast_prefix != "":
-		return tr(_toast_prefix) % tr(_toast_key)
-	return tr(_toast_key)
+		return Keys.fill(tr(_toast_prefix) % tr(_toast_key))
+	return Keys.fill(tr(_toast_key))
 
 
 func set_visible_ui(on: bool) -> void:

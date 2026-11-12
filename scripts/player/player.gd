@@ -15,6 +15,10 @@ extends CharacterBody3D
 @export var step_height := 0.4
 
 const CAPSULE_RADIUS := 0.32
+## Running widens the view by this much.
+const RUN_FOV := 6.0
+## The right stick turns this fast at full tilt (rad/s, times the sensitivity).
+const STICK_TURN := 2.4
 
 const STEPS := {
 	&"stone": [preload("res://assets/audio/step_stone_0.wav"), preload("res://assets/audio/step_stone_1.wav"),
@@ -85,7 +89,19 @@ func look_at_point(p: Vector3) -> void:
 	head.rotation.x = _pitch
 
 
+## The right stick's look for this tick: squared, so a small tilt aims finely
+## and a full one turns round.
+static func stick_look(stick: Vector2, sensitivity: float, delta: float) -> Vector2:
+	return stick * stick.length() * STICK_TURN * sensitivity * delta
+
+
 func _physics_process(delta: float) -> void:
+	if not bot_enabled and not Game.ui_blocking:
+		var st := Input.get_vector(&"look_left", &"look_right", &"look_up", &"look_down")
+		if st != Vector2.ZERO:
+			var d := stick_look(st, Game.mouse_sensitivity, delta)
+			_yaw_target -= d.x
+			_pitch_target = clampf(_pitch_target - d.y * (-1.0 if Game.invert_y else 1.0), deg_to_rad(-85), deg_to_rad(85))
 	var k := 1.0 - exp(-look_smoothing * delta)
 	_yaw = lerp_angle(_yaw, _yaw_target, k)
 	_pitch = lerpf(_pitch, _pitch_target, k)
@@ -200,5 +216,5 @@ func _bob_and_steps(delta: float, sprint: bool) -> void:
 	var amp := bob_amount * clampf(hspeed / walk_speed, 0.0, 1.6) if moving else 0.0
 	var target_y := _cam_base_y + sin(_bob * 2.0) * amp
 	camera.position.y = lerpf(camera.position.y, target_y, 1.0 - exp(-14.0 * delta))
-	var fov := 78.0 if sprint and moving else 72.0
+	var fov := Game.fov + (RUN_FOV if sprint and moving else 0.0)
 	camera.fov = lerpf(camera.fov, fov, 1.0 - exp(-6.0 * delta))

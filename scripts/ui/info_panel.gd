@@ -41,7 +41,8 @@ func _ready() -> void:
 	_src = _wrap(UiStyle.label("", 19, UiStyle.MUTED))
 	var h2 := UiStyle.label("UI_STORY", 22, UiStyle.FICTION)
 	_story = _wrap(UiStyle.label("", 23, Color("#e8c9a8")))
-	var foot := UiStyle.label("UI_CLOSE", 20, UiStyle.MUTED)
+	var foot := UiStyle.label("", 20, UiStyle.MUTED)
+	Keys.bind(foot, "UI_CLOSE")
 	foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	for n: Control in [_title, _where, _desc, _sep(), h1, _hist, _src, _sep(), h2, _story, foot]:
 		col.add_child(n)
@@ -116,5 +117,5 @@ func _process(_delta: float) -> void:
 	# The E that opened the panel must not close it in the same frame.
 	if not _panel.visible or Engine.get_process_frames() <= _opened_frame + 1:
 		return
-	if Input.is_action_just_pressed(&"interact") or Input.is_action_just_pressed(&"pause"):
+	if Input.is_action_just_pressed(&"interact") or Input.is_action_just_pressed(&"back"):
 		close()

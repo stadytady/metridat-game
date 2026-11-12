@@ -10,10 +10,21 @@ signal settings_changed
 signal state_restored
 ## Save now (the pause menu's Quit asks before the tree goes away).
 signal save_requested
+## The player put down the mouse for the pad or back: legends and texts redraw.
+signal device_changed
 
-const SETTINGS_PATH := "user://settings.cfg"
+## Where the settings live (tests point it elsewhere, not to overwrite the player's).
+var settings_path := "user://settings.cfg"
 
 var mouse_sensitivity := 1.0
+## Field of view in degrees (running widens it by RUN_FOV more).
+var fov := 72.0
+const FOV_MIN := 60.0
+const FOV_MAX := 100.0
+## action -> physical key, only for keys the player moved (Keys.DEFAULT_KEYS otherwise).
+var key_binds := {}
+## True while the last thing touched was the gamepad.
+var pad := false
 var invert_y := false
 ## Master volume, 0 (mute) .. 1; set_volume() applies it to the Master bus.
 var master_volume := 1.0
@@ -61,6 +72,8 @@ const REARM_MS := 400
 
 
 func _ready() -> void:
+	# the pad is noticed in the pause menu too
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	_setup_input()
 	load_settings()
 
@@ -72,28 +85,48 @@ func _exit_tree() -> void:
 
 
 func _setup_input() -> void:
-	var keys := {
-		&"move_forward": [KEY_W, KEY_UP],
-		&"move_back": [KEY_S, KEY_DOWN],
-		&"move_left": [KEY_A, KEY_LEFT],
-		&"move_right": [KEY_D, KEY_RIGHT],
-		&"sprint": [KEY_SHIFT],
-		&"jump": [KEY_SPACE],
-		&"interact": [KEY_E],
-		&"pause": [KEY_ESCAPE],
-		&"journal": [KEY_J],
-		&"admin": [KEY_QUOTELEFT],
-		&"goals": [KEY_TAB],
-		&"perf_overlay": [KEY_F3],
-	}
-	for action: StringName in keys:
-		if InputMap.has_action(action):
-			continue
-		InputMap.add_action(action)
-		for k: Key in keys[action]:
-			var ev := InputEventKey.new()
-			ev.physical_keycode = k
-			InputMap.action_add_event(action, ev)
+	Keys.setup(key_binds)
+
+
+## The pad was touched (a button, a stick past the dead zone) or the keyboard
+## and mouse were: the texts follow whichever is in the hands.
+func _input(event: InputEvent) -> void:
+	if event is InputEventJoypadButton and event.pressed:
+		set_pad(true)
+	elif event is InputEventJoypadMotion and absf(event.axis_value) > 0.5:
+		set_pad(true)
+	elif (event is InputEventKey and event.pressed) or (event is InputEventMouseButton and event.pressed):
+		set_pad(false)
+	elif event is InputEventMouseMotion and event.relative.length() > 6.0:
+		set_pad(false)
+
+
+func set_pad(on: bool) -> void:
+	if on != pad:
+		pad = on
+		device_changed.emit()
+
+
+## Moves an action to key k (swapping with whoever had it) and keeps it.
+func bind_key(action: StringName, k: Key) -> void:
+	key_binds = Keys.rebind(key_binds, action, k)
+	Keys.setup(key_binds)
+	save_settings()
+
+
+func reset_keys() -> void:
+	key_binds = {}
+	Keys.setup(key_binds)
+	save_settings()
+
+
+func key_for(action: StringName) -> Key:
+	return key_binds.get(action, Keys.DEFAULT_KEYS[action])
+
+
+func set_fov(v: float) -> void:
+	fov = clampf(v, FOV_MIN, FOV_MAX)
+	save_settings()
 
 
 func time_target() -> float:
@@ -167,12 +200,19 @@ func mark_found(d: Discovery) -> void:
 
 func load_settings() -> void:
 	var cfg := ConfigFile.new()
-	if cfg.load(SETTINGS_PATH) == OK:
+	if cfg.load(settings_path) == OK:
 		mouse_sensitivity = clampf(float(cfg.get_value("input", "mouse_sensitivity", 1.0)), 0.1, 4.0)
 		invert_y = bool(cfg.get_value("input", "invert_y", false))
 		master_volume = clampf(float(cfg.get_value("audio", "master_volume", 1.0)), 0.0, 1.0)
 		psx_effects = bool(cfg.get_value("video", "psx_effects", true))
 		language = String(cfg.get_value("ui", "language", ""))
+		fov = clampf(float(cfg.get_value("video", "fov", 72.0)), FOV_MIN, FOV_MAX)
+		key_binds = {}
+		for a: StringName in Keys.DEFAULT_KEYS:
+			var k := int(cfg.get_value("keys", String(a), -1))
+			if k > 0 and not Keys.reserved(k as Key):
+				key_binds = Keys.rebind(key_binds, a, k as Key)
+		Keys.setup(key_binds)
 	if language not in LANGUAGES:
 		language = "ru" if OS.get_locale_language() == "ru" else "en"
 	TranslationServer.set_locale(language)
@@ -213,7 +253,10 @@ func save_settings() -> void:
 	cfg.set_value("audio", "master_volume", master_volume)
 	cfg.set_value("video", "psx_effects", psx_effects)
 	cfg.set_value("ui", "language", language)
-	var err := cfg.save(SETTINGS_PATH)
+	cfg.set_value("video", "fov", fov)
+	for a: StringName in key_binds:
+		cfg.set_value("keys", String(a), int(key_binds[a]))
+	var err := cfg.save(settings_path)
 	if err != OK:
 		push_warning("settings not saved: %s" % error_string(err))
 	settings_changed.emit()

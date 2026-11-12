@@ -45,7 +45,8 @@ func _ready() -> void:
 	_choices = VBoxContainer.new()
 	_choices.add_theme_constant_override("separation", 2)
 	_choices.visible = false
-	_keys_hint = UiStyle.label("UI_DIALOGUE_KEYS", 18, UiStyle.MUTED)
+	_keys_hint = UiStyle.label("", 18, UiStyle.MUTED)
+	Keys.bind(_keys_hint, "UI_DIALOGUE_KEYS")
 	_keys_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_keys_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for n: Control in [_name, _line, _choices, _keys_hint]:
@@ -171,7 +172,6 @@ func _notification(what: int) -> void:
 		if _current != null:
 			_line.text = tr(_current.text)
 			_refresh_choices()
-		_keys_hint.text = tr("UI_DIALOGUE_KEYS")
 
 
 ## Highlight the choice whose text is this key (the walkthrough picks an
@@ -218,7 +218,7 @@ func _process(_delta: float) -> void:
 		return
 	if Input.is_action_just_pressed(&"interact"):
 		advance()
-	elif Input.is_action_just_pressed(&"pause"):
+	elif Input.is_action_just_pressed(&"back"):
 		close()
 	elif _choices.visible:
 		if Input.is_action_just_pressed(&"move_forward"):

@@ -23,8 +23,21 @@ func test_every_entry_has_a_cap_and_a_translated_action() -> void:
 
 func test_the_legend_covers_the_controls_we_teach() -> void:
 	var caps := []
+	var pads := []
 	for e: Array in K.ENTRIES:
-		caps.append(String(e[0]))
-	for needed: String in ["WASD", "E", "J", "TAB", "ESC"]:
+		caps.append(K.cap(e[0], {}, false))
+		pads.append(K.cap(e[0], {}, true))
+	for needed: String in ["WASD", "E", "J", "TAB", "ESC", "MOUSE"]:
 		check(caps.has(needed), "the legend forgot %s" % needed)
+	for needed: String in ["LS", "RS", "A", "Y", "START"]:
+		check(pads.has(needed), "the pad legend forgot %s" % needed)
+	check(not pads.has("?"), "a pad cap has no name: %s" % [pads])
 	check(K.ENTRIES.size() >= 6, "the legend shrank to %d entries" % K.ENTRIES.size())
+
+
+## A moved key shows on its cap; a moved walking key keeps the four together.
+func test_the_caps_follow_the_keys() -> void:
+	var binds := Keys.rebind({}, &"interact", KEY_F)
+	check(K.cap(&"interact", binds, false) == "F", "interact on F shows %s" % K.cap(&"interact", binds, false))
+	binds = Keys.rebind({}, &"move_forward", KEY_Z)
+	check(K.cap(&"move", binds, false) == "ZASD", "walking on ZASD shows %s" % K.cap(&"move", binds, false))
