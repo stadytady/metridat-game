@@ -73,6 +73,11 @@ jobs:
         with:
           path: ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
           key: godot-templates-${{ env.GODOT_VERSION }}-windows-linux-web
+      - name: Cache Godot
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/bin/godot
+          key: godot-bin-${{ env.GODOT_VERSION }}-linux-x86_64
       - name: Install Godot and templates
         run: |
           tools/install-godot.sh --templates

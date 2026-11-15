@@ -22,6 +22,11 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
+      - name: Cache Godot
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/bin/godot
+          key: godot-bin-${{ env.GODOT_VERSION }}-linux-x86_64
       - name: Install Godot
         run: |
           tools/install-godot.sh
@@ -47,6 +52,11 @@ jobs:
         with:
           path: ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
           key: godot-templates-${{ env.GODOT_VERSION }}-windows-linux-web
+      - name: Cache Godot
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/bin/godot
+          key: godot-bin-${{ env.GODOT_VERSION }}-linux-x86_64
       - name: Install Godot and templates
         run: |
           tools/install-godot.sh --templates
@@ -109,6 +119,11 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
+      - name: Cache Godot
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/bin/godot
+          key: godot-bin-${{ env.GODOT_VERSION }}-linux-x86_64
       - name: Install Godot and software Vulkan
         run: |
           tools/install-godot.sh
