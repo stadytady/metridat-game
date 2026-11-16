@@ -102,12 +102,17 @@ func _fill() -> void:
 			row.mouse_entered.connect(func() -> void: title.add_theme_color_override("font_color", UiStyle.BORDER))
 			row.mouse_exited.connect(func() -> void: title.add_theme_color_override("font_color", UiStyle.TEXT))
 		_rows.add_child(row)
+	# A ScrollContainer asks for no height of its own: left alone, reset_size()
+	# folds the list to nothing and the journal shows a title over an empty
+	# box. It asks for the rows' height, up to what the screen leaves below the
+	# title and above the footer; past that the rest scrolls.
+	var room := UiStyle.screen(self).y - 80.0
+	_scroll.custom_minimum_size.y = 0.0
 	_panel.reset_size()
-	# never taller than the screen: the rest of the list scrolls behind the title
-	var room := 1080.0 - 80.0
-	if _panel.size.y > room:
-		_panel.size.y = room
-	_panel.position = ((Vector2(1920, 1080) - _panel.size) / 2.0).max(Vector2(40, 40))
+	var frame := _panel.get_combined_minimum_size().y
+	_scroll.custom_minimum_size.y = minf(_rows.get_combined_minimum_size().y, maxf(room - frame, 120.0))
+	_panel.reset_size()
+	_panel.position = UiStyle.centred(self, _panel.size)
 
 
 func _notification(what: int) -> void:

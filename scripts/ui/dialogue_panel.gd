@@ -33,7 +33,6 @@ func _ready() -> void:
 	_panel = PanelContainer.new()
 	_panel.add_theme_stylebox_override("panel", UiStyle.panel())
 	_panel.custom_minimum_size = Vector2(1100, 0)
-	_panel.position = Vector2((1920 - 1100) / 2.0, 1080 - 330)
 	add_child(_panel)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 10)
@@ -164,7 +163,8 @@ func _clear_choices() -> void:
 ## Re-fit the panel after the text changed: it grows upward from the bottom.
 func _fit() -> void:
 	_panel.reset_size()
-	_panel.position.y = 1080 - _panel.size.y - 120
+	var screen := UiStyle.screen(self)
+	_panel.position = Vector2((screen.x - _panel.size.x) / 2.0, screen.y - _panel.size.y - 120)
 
 
 func _notification(what: int) -> void:

@@ -520,18 +520,56 @@ static func fountain_at(houses: Array) -> Dictionary:
 	return {}
 
 
-## Where the watchman paces: up and down the street past the first crossing herm,
-## three metres either way. Empty when the town has no crossing to stand on.
+## Where the watchman walks: along the terrace street at the first crossing
+## herm, WATCH_HALF either way of the corner, past the herm and not through it.
+## (It used to be six metres straight through the herm's own spot: he has no
+## collider, so he walked through the stone, back and forth, all night.) The
+## stretch stops where a house, a reserved place or a herm would be in the way.
+## Empty when the town has no crossing to stand on.
+const WATCH_HALF := 9.0
+## How near the herm (a plinth ~0.6 m wide) his line may pass.
+const WATCH_HERM_CLEAR := 1.0
+
+
 static func watch_route(houses: Array) -> Array[Vector3]:
 	var out: Array[Vector3] = []
 	var herms := crossing_herms(houses)
 	if herms.is_empty():
 		return out
 	var h: Vector3 = herms[0].pos
-	for dz: float in [-3.0, 3.0]:
-		var p := Vector3(h.x, 0, h.z + dz)
-		p.y = Topo.surface(p.x, p.z)
-		out.append(p)
+	var hp := Vector2(h.x, h.z)
+	var run := PackedVector2Array()
+	var at := -1
+	var best := INF
+	for r: PackedVector2Array in streets():
+		for i in r.size():
+			var d := r[i].distance_to(hp)
+			if d < best:
+				best = d
+				run = r
+				at = i
+	if at < 0:
+		return out
+	var clear := func(p: Vector2) -> bool:
+		if on_house(houses, p.x, p.y, 0.4) or Topo.is_reserved(p.x, p.y, 1.0):
+			return false
+		for hm: Dictionary in herms:
+			var q: Vector3 = hm.pos
+			if p.distance_to(Vector2(q.x, q.z)) < WATCH_HERM_CLEAR:
+				return false
+		return true
+	if not clear.call(run[at]):
+		return out
+	# grow the stretch from the corner both ways while the street is clear
+	var reach := ceili(WATCH_HALF / Z_STEP)
+	var lo := at
+	var hi := at
+	while lo - 1 >= maxi(0, at - reach) and clear.call(run[lo - 1]):
+		lo -= 1
+	while hi + 1 <= mini(run.size() - 1, at + reach) and clear.call(run[hi + 1]):
+		hi += 1
+	for i in range(lo, hi + 1):
+		out.append(Vector3(run[i].x, Topo.surface(run[i].x, run[i].y), run[i].y))
 	return out
 
 

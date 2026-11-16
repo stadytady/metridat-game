@@ -53,6 +53,10 @@ func _run() -> void:
 	await _frames(5)
 	begin_step("fixture")
 	apply_fixture(fx)
+	# the place name shown at the spawn would still be fading in the first frames
+	var hud: Node = get_parent().get_node_or_null("HUD")
+	if hud != null:
+		hud.clear_toast()
 	await _frames(5)
 	begin_step("run")
 	await _scenario.run()

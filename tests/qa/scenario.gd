@@ -124,6 +124,23 @@ func pad_button(b: JoyButton, hold := 2) -> void:
 			await tree().process_frame
 
 
+## Puts the player's eye at a World.viewpoints() view, looking at its target:
+## the same frames --shots takes, with the world in this scenario's state.
+func view(name: String) -> void:
+	var v: Array = load("res://scripts/world/world.gd").viewpoints()[name]
+	var p := player()
+	p.global_position = (v[0] as Vector3) - Vector3(0, p.camera.global_position.y - p.global_position.y, 0)
+	p.velocity = Vector3.ZERO
+	p.look_at_point(v[1])
+	await frames(2)
+
+
+## Turns the player's eye on a point (a figure, a light), from where they stand.
+func look(at: Vector3) -> void:
+	player().look_at_point(at)
+	await frames(2)
+
+
 ## A frame of the game into the report (skipped on the headless renderer).
 func shot(name: String) -> void:
 	await runner.shot(name)

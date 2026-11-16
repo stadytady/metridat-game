@@ -25,14 +25,25 @@ func run() -> void:
 	var kb: Knucklebones = world.find_child("Knucklebones", true, false)
 	var seated := 0
 	var t := 0.0
+	var frames_left := 3
 	while t < 90.0:
 		seated = kb.walkers().filter(func(n: Npc) -> bool: return n.pose_now() == "sit").size()
 		if seated == 2:
 			break
+		# a few frames of them on the way, from beside the path
+		if frames_left > 0 and int(t) % 4 == 0 and not kb.walkers().is_empty():
+			frames_left -= 1
+			var n: Npc = kb.walkers()[0]
+			var side := n.global_basis.x.normalized() * 3.5
+			var at := Vector2(n.global_position.x + side.x, n.global_position.z + side.z)
+			player().global_position = Vector3(at.x, Topo.surface(at.x, at.y) + 0.05, at.y)
+			await look(n.global_position + Vector3(0, 0.6, 0))
+			await shot("children_on_the_way_%02d" % int(t))
 		await seconds(1.0)
 		t += 1.0
 	check(seated == 2, "after %.0f s %d of 2 children sit at the hearth" % [t, seated])
 	for i in kb.walkers().size():
 		var n: Npc = kb.walkers()[i]
 		check(not n.patrol.is_empty(), "child %d was put home, not walked there" % i)
+	await view("agora")
 	await shot("square_at_night")

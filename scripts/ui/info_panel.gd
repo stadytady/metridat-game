@@ -85,7 +85,7 @@ func _fill(d: Discovery) -> void:
 
 func _center() -> void:
 	_panel.reset_size()
-	_panel.position = ((Vector2(1920, 1080) - _panel.size) / 2.0).max(Vector2(40, 40))
+	_panel.position = UiStyle.centred(self, _panel.size)
 
 
 func _on_discovered(d: Discovery, _is_new: bool) -> void:

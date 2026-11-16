@@ -11,6 +11,20 @@ const HISTORY := Color("#7aa39b")
 const FICTION := Color("#d98b55")
 
 
+## The canvas the UI is laid out on. Stretch aspect "expand" keeps it 1080 high
+## and 1920 wide at 16:9, makes it taller on 16:10 (Steam Deck: 1920x1200) and
+## wider on 21:9 (2560x1080): centre on this, never on a literal 1920x1080.
+static func screen(n: Node) -> Vector2:
+	if n == null or not n.is_inside_tree():
+		return Vector2(1920, 1080)
+	return n.get_viewport().get_visible_rect().size
+
+
+## Where a panel of this size sits centred on the canvas, kept off the edges.
+static func centred(n: Node, size: Vector2) -> Vector2:
+	return ((screen(n) - size) / 2.0).max(Vector2(40, 40))
+
+
 static func panel() -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = BG

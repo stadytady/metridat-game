@@ -25,7 +25,7 @@ func _ready() -> void:
 	_card = PanelContainer.new()
 	_card.add_theme_stylebox_override("panel", UiStyle.panel())
 	_card.custom_minimum_size = CARD
-	_card.position = Vector2((1920 - CARD.x) / 2.0, (1080 - CARD.y) / 2.0)
+	_card.position = UiStyle.centred(self, CARD)
 	add_child(_card)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 14)
@@ -63,6 +63,8 @@ func _rule() -> Control:
 
 func open() -> void:
 	_refresh()
+	# the window may have changed since it was built (16:10, 21:9, a resize)
+	_card.position = UiStyle.centred(self, CARD)
 	visible = true
 	Game.ui_blocking = true
 
