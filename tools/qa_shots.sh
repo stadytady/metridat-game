@@ -7,7 +7,13 @@
 # index.html, so it can run over a folder tools/test.sh already filled.
 set -uo pipefail
 cd "$(dirname "$0")/.."
-out="$(realpath -m "${1:?output dir}")"; shift || true
+# checked here, not inside $(...): there a failed ${1:?} ends only the subshell,
+# and without set -e the run went on with an empty path into the repo root
+if [[ -z "${1:-}" ]]; then
+  echo "usage: tools/qa_shots.sh OUT_DIR [scenario ...]" >&2
+  exit 2
+fi
+out="$(realpath -m "$1")"; shift
 godot="${GODOT:-godot}"
 res="${RES:-1920x1080}"
 mkdir -p "$out"
