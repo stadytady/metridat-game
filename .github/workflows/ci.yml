@@ -139,3 +139,40 @@ jobs:
           name: panticapaeum-screenshots
           path: build/shots/*.png
           if-no-files-found: error
+
+  qa-shots:
+    # The scenarios again with the real renderer (lavapipe), so the report shows
+    # the frames they take: the watchman's round, the children going home, the
+    # torches on the wall. The test job already gated on them headless; this
+    # one adds the pictures to its report and uploads it as -full.
+    needs: test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v5
+      - name: Cache Godot
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/bin/godot
+          key: godot-bin-${{ env.GODOT_VERSION }}-linux-x86_64
+      - name: Install Godot and software Vulkan
+        run: |
+          tools/install-godot.sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq mesa-vulkan-drivers xvfb
+      - name: Take the test job's report
+        uses: actions/download-artifact@v4
+        with:
+          name: panticapaeum-qa-report
+          path: build/qa
+      - name: Scenarios with frames
+        run: |
+          godot --headless --path . --import >/dev/null 2>&1 || true
+          tools/qa_shots.sh build/qa
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: panticapaeum-qa-report-full
+          path: build/qa
+          if-no-files-found: warn

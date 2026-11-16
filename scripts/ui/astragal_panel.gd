@@ -106,7 +106,7 @@ func open() -> void:
 		(c as Container).queue_sort()
 	_panel.queue_sort()
 	_panel.reset_size()
-	_panel.position = ((Vector2(1920, 1080) - _panel.size) / 2.0).max(Vector2(40, 40))
+	_panel.position = UiStyle.centred(self, _panel.size)
 	Game.ui_blocking = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	_armed = not Input.is_action_pressed(&"interact")
@@ -186,7 +186,7 @@ func _on_settled() -> void:
 		verdict.text = tr(key)
 		_log.add_child(verdict)
 		_panel.reset_size()
-		_panel.position = ((Vector2(1920, 1080) - _panel.size) / 2.0).max(Vector2(40, 40))
+		_panel.position = UiStyle.centred(self, _panel.size)
 
 
 ## Whether a throw is still in the air (the walkthrough and tests wait on it).

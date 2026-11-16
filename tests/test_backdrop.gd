@@ -291,7 +291,19 @@ func test_the_watchman_has_somewhere_to_pace() -> void:
 		check(absf(p.y - Topo.surface(p.x, p.z)) < 0.01, "the watchman walks off the ground at %s" % p)
 		check(not B.on_house(houses, p.x, p.z, 0.4), "the watchman walks through a wall at %s" % p)
 	if route.size() >= 2:
-		check(route[0].distance_to(route[1]) > 4.0, "the watchman paces only %.1f m" % route[0].distance_to(route[1]))
+		var length := 0.0
+		for i in route.size() - 1:
+			length += route[i].distance_to(route[i + 1])
+		check(length > 10.0, "the watchman paces only %.1f m" % length)
+	# he has no collider: a line through a herm is him walking through the stone
+	for hm: Dictionary in B.crossing_herms(houses):
+		var q: Vector3 = hm.pos
+		for i in route.size() - 1:
+			var a := Vector2(route[i].x, route[i].z)
+			var b := Vector2(route[i + 1].x, route[i + 1].z)
+			var c := Geometry2D.get_closest_point_to_segment(Vector2(q.x, q.z), a, b)
+			check(c.distance_to(Vector2(q.x, q.z)) >= B.WATCH_HERM_CLEAR - 0.01,
+					"the watchman walks through the herm at %s (%.2f m off)" % [q, c.distance_to(Vector2(q.x, q.z))])
 
 
 ## Three smokes over the roofs, not one: each kind rises from some house, and

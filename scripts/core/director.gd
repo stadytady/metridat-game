@@ -674,7 +674,7 @@ func _inspect(player: CharacterBody3D, items: Dictionary, id: String) -> void:
 	var info: Node = _main().get_node("InfoPanel")
 	if not info.is_open() or not Game.ui_blocking:
 		_fail.append("info panel did not open for " + id)
-	var screen := Rect2(Vector2.ZERO, Vector2(1920, 1080))
+	var screen := Rect2(Vector2.ZERO, UiStyle.screen(info))
 	if not screen.encloses(info._panel.get_global_rect()):
 		_fail.append("info panel off screen for %s: %s" % [id, info._panel.get_global_rect()])
 	await _frames(2)
@@ -829,7 +829,7 @@ func _check_journal(expect_hints: int) -> void:
 	var c: Vector2i = j.counts()
 	if c.x != Game.total() or c.y != expect_hints:
 		_fail.append("journal: %d rows, %d hints; expected %d, %d" % [c.x, c.y, Game.total(), expect_hints])
-	if not Rect2(Vector2.ZERO, Vector2(1920, 1080)).encloses(j._panel.get_global_rect()):
+	if not Rect2(Vector2.ZERO, UiStyle.screen(j)).encloses(j._panel.get_global_rect()):
 		_fail.append("journal off screen: %s" % j._panel.get_global_rect())
 	j.close()
 	await _frames(2)

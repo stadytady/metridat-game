@@ -26,24 +26,27 @@ func _ready() -> void:
 	add_child(_bg)
 	_end = UiStyle.label("UI_THE_END", 96, GOLD)
 	_end.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_end.position = Vector2(0, 420)
-	_end.size = Vector2(1920, 120)
+	# full width at any aspect: the canvas is wider than 1920 on 21:9
+	_end.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	_end.position.y = 420
+	_end.size.y = 120
 	_end.modulate.a = 0.0
 	add_child(_end)
 	_credits = VBoxContainer.new()
 	_credits.add_theme_constant_override("separation", 26)
-	_credits.position = Vector2(0, 1100)
-	_credits.size = Vector2(1920, 400)
+	_credits.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	_credits.position.y = 1100
+	_credits.size.y = 400
 	for key: String in CREDITS:
 		var l := UiStyle.label(key, 30)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		l.custom_minimum_size = Vector2(1920, 0)
 		_credits.add_child(l)
 	add_child(_credits)
 	_keys = UiStyle.label("UI_END_KEYS", 24, UiStyle.MUTED)
 	_keys.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_keys.position = Vector2(0, 980)
-	_keys.size = Vector2(1920, 40)
+	_keys.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	_keys.position.y = 980
+	_keys.size.y = 40
 	_keys.modulate.a = 0.0
 	add_child(_keys)
 
