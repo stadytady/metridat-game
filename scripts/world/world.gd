@@ -72,6 +72,7 @@ static func viewpoints() -> Dictionary:
 		"dream_tomb": [preload("res://scripts/world/dream.gd").ORIGIN + preload("res://scripts/world/dream.gd").chamber_center() + Vector3(-0.9, 1.6, -1.7), preload("res://scripts/world/dream.gd").ORIGIN + preload("res://scripts/world/dream.gd").chamber_center() + Vector3(0, 0.6, 0.9)],
 		# the night watch on the town wall: the north wall from the park's edge, and a
 		# sentry on his roof (tools/shots.sh DIR --only=watch,watch_roof --time=1)
+		"saltery": [Vector3(63.0, Topo.terrain(63.0, 22.2) + 1.7, 22.2), Vector3(60.2, Topo.terrain(60.2, 24.6) - 0.2, 24.6)],
 		"watch": [Vector3(-80.0, Topo.terrain(-80.0, 40.0) + 1.6, 40.0), Vector3(-72.2, Topo.terrain(-80.0, 40.0) + 1.0, 69.0)],
 		"watch_roof": [roof + Vector3(2.6, 1.6, -2.4), roof + Vector3(0, 1.2, 1.9)],
 		# the coin striker's room by the mule's pen: in at the door, and from the street

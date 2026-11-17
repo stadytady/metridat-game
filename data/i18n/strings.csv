@@ -332,3 +332,22 @@ UI_KEYS_RESET,Default keys,Клавиши по умолчанию
 UI_BACK,Back,Назад
 UI_PRESS_KEY,Press a key…,Нажмите клавишу…
 UI_FOV,Field of view  %d°,Поле зрения  %d°
+UI_MINT_TITLE,Strike a stater,Отчеканить статер
+UI_MINT_HINT,"Sosias holds the punch on the blank. Strike when the needle crosses his mark: one blow, one coin.","Сосий держит штемпель на кружке. Бей, когда стрелка проходит его метку: один удар — одна монета."
+UI_MINT_KEYS,[{use}] Strike   [{back}] Leave,[{use}] Ударить   [{back}] Уйти
+UI_MINT_AGAIN,[{use}] Three more blanks   [{back}] Leave,[{use}] Ещё три кружка   [{back}] Уйти
+UI_MINT_CRISP,Crisp,Чётко
+UI_MINT_DOUBLED,Two noses,Два носа
+UI_MINT_OFF_CENTRE,Off centre,Со сдвигом
+UI_MINT_DONE,Sosias weighs them on his palm and drops them back into the pot.,Сосий взвешивает их на ладони и бросает обратно в горшок.
+UI_MINT_DONE_CRISP,Sosias holds one up to the light: 'That one could go to the treasury.',Сосий подносит одну к свету: «Вот эту хоть в казну».
+LOC_STRIKER_CHOICE_4,Can I strike one?,А мне можно ударить?
+LOC_STRIKER_TRY_1,"Take the hammer. I hold the punch; you watch my mark, not my fingers.","Бери молот. Штемпель держу я, а ты смотри на метку, а не на мои пальцы."
+LOC_STRIKER_TRY_2,"Three blanks, one blow each. Whatever comes out goes back into the pot, so don't grow fond of it.","Три кружка, по удару на каждый. Что выйдет — всё обратно в горшок, так что не привязывайся."
+ACH_CRISP_STATER_NAME,Sosias's own hand,Рука Сосия
+ACH_CRISP_STATER_DESC,Strike a crisp stater at the coin striker's anvil.,Отчеканить чёткий статер на наковальне чеканщика.
+D_SALT_FISH_TITLE,Salted fish in a jar,Солёная рыба в кувшине
+D_SALT_FISH_DESCRIPTION,"A squat clay jar packed to the brim with coarse salt. The tails of small fish stick out of the top, laid in rows like roof tiles.","Приземистый глиняный кувшин, доверху набитый крупной солью. Сверху торчат хвосты мелкой рыбы, уложенной рядами, как черепица."
+D_SALT_FISH_HISTORY,"Salted fish, tarichos, was one of the goods the Black Sea sent south. Polybius, writing in the 2nd century BCE, counts honey, wax and salted fish among what the Pontus supplied the Greeks in plenty, taking olive oil and wine in return. Near Panticapaeum the remains of the trade are the stone salting vats of Tyritake and Myrmekion, about thirty of them at Tyritake alone, lined with waterproof plaster; but they were built in the 1st to 3rd centuries CE, long after this game's time. How much Bosporan salt fish reached the Aegean before then is still argued over, because the jars it travelled in are hard to tell from others.","Солёная рыба, тарихос, была одним из товаров, которые Чёрное море отправляло на юг. Полибий во II веке до н. э. называет мёд, воск и солёную рыбу среди того, чем Понт в изобилии снабжал греков, получая взамен оливковое масло и вино. Под Пантикапеем от этой торговли остались каменные засолочные ванны Тиритаки и Мирмекия — только в Тиритаке их около тридцати, обмазанных водонепроницаемым раствором. Но построены они в I–III веках н. э., много позже времени игры. Сколько боспорской солёной рыбы доходило до Эгеиды раньше, до сих пор спорят: кувшины, в которых её везли, трудно отличить от прочих."
+D_SALT_FISH_NARRATIVE,"The two small salting troughs on the beach, the salt heap and the woman who lays the catch down in it are the game's guess at how salting looked before the big vats: smaller, by the boats. Glaukos's sardines in this jar are fiction too.","Два небольших засолочных корыта на берегу, соляная куча и женщина, перекладывающая улов солью, — догадка игры о том, как солили до больших ванн: мельче и прямо у лодок. Сардины Главка в этом кувшине — тоже вымысел."
+D_SALT_FISH_HINT,"On the beach past the fisherman's camp, where the catch is laid down in salt.","На берегу за стоянкой рыбака, там, где улов перекладывают солью."

@@ -45,6 +45,9 @@ var _door_lamp: WallLamp
 var _shelf_light: OmniLight3D
 var _shelf_flame: GPUParticles3D
 var hits := 0
+## The player's own strike at the anvil (MintPanel), while it is open.
+var mint_panel: CanvasLayer
+var _wants_panel := false
 
 
 ## The room's frame: origin at the middle of the front wall on the ground,
@@ -100,6 +103,8 @@ func _ready() -> void:
 	add_child(kit.build("Mint"))
 	_lamps(info)
 	_step(0.0)
+	# "may I strike one?": the panel waits until the talk has closed
+	Game.mint_requested.connect(func() -> void: _wants_panel = true)
 
 
 ## A point inside, in the room's frame, on its floor.
@@ -235,6 +240,20 @@ func _lamps(info: Dictionary) -> void:
 
 func _process(delta: float) -> void:
 	_step(delta)
+	if _wants_panel and mint_panel == null and Game.can_interact_now():
+		_wants_panel = false
+		open_mint()
+
+
+## The blank on the anvil, his punch on it, the player's hammer: MintPanel.
+func open_mint() -> CanvasLayer:
+	mint_panel = preload("res://scripts/ui/mint_panel.gd").new()
+	mint_panel.name = "MintPanel"
+	get_tree().current_scene.add_child(mint_panel)
+	mint_panel.closed.connect(func() -> void: mint_panel = null)
+	mint_panel.struck.connect(func(q: String) -> void: Game.coin_struck.emit(q))
+	mint_panel.open()
+	return mint_panel
 
 
 ## One tick: lamps follow the town's dusk; by day the hammer swings and every
@@ -248,7 +267,8 @@ func _step(delta: float) -> void:
 		_shelf_flame.visible = night
 		_shelf_flame.emitting = night
 	# he puts the hammer down to talk, and for the night
-	var resting := _night or (Game.ui_blocking and _talking())
+	# (and while the player strikes: then he holds the punch, the player the hammer)
+	var resting := _night or (Game.ui_blocking and _talking()) or mint_panel != null
 	if resting:
 		_arm(0.0)
 		return

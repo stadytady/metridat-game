@@ -7,7 +7,7 @@ const CSV := "res://data/i18n/strings.csv"
 
 
 func test_five_well_formed_ids() -> void:
-	check(A.LIST.size() == 8, "expected 8 achievements, got %d" % A.LIST.size())
+	check(A.LIST.size() == 9, "expected 9 achievements, got %d" % A.LIST.size())
 	var steam := RegEx.create_from_string("^ACH_[A-Z0-9_]+$")
 	for id: String in A.LIST:
 		check(steam.search(id) != null, "%s is not a Steam-friendly API name" % id)
@@ -26,6 +26,14 @@ func test_the_quiet_ones() -> void:
 	check(not A.again_earned({}), "no talks at all counts as again")
 	check(A.night_earned(A.NIGHT_SECONDS), "a full minute does not count")
 	check(not A.night_earned(A.NIGHT_SECONDS - 1.0), "one second short already counts")
+
+
+## Only a crisp strike at Sosias's anvil earns his hand: two noses do not.
+func test_a_crisp_stater_earns_it() -> void:
+	check(A.stater_earned("crisp"), "a crisp stater does not earn it")
+	for q: String in ["doubled", "off_centre", ""]:
+		check(not A.stater_earned(q), "a %s stater earns it" % q)
+	check(A.stater_earned(MintGame.quality(MintGame.TRUE)), "a true blow's coin is not the one that earns it")
 
 
 func test_progress_rules() -> void:

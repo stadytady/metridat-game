@@ -38,6 +38,26 @@ const CORMORANT_SAND := Vector2(65.0, 40.2)
 const CORMORANT_SAND_R := 2.2
 const CORMORANT_ROCKS := [Vector3(66.9, 0.0, 38.9), Vector3(67.4, 0.0, 41.6)]
 const CORMORANTS_ON_SAND := 3
+## The salting place south of the camp: two shallow plastered troughs dug into
+## the shingle, a heap of salt, and a woman laying the catch down in it. Small
+## and by the boats - the game's guess at salting before the great vats of
+## Tyritake and Myrmekion, which came centuries later (see the salt_fish find).
+## Each trough: centre (x, z); all are TROUGH_SIZE (x by z), walls TROUGH_WALL.
+const TROUGHS := [Vector2(60.4, 24.0), Vector2(60.4, 25.6)]
+const TROUGH_SIZE := Vector2(2.2, 1.2)
+const TROUGH_WALL := 0.12
+## The rim stands this far above the mean ground under a trough: dug into the
+## slope, so the uphill side is nearly flush and the downhill one shows a little
+## wall, as a pit lined with plaster would, not a box set on the beach.
+const TROUGH_RIM := 0.28
+const SALT_HEAP := Vector2(58.4, 22.5)
+const SALT_JAR := Vector2(62.15, 25.7)
+## The salter's round: [x, z, pose, pause s, facing yaw deg]: a scoop at the
+## heap, then bent over the near trough laying fish and salt in it.
+const SALTER_ROUTE := [
+	[58.95, 22.95, "pick", 4.0, 51.0],
+	[60.4, 22.85, "pick", 7.0, 180.0],
+]
 ## The beach's own boulders keep this far off the colony (built into a scratch
 ## kit, as on the camp, so the rng and every other rock stay where they were).
 const CORMORANT_CLEAR := 6.0
@@ -61,6 +81,7 @@ func _ready() -> void:
 	_baskets(kit, rng)
 	_fire_ring(kit, rng)
 	_cormorant_rocks(kit, rng)
+	_saltery(kit)  # after every rng draw: the rocks stay where they were
 	add_child(kit.build("Camp", &"dirt"))
 	_cormorants()
 	spawn_quest_item("hook", Vector3(LOST_HOOK.x, ground(LOST_HOOK) + 0.01, LOST_HOOK.y), 60.0)
@@ -68,6 +89,8 @@ func _ready() -> void:
 	_fire()
 	_fisherman()
 	spawn_inspectable("net_sinkers", Vector3(SINKERS.x, ground(SINKERS) + 0.36, SINKERS.y), 20.0)
+	spawn_inspectable("salt_fish", Vector3(SALT_JAR.x, ground(SALT_JAR), SALT_JAR.y), -60.0)
+	_salter()
 
 
 ## The drying rack: two poles and a bar, and a net thrown over the bar. It
@@ -221,6 +244,84 @@ static func _fish_mesh() -> ArrayMesh:
 	kit.box("fish", Vector3.ZERO, Vector3(0.3, 0.05, 0.07), [])
 	kit.box("fish", Vector3(-0.17, 0, 0), Vector3(0.05, 0.04, 0.09), [])  # tail
 	return kit.commit()
+
+
+## A trough's rim height: level, over the mean of its four corners.
+static func trough_rim(c: Vector2) -> float:
+	var sum := 0.0
+	for sx: float in [-0.5, 0.5]:
+		for sz: float in [-0.5, 0.5]:
+			sum += Topo.terrain(c.x + sx * TROUGH_SIZE.x, c.y + sz * TROUGH_SIZE.y)
+	return sum / 4.0 + TROUGH_RIM
+
+
+## The troughs, level on the sloping shingle (their walls run down into it), the
+## near one full of fish laid head to tail on salt, the far one under planks;
+## and the salt heap beside them. No rng: the camp's rocks keep their draws.
+func _saltery(kit: MeshKit) -> void:
+	for i in TROUGHS.size():
+		var c: Vector2 = TROUGHS[i]
+		var rim := trough_rim(c)
+		var foot := Topo.lowest_ground(c.x, c.y, maxf(TROUGH_SIZE.x, TROUGH_SIZE.y) * 0.6) - 0.15
+		var h := rim - foot
+		var hx := TROUGH_SIZE.x / 2.0
+		var hz := TROUGH_SIZE.y / 2.0
+		var w := TROUGH_WALL
+		for sz: float in [-1.0, 1.0]:
+			kit.box("plaster", Vector3(c.x, foot + h / 2.0, c.y + sz * (hz - w / 2.0)), Vector3(TROUGH_SIZE.x, h, w))
+		for sx: float in [-1.0, 1.0]:
+			kit.box("plaster", Vector3(c.x + sx * (hx - w / 2.0), foot + h / 2.0, c.y), Vector3(w, h, TROUGH_SIZE.y - w * 2.0))
+		# the salt inside, a hand below the rim
+		var fill := rim - 0.1
+		kit.box("plaster", Vector3(c.x, (foot + fill) / 2.0, c.y), Vector3(TROUGH_SIZE.x - w * 2.0, fill - foot, TROUGH_SIZE.y - w * 2.0), ["bottom"])
+		if i == 0:
+			# the top layer: fish side by side, head to tail, in four rows
+			for row in 4:
+				for k in 7:
+					var x := c.x - hx + w + 0.16 + float(k) * 0.27
+					var z := c.y - hz + w + 0.14 + float(row) * 0.26
+					kit.box("fish", Vector3(x, fill + 0.02, z + (0.03 if k % 2 == 0 else -0.03)), Vector3(0.24, 0.04, 0.07), ["bottom"])
+		else:
+			# covered: planks laid across, the last one left off
+			for k in 5:
+				var x := c.x - hx + 0.22 + float(k) * 0.4
+				kit.box("wood", Vector3(x, rim + 0.02, c.y), Vector3(0.34, 0.04, TROUGH_SIZE.y + 0.06))
+	# the salt heap, grey-white and lumpy
+	var hb := Vector3(SALT_HEAP.x, Topo.lowest_ground(SALT_HEAP.x, SALT_HEAP.y, 0.6) - 0.05, SALT_HEAP.y)
+	kit.lathe("plaster", PackedVector2Array([Vector2(0.62, 0.0), Vector2(0.45, 0.28), Vector2(0.2, 0.5), Vector2(0.04, 0.58)]),
+			7, hb, 1.0, false, "", true)
+
+
+## The woman at the troughs: a scoop of salt from the heap, then bent over the
+## near trough laying it on the fish. Not talkable, and no collider: she works
+## off the paths, and the shingle is the player's to cross.
+func _salter() -> void:
+	var n: Npc = NPC.new()
+	n.name = "Salter"
+	n.npc_id = "salter"
+	n.talkable = false
+	n.solid = false
+	n.follow_ground = true
+	n.stops_for_player = false
+	n.look = {"woman": true, "kerchief": "cloth", "skirt": "long", "cloth": "chiton_ochre"}
+	var home := Vector3(SALTER_ROUTE[0][0], 0, SALTER_ROUTE[0][1])
+	n.position = Vector3(home.x, Topo.terrain(home.x, home.z), home.z)
+	var pts := PackedVector3Array()
+	var poses := PackedStringArray()
+	var pauses := PackedFloat32Array()
+	var faces := PackedFloat32Array()
+	for r: Array in SALTER_ROUTE:
+		pts.append(Vector3(r[0], 0, r[1]) - home)
+		poses.append(r[2])
+		pauses.append(r[3])
+		faces.append(r[4])
+	n.patrol = pts
+	n.patrol_poses = poses
+	n.patrol_pauses = pauses
+	n.patrol_faces = faces
+	n.patrol_speed = 0.45
+	n.pose = "pick"
+	add_child(n)
 
 
 ## His round as Npc patrol data, home at the stone.

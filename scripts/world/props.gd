@@ -47,6 +47,8 @@ static func build(name: String) -> MeshKit:
 			boat(kit)
 		"sinkers":
 			sinkers(kit)
+		"salt_fish":
+			salt_fish(kit)
 		"hekataion":
 			hekataion(kit)
 		"mirror":
@@ -374,6 +376,27 @@ static func sinkers(kit: MeshKit) -> void:
 	for x: float in [-0.08, 0.1]:
 		var p := Vector3(x, 0.0, 0.11 * signf(x))
 		kit.lathe("clay", PackedVector2Array([Vector2(0.035, 0.0), Vector2(0.015, 0.07)]), 4, p, 1.0, true, "clay", true)
+
+
+## A squat jar of salted fish: coarse salt to the brim and the tails of small
+## fish standing out of it in rows, heads down, as they were packed. Origin on
+## the ground, about 0.4 m tall.
+static func salt_fish(kit: MeshKit) -> void:
+	kit.lathe("clay", PackedVector2Array([
+		Vector2(0.09, 0.0), Vector2(0.16, 0.08), Vector2(0.18, 0.2), Vector2(0.15, 0.32),
+		Vector2(0.12, 0.36), Vector2(0.13, 0.38)]), 8, Vector3.ZERO, 1.0, true, "clay", false)
+	# the salt, a little below the lip, and heaped in the middle
+	kit.lathe("plaster", PackedVector2Array([Vector2(0.12, 0.35), Vector2(0.06, 0.375), Vector2(0.0, 0.385)]),
+			8, Vector3.ZERO, 1.0, false, "plaster", false)
+	for row in 3:
+		for k in 3:
+			var x := -0.06 + 0.06 * float(k)
+			var z := -0.05 + 0.05 * float(row)
+			# the tail out of the salt: two thin fins in a V
+			for side: float in [-1.0, 1.0]:
+				kit.box("fish", Vector3(x + side * 0.008, 0.405, z), Vector3(0.008, 0.04, 0.026), [])
+	# a pinch of salt spilt at its foot
+	kit.box("plaster", Vector3(0.17, 0.004, 0.08), Vector3(0.07, 0.008, 0.05), ["bottom"])
 
 
 ## A bronze fish hook on a scrap of line, lying on the ground.
