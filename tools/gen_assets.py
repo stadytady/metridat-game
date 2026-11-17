@@ -711,7 +711,7 @@ def materials():
 SR = 22050
 
 
-LOOPS = {"wind", "waves", "fire", "dream_drone", "market", "wheel", "cicada"}
+LOOPS = {"wind", "waves", "fire", "dream_drone", "market", "wheel", "cicada", "symposium"}
 
 
 def write_wav(name: str, x: np.ndarray) -> None:
@@ -1345,7 +1345,54 @@ def main() -> None:
     bark(np.random.default_rng(541))
     hum(np.random.default_rng(542))
     astragal(np.random.default_rng(543))
+    # the supper party behind a door on the Street of Jars, after dark
+    symposium(np.random.default_rng(544))
     print(f"textures: {len(TEXTURES)}, materials: {len(MATERIALS)}, audio: {len(list(AUD.glob('*.wav')))}")
+
+
+def symposium(rng):
+    """A supper party heard through a door at night: a few men talking over one
+    another, a laugh now and then, and the aulos - a double pipe, one reed
+    holding a drone while the other plays a slow tune in a minor mode, reedy
+    (odd harmonics), with a breath of vibrato. Ten seconds, looped: the talk is
+    gated in whole cycles over the loop and the tune fades in and out at the
+    join, so it loops without a seam."""
+    dur = 10.0
+    n = int(SR * dur)
+    t = np.arange(n) / SR
+    talk = np.zeros(n)
+    for i in range(5):
+        f = rng.uniform(150, 420)
+        band = bandpass(rng.standard_normal(n), f * 0.75, f * 1.4)
+        cycles = int(rng.integers(3, 11))
+        syll = 0.5 + 0.5 * np.sin(2 * np.pi * int(rng.integers(30, 45)) * t / dur + rng.uniform(0, 6.3))
+        gate = np.clip(np.sin(2 * np.pi * cycles * t / dur + rng.uniform(0, 6.3)) * 1.4, 0, 1)
+        talk += band * gate * syll * rng.uniform(0.4, 1.0)
+    laugh = np.zeros(n)
+    for _ in range(2):
+        at = int(rng.uniform(0.5, dur - 1.5) * SR)
+        ln = int(SR * 0.9)
+        tt = np.arange(ln) / SR
+        f0 = rng.uniform(170, 240)
+        burst = (np.sign(np.sin(2 * np.pi * 6.0 * tt)) * 0.5 + 0.5) * np.exp(-tt * 2.5)
+        laugh[at:at + ln] += np.sin(2 * np.pi * f0 * tt) * burst * 0.6
+    pipe = np.zeros(n)
+    # a slow tune: (start s, length s, Hz) - D, F, E, D, C, D in a minor mode
+    tune = ((0.6, 1.5, 293.7), (2.1, 1.1, 349.2), (3.2, 1.4, 329.6), (4.6, 1.6, 293.7), (6.2, 1.2, 261.6), (7.4, 1.9, 293.7))
+    for a, ln_s, f0 in tune:
+        i0, i1 = int(a * SR), int((a + ln_s) * SR)
+        tt = t[i0:i1] - a
+        vib = 1 + 0.006 * np.sin(2 * np.pi * 5.5 * tt)
+        ph = 2 * np.pi * np.cumsum(f0 * vib) / SR
+        tone = np.sin(ph) + 0.45 * np.sin(3 * ph) + 0.25 * np.sin(5 * ph) + 0.12 * np.sin(7 * ph)
+        env = np.minimum(1, tt / 0.08) * np.minimum(1, (ln_s - tt) / 0.15)
+        pipe[i0:i1] += tone * env
+    # the drone pipe on D below, fading in and out at the loop's join
+    drone_env = np.minimum(1, t / 0.4) * np.minimum(1, (dur - t) / 0.4)
+    dph = 2 * np.pi * 146.8 * t
+    pipe += (np.sin(dph) + 0.4 * np.sin(3 * dph) + 0.2 * np.sin(5 * dph)) * 0.45 * drone_env
+    # all of it behind a wall: the top end muffled
+    write_wav("symposium", norm(lowpass(talk * 0.55 + laugh + pipe * 0.5, 1800), 0.45))
 
 
 if __name__ == "__main__":
