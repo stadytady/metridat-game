@@ -49,6 +49,8 @@ static func build(name: String) -> MeshKit:
 			sinkers(kit)
 		"salt_fish":
 			salt_fish(kit)
+		"gold_plaques":
+			gold_plaques(kit)
 		"hekataion":
 			hekataion(kit)
 		"mirror":
@@ -397,6 +399,23 @@ static func salt_fish(kit: MeshKit) -> void:
 				kit.box("fish", Vector3(x + side * 0.008, 0.405, z), Vector3(0.008, 0.04, 0.026), [])
 	# a pinch of salt spilt at its foot
 	kit.box("plaster", Vector3(0.17, 0.004, 0.08), Vector3(0.07, 0.008, 0.05), ["bottom"])
+
+
+## A handful of thin gold plaques for sewing on a coat, on a scrap of fur: each
+## a square with a raised border and a deer leaping across it, two of them
+## turned over. Origin on the ground, flat.
+static func gold_plaques(kit: MeshKit) -> void:
+	kit.box("fur", Vector3(0, 0.005, 0), Vector3(0.26, 0.01, 0.2), ["bottom"])
+	var spots := [Vector2(-0.07, -0.05), Vector2(0.0, -0.06), Vector2(0.07, -0.04), Vector2(-0.06, 0.04), Vector2(0.02, 0.03), Vector2(0.08, 0.06)]
+	for i in spots.size():
+		var p: Vector2 = spots[i]
+		var c := Vector3(p.x, 0.012, p.y)
+		kit.box("gold", c, Vector3(0.045, 0.004, 0.045), ["bottom"])
+		if i % 3 != 2:  # face up: a border and the deer
+			kit.box("dark", c + Vector3(0, 0.0025, 0), Vector3(0.03, 0.001, 0.006), [])  # body
+			kit.box("dark", c + Vector3(0.012, 0.0025, -0.008), Vector3(0.004, 0.001, 0.012), [])  # neck and head
+			kit.box("dark", c + Vector3(-0.01, 0.0025, 0.009), Vector3(0.004, 0.001, 0.01), [])  # legs
+			kit.box("dark", c + Vector3(0.008, 0.0025, 0.009), Vector3(0.004, 0.001, 0.01), [])
 
 
 ## A bronze fish hook on a scrap of line, lying on the ground.

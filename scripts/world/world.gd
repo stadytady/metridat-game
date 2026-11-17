@@ -72,6 +72,9 @@ static func viewpoints() -> Dictionary:
 		"dream_tomb": [preload("res://scripts/world/dream.gd").ORIGIN + preload("res://scripts/world/dream.gd").chamber_center() + Vector3(-0.9, 1.6, -1.7), preload("res://scripts/world/dream.gd").ORIGIN + preload("res://scripts/world/dream.gd").chamber_center() + Vector3(0, 0.6, 0.9)],
 		# the night watch on the town wall: the north wall from the park's edge, and a
 		# sentry on his roof (tools/shots.sh DIR --only=watch,watch_roof --time=1)
+		"altar": [Vector3(-86.4, Topo.HILL_PLATFORM_TOP + 1.6, -1.6), Vector3(-83.6, Topo.HILL_PLATFORM_TOP + 0.9, -6.0)],
+		"scythian": [Vector3(30.4, Topo.AGORA_H + 1.6, 5.4), Vector3(32.8, Topo.AGORA_H + 0.9, 8.4)],
+		"steppe_riders": [Vector3(-97.5, Topo.HILL_PLATFORM_TOP + 1.6, 0.0), Vector3(-120.0, Topo.terrain(-120.0, 3.0) + 1.2, 3.0)],
 		"saltery": [Vector3(63.0, Topo.terrain(63.0, 22.2) + 1.7, 22.2), Vector3(60.2, Topo.terrain(60.2, 24.6) - 0.2, 24.6)],
 		"watch": [Vector3(-80.0, Topo.terrain(-80.0, 40.0) + 1.6, 40.0), Vector3(-72.2, Topo.terrain(-80.0, 40.0) + 1.0, 69.0)],
 		"watch_roof": [roof + Vector3(2.6, 1.6, -2.4), roof + Vector3(0, 1.2, 1.9)],

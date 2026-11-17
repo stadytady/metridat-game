@@ -99,6 +99,12 @@ const POSES := {
 		"l_shoulder": Vector3(26, 0, 12), "r_shoulder": Vector3(26, 0, -12), "l_elbow": Vector3(58, 0, 0), "r_elbow": Vector3(58, 0, 0)},
 	# on a low stool at a warp-weighted loom: back straight, both hands up at the
 	# warp, the knees tucked in under the cloth beam
+	# astride a horse: thighs forward and wide round the barrel, shins hanging
+	# down its flanks, hands low before the chest on the reins
+	"ride": {"chest": Vector3(-6, 0, 0), "head": Vector3(-4, 0, 0),
+		"l_shoulder": Vector3(38, 0, 8), "r_shoulder": Vector3(38, 0, -8),
+		"l_elbow": Vector3(52, 0, 0), "r_elbow": Vector3(52, 0, 0),
+		"l_hip": Vector3(62, 0, 32), "r_hip": Vector3(62, 0, -32), "l_knee": Vector3(-78, 0, 0), "r_knee": Vector3(-78, 0, 0)},
 	"weave": {"chest": Vector3(-8, 0, 0), "head": Vector3(-10, 0, 0),
 		"l_shoulder": Vector3(74, 0, 12), "r_shoulder": Vector3(74, 0, -12),
 		"l_elbow": Vector3(34, 0, 0), "r_elbow": Vector3(34, 0, 0),
@@ -106,9 +112,10 @@ const POSES := {
 }
 
 ## Pelvis height for a pose (seated figures sit on something low).
+## (The rider's "ride" sits on a horse: Rider puts the pelvis on its back.)
 const SEAT := {"stand": 0.92, "potter": 0.46, "turner": 0.32, "mender": 0.4, "sleep": 0.12, "baker": 0.5, "carry": 0.92, "declaim": 0.92, "draw": 0.92,
 	"walk": 0.92, "think": 0.92, "spin": 0.92, "pick": 0.86, "stoke": 0.5, "sit_think": 0.34,
-	"head_carry": 0.92, "pour": 0.92, "sit": 0.3, "weave": 0.54, "gut": 0.4, "strike": 0.46}
+	"head_carry": 0.92, "pour": 0.92, "sit": 0.3, "weave": 0.54, "gut": 0.4, "strike": 0.46, "ride": 0.92}
 
 
 ## How a person looks: "woman", "beard" (0 none, 1 short, 2 full), "hair"
@@ -116,6 +123,10 @@ const SEAT := {"stand": 0.92, "potter": 0.46, "turner": 0.32, "mender": 0.4, "sl
 ## left the plain "chiton"), "kerchief" (its cloth), "skirt" ("short" tunic, "long" to the
 ## ankles, "none" when the caller dresses the legs itself), "shroud" (no face
 ## parts: a hood goes over the head).
+## Scythian dress, as Herodotus (7.64) and the Kul-Oba electrum vessel show it:
+## "trousers" (their cloth: legs covered to soft "boots"), "sleeves" (a coat with
+## long sleeves to the wrist, belted over a short skirt) and "hood" (a pointed
+## cap, its cloth). Long hair falls from under the hood.
 const LOOKS := {
 	"potter": {"beard": 2, "hair": 1, "cloth": "chiton_ochre"},
 	"turner": {"beard": 0, "hair": 0},
@@ -127,6 +138,8 @@ const LOOKS := {
 	"baker": {"woman": true, "kerchief": "cloth", "skirt": "long", "cloth": "chiton_dark"},
 	"water_carrier": {"woman": true, "kerchief": "chiton_dark", "skirt": "long", "cloth": "chiton_blue"},
 	"cottage_woman": {"woman": true, "kerchief": "chiton_dark", "skirt": "long", "cloth": "chiton_red"},
+	"scythian": {"beard": 2, "hair": 1, "cloth": "chiton_red", "trousers": "chiton_blue", "sleeves": true, "hood": "fleece"},
+	"scythian_rider": {"beard": 2, "hair": 1, "cloth": "chiton_dark", "trousers": "chiton_ochre", "sleeves": true, "hood": "fur"},
 }
 const DYES := ["chiton", "chiton_red", "chiton_blue", "chiton_ochre"]
 const FACES := ["face_bare", "face_short", "face_beard", "face_woman"]
@@ -201,17 +214,32 @@ static func _segment(kit: MeshKit, name: String, cloth: String, look: Dictionary
 			kit.box("skin", Vector3(0, 0.12, -0.118), Vector3(0.035, 0.05, 0.025), [])  # nose
 			_hair(kit, look)
 		"l_shoulder", "r_shoulder":
-			kit.lathe("skin", PackedVector2Array([Vector2(0.038, -0.3), Vector2(0.046, 0.0)]), 6, Vector3.ZERO, 1.0, true, "", true)
-			# a short sleeve of the tunic over the top of the arm
-			kit.lathe(cloth, PackedVector2Array([Vector2(0.058, -0.13), Vector2(0.06, 0.03)]), 6, Vector3.ZERO, 1.0, true, "", true)
+			if look.get("sleeves", false):
+				# a coat sleeve to the elbow and on, a little fuller than the arm
+				kit.lathe(cloth, PackedVector2Array([Vector2(0.05, -0.3), Vector2(0.06, 0.03)]), 6, Vector3.ZERO, 1.0, true, "", true)
+			else:
+				kit.lathe("skin", PackedVector2Array([Vector2(0.038, -0.3), Vector2(0.046, 0.0)]), 6, Vector3.ZERO, 1.0, true, "", true)
+				# a short sleeve of the tunic over the top of the arm
+				kit.lathe(cloth, PackedVector2Array([Vector2(0.058, -0.13), Vector2(0.06, 0.03)]), 6, Vector3.ZERO, 1.0, true, "", true)
 		"l_elbow", "r_elbow":
-			kit.lathe("skin", PackedVector2Array([Vector2(0.03, -0.24), Vector2(0.038, 0.0)]), 6, Vector3.ZERO, 1.0, true, "", true)
+			kit.lathe(cloth if look.get("sleeves", false) else "skin",
+					PackedVector2Array([Vector2(0.034 if look.get("sleeves", false) else 0.03, -0.24), Vector2(0.042 if look.get("sleeves", false) else 0.038, 0.0)]),
+					6, Vector3.ZERO, 1.0, true, "", true)
 			kit.box("skin", Vector3(0, -0.285, -0.005), Vector3(0.05, 0.085, 0.03), [])  # hand
 		"l_hip", "r_hip":
-			kit.lathe("skin", PackedVector2Array([Vector2(0.052, -0.44), Vector2(0.068, 0.0)]), 6, Vector3.ZERO, 1.0, true, "", true)
+			var leg: String = look.get("trousers", "skin")
+			kit.lathe(leg, PackedVector2Array([Vector2(0.06 if leg != "skin" else 0.052, -0.44), Vector2(0.072 if leg != "skin" else 0.068, 0.0)]),
+					6, Vector3.ZERO, 1.0, true, "", true)
 		"l_knee", "r_knee":
-			kit.lathe("skin", PackedVector2Array([Vector2(0.036, -0.4), Vector2(0.05, 0.0)]), 6, Vector3.ZERO, 1.0, true, "", true)
-			kit.box("belt", Vector3(0, -0.415, -0.045), Vector3(0.075, 0.05, 0.2), [])  # a sandalled foot
+			var shin: String = look.get("trousers", "skin")
+			kit.lathe(shin, PackedVector2Array([Vector2(0.044 if shin != "skin" else 0.036, -0.4), Vector2(0.054 if shin != "skin" else 0.05, 0.0)]),
+					6, Vector3.ZERO, 1.0, true, "", true)
+			if look.has("trousers"):
+				# soft boots over the trouser legs, to mid-shin
+				kit.lathe("belt", PackedVector2Array([Vector2(0.05, -0.4), Vector2(0.052, -0.22)]), 6, Vector3.ZERO, 1.0, true, "", false)
+				kit.box("belt", Vector3(0, -0.415, -0.05), Vector3(0.085, 0.06, 0.21), [])
+			else:
+				kit.box("belt", Vector3(0, -0.415, -0.045), Vector3(0.075, 0.05, 0.2), [])  # a sandalled foot
 
 
 static func _hair(kit: MeshKit, look: Dictionary) -> void:
@@ -230,6 +258,26 @@ static func _hair(kit: MeshKit, look: Dictionary) -> void:
 		kit.box(kerchief, Vector3(0, 0.16, 0.108), Vector3(0.198, 0.13, 0.04), [])
 		kit.box("hair", Vector3(0, 0.03, 0.11), Vector3(0.15, 0.13, 0.045), [])
 		return
+	if look.has("hood"):
+		# the pointed cap: tight round the skull, rising to a soft point bent
+		# forward, side flaps over the ears; long hair down the back below it
+		var hood: String = look.hood
+		kit.box(hood, Vector3(0, 0.235, 0.012), Vector3(0.215, 0.09, 0.235), [])
+		kit.lathe(hood, PackedVector2Array([Vector2(0.1, 0.27), Vector2(0.06, 0.36), Vector2(0.015, 0.43)]), 6,
+				Vector3(0, 0.0, -0.01), 1.0, true, "", false)
+		for sx: float in [-1.0, 1.0]:
+			kit.box(hood, Vector3(sx * 0.105, 0.11, 0.02), Vector3(0.02, 0.2, 0.12), [])
+		kit.box("hair", Vector3(0, 0.07, 0.112), Vector3(0.17, 0.26, 0.05), [])
+	else:
+		_hair_style(kit, look)
+	match int(look.get("beard", 0)):
+		1:
+			kit.box("hair", Vector3(0, 0.02, -0.085), Vector3(0.16, 0.06, 0.05), [])
+		2:
+			kit.box("hair", Vector3(0, 0.0, -0.08), Vector3(0.19, 0.11, 0.07), [])
+
+
+static func _hair_style(kit: MeshKit, look: Dictionary) -> void:
 	match int(look.get("hair", 0)):
 		1:  # curly: fuller on top and over the ears
 			kit.box("hair", Vector3(0, 0.26, 0.02), Vector3(0.23, 0.09, 0.25), [])
@@ -240,11 +288,6 @@ static func _hair(kit: MeshKit, look: Dictionary) -> void:
 		_:  # cropped
 			kit.box("hair", Vector3(0, 0.25, 0.02), Vector3(0.21, 0.07, 0.23), [])
 			kit.box("hair", Vector3(0, 0.15, 0.1), Vector3(0.21, 0.16, 0.05), [])
-	match int(look.get("beard", 0)):
-		1:
-			kit.box("hair", Vector3(0, 0.02, -0.085), Vector3(0.16, 0.06, 0.05), [])
-		2:
-			kit.box("hair", Vector3(0, 0.0, -0.08), Vector3(0.19, 0.11, 0.07), [])
 
 
 ## The mysterious figure (the night street, the dream path): a standing body

@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=15
+type="Resource"
+uid="uid://cub7nfiiaghcs"
+path="res://.godot/imported/scythian.dialogue-c9189ea1dee80c46abb250a50419ce0e.tres"
+
+[deps]
+
+source_file="res://data/dialogues/scythian.dialogue"
+dest_files=["res://.godot/imported/scythian.dialogue-c9189ea1dee80c46abb250a50419ce0e.tres"]
+
+[params]
+
+defaults=true
