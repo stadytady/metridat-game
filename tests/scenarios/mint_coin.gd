@@ -15,10 +15,12 @@ func run() -> void:
 	await walk_to(Vector2(-1.0, 6.0))
 	await talk("striker", "LOC_STRIKER_CHOICE_4", 2)
 	step("the hammer")
-	var t := 0.0
-	while mint.mint_panel == null and t < 3.0:
-		await seconds(0.1)
-		t += 0.1
+	# The anvil waits for Game.can_interact_now(), which counts REARM_MS of
+	# wall-clock time after the talk closes; with --fixed-fps the game clock can
+	# run far faster than that, so the wait here is in real milliseconds too.
+	var deadline := Time.get_ticks_msec() + 3000
+	while mint.mint_panel == null and Time.get_ticks_msec() < deadline:
+		await frames(1)
 	var panel: CanvasLayer = mint.mint_panel
 	check(panel != null and panel.is_open(), "the anvil did not open after the talk")
 	if panel == null:
