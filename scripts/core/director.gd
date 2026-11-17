@@ -503,6 +503,13 @@ func _route() -> Array:
 	r.append(Vector2(64.3, 15.6))
 	r.append(Vector2(63.6, 14.4))
 	r.append("give:hook")
+	# south along the shingle to the salting troughs, the jar of salt fish by
+	# the far one, and back past the fire to the camp
+	r.append(Vector2(62.8, 17.2))
+	r.append(Vector2(63.2, 25.0))
+	r.append("salt_fish")
+	r.append(Vector2(62.8, 17.2))
+	r.append(Vector2(63.6, 14.4))
 	r.append(Vector2(56.0, 6.0))
 	# along the beach to the pier, out to the skipper by the gangway, and back
 	var px0 := Topo.pier_x0()

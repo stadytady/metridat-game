@@ -20,6 +20,7 @@ const LIST := {
 	"ACH_SILENT": ["ACH_SILENT_NAME", "ACH_SILENT_DESC", false],
 	"ACH_AGAIN": ["ACH_AGAIN_NAME", "ACH_AGAIN_DESC", false],
 	"ACH_NIGHT": ["ACH_NIGHT_NAME", "ACH_NIGHT_DESC", false],
+	"ACH_CRISP_STATER": ["ACH_CRISP_STATER_NAME", "ACH_CRISP_STATER_DESC", false],
 }
 
 ## How long the player has to stand in the city after dark for ACH_NIGHT.
@@ -42,6 +43,9 @@ func _ready() -> void:
 			_check())
 	Game.lamp_lit.connect(func(_lit: int, _total: int) -> void: _check())
 	Game.dream_changed.connect(func(_on: bool) -> void: _check())
+	Game.coin_struck.connect(func(q: String) -> void:
+		if stater_earned(q):
+			unlock("ACH_CRISP_STATER"))
 	_check()
 
 
@@ -71,6 +75,11 @@ static func silent_earned(heard: int, dreamed: bool) -> bool:
 ## Fedr has a second, shorter line for anyone who comes back after the first talk.
 static func again_earned(talks: Dictionary, npc := "actor") -> bool:
 	return int(talks.get(npc, 0)) >= 2
+
+
+## Three true blows at Sosias's anvil: a coin as clean as his own.
+static func stater_earned(quality: String) -> bool:
+	return quality == "crisp"
 
 
 static func night_earned(seconds: float) -> bool:

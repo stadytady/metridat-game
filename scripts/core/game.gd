@@ -10,6 +10,11 @@ signal settings_changed
 signal state_restored
 ## Save now (the pause menu's Quit asks before the tree goes away).
 signal save_requested
+## Sosias agreed to let the player strike a coin (striker.dialogue): Mint opens
+## the panel once the talk has closed.
+signal mint_requested
+## The player finished a coin at his anvil: "crisp", "fair" or "smudged".
+signal coin_struck(quality: String)
 ## The player put down the mouse for the pad or back: legends and texts redraw.
 signal device_changed
 
@@ -137,6 +142,11 @@ func time_target() -> float:
 	if prologue:
 		return prologue_hour
 	return DayCycle.target_for(found_count(), total())
+
+
+## From the striker's dialogue: "may I strike one?" - "go on".
+func request_mint() -> void:
+	mint_requested.emit()
 
 
 func quest_state(id: String) -> int:

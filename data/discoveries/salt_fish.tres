@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="Discovery" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/interaction/discovery.gd" id="1_d"]
+[ext_resource type="PackedScene" path="res://scenes/interactables/models/salt_fish.tscn" id="2_m"]
+
+[resource]
+script = ExtResource("1_d")
+id = &"salt_fish"
+title = "D_SALT_FISH_TITLE"
+location = "LOC_SHORE"
+description = "D_SALT_FISH_DESCRIPTION"
+history = "D_SALT_FISH_HISTORY"
+sources = "Polybius, Histories 4.38.4-5; V. F. Gaidukevich, Das Bosporanische Reich (1971); J. M. Højte, The Archaeological Evidence for Fish Processing in the Black Sea Region, in T. Bekker-Nielsen (ed.), Ancient Fishing and Fish Processing in the Black Sea Region (Black Sea Studies 2, 2005)."
+narrative = "D_SALT_FISH_NARRATIVE"
+hint = "D_SALT_FISH_HINT"
+model = ExtResource("2_m")
