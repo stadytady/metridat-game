@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="Discovery" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/interaction/discovery.gd" id="1_d"]
+[ext_resource type="PackedScene" path="res://scenes/interactables/models/gold_plaques.tscn" id="2_m"]
+
+[resource]
+script = ExtResource("1_d")
+id = &"gold_plaques"
+title = "D_GOLD_PLAQUES_TITLE"
+location = "LOC_AGORA"
+description = "D_GOLD_PLAQUES_DESCRIPTION"
+history = "D_GOLD_PLAQUES_HISTORY"
+sources = "Herodotus, Histories 7.64; From the Lands of the Scythians: Ancient Treasures from the Museums of the U.S.S.R. (Metropolitan Museum of Art, 1975); B. Piotrovsky, L. Galanina, N. Grach, Scythian Art (1987)."
+narrative = "D_GOLD_PLAQUES_NARRATIVE"
+hint = "D_GOLD_PLAQUES_HINT"
+model = ExtResource("2_m")

@@ -1,4 +1,4 @@
-[gd_scene load_steps=28 format=3]
+[gd_scene load_steps=30 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/world.gd" id="1_world"]
 [ext_resource type="Script" path="res://scripts/world/atmosphere.gd" id="2_atm"]
@@ -27,6 +27,8 @@
 [ext_resource type="Script" path="res://scripts/world/steppe.gd" id="25_steppe"]
 [ext_resource type="Script" path="res://scripts/world/park.gd" id="26_park"]
 [ext_resource type="Script" path="res://scripts/world/mint.gd" id="27_mint"]
+[ext_resource type="Script" path="res://scripts/world/scythians.gd" id="28_scyth"]
+[ext_resource type="Script" path="res://scripts/world/altar.gd" id="29_altar"]
 
 [node name="World" type="Node3D"]
 script = ExtResource("1_world")
@@ -99,6 +101,12 @@ script = ExtResource("24_harbour")
 
 [node name="Mint" type="Node3D" parent="."]
 script = ExtResource("27_mint")
+
+[node name="Scythians" type="Node3D" parent="."]
+script = ExtResource("28_scyth")
+
+[node name="Altar" type="Node3D" parent="."]
+script = ExtResource("29_altar")
 
 [node name="Lamps" type="Node3D" parent="."]
 script = ExtResource("14_lamps")

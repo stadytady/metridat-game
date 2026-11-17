@@ -376,6 +376,10 @@ func _route() -> Array:
 	# the actor rehearsing in the theatre, a few steps from the start
 	r.append(Vector2(-88.4, -0.8))
 	r.append("talk:actor")
+	# the priest at the altar of Apollo on the south side of the terrace
+	r.append(Vector2(-84.0, -3.5))
+	r.append("talk:priest")
+	r.append(Vector2(-86.5, 0.5))
 	# out through the north gate into the park, to the marble head by the walk
 	r.append(Vector2(-86.0, 6.6))
 	r.append(Vector2(-86.0, 10.4))
@@ -455,6 +459,12 @@ func _route() -> Array:
 	# bot still catches a shoulder on when the timing shifts by a few seconds
 	r.append(Vector2(16.2, 2.6))
 	r.append(Vector2(20.0, 2.4))
+	r.append(Vector2(30.0, 3.0))
+	# the trader from the steppe at the south-east corner, and the gold on his hide
+	r.append(Vector2(31.3, 6.2))
+	r.append("talk:scythian")
+	r.append(Vector2(31.2, 7.7))  # up to the hide, beside him
+	r.append("gold_plaques")
 	r.append(Vector2(30.0, 3.0))
 	# down the footpath to Myrto's house: talk at the oven, look into both rooms
 	r.append(Vector2(26.0, 9.6))

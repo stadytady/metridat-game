@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=15
+type="Resource"
+uid="uid://bag4ykr1lxvsc"
+path="res://.godot/imported/priest.dialogue-cb065ee3a2540cd103062ba4c6b826f8.tres"
+
+[deps]
+
+source_file="res://data/dialogues/priest.dialogue"
+dest_files=["res://.godot/imported/priest.dialogue-cb065ee3a2540cd103062ba4c6b826f8.tres"]
+
+[params]
+
+defaults=true

@@ -40,54 +40,69 @@ func _ready() -> void:
 	add_to_group(&"mule")
 	_t = randf() * 4.0
 	_rng.seed = 731
+	var parts := build_body(self)
+	_legs = parts.legs
+	_head = parts.head
+	_ear_l = _head
+	_tail = parts.tail
+
+
+## The animal's body under `root`, shared with the Scythians' horses: a barrel
+## on four legs, each leg on a hip of its own so it can walk, the neck and head
+## on a pivot at the withers and the tail on its own. A horse is the same build
+## with short ears ({"ears": 0.11}) and a heavier mane. Returns {legs: [hip,
+## ...], head, tail}.
+static func build_body(root: Node3D, opts: Dictionary = {}) -> Dictionary:
+	var ears: float = opts.get("ears", 0.26)
+	var mane: float = opts.get("mane", 0.06)
+	var legs: Array[Node3D] = []
 	var kit := MeshKit.new()
 	# barrel low and long, with a deeper chest and a rounded croup
 	kit.box("fur", Vector3(0, BODY_Y, 0.0), Vector3(0.46, 0.46, 1.05), [])
 	kit.box("fur", Vector3(0, BODY_Y + 0.02, -0.5), Vector3(0.42, 0.44, 0.36), [])
 	kit.box("fur", Vector3(0, BODY_Y, 0.5), Vector3(0.4, 0.4, 0.3), [])
-	add_child(kit.build("Mule"))
+	root.add_child(kit.build("Body"))
 	# four legs on hips of their own, so it can walk; dark hooves
 	for sx: float in [-0.15, 0.15]:
 		for sz: float in [-0.42, 0.44]:
 			var hip := Node3D.new()
 			hip.position = Vector3(sx, 0.97, sz)
-			add_child(hip)
+			root.add_child(hip)
 			var lk := MeshKit.new()
 			lk.box("fur", Vector3(0, -0.47, 0), Vector3(0.13, 0.95, 0.15), [])
 			lk.box("dark", Vector3(0, -0.94, 0), Vector3(0.15, 0.06, 0.17), [])
 			var lm := MeshInstance3D.new()
 			lm.mesh = lk.commit()
 			hip.add_child(lm)
-			_legs.append(hip)
+			legs.append(hip)
 	# neck and head on a pivot at the withers, so the head can hang into the hay
-	_head = Node3D.new()
-	_head.position = Vector3(0, BODY_Y + 0.16, -0.58)
-	add_child(_head)
+	var head := Node3D.new()
+	head.position = Vector3(0, BODY_Y + 0.16, -0.58)
+	root.add_child(head)
 	var hk := MeshKit.new()
 	hk.box("fur", Vector3(0, 0.1, -0.06), Vector3(0.2, 0.42, 0.24), [])  # neck
-	hk.box("hair", Vector3(0, 0.14, -0.19), Vector3(0.06, 0.34, 0.08), [])  # mane down the back of the neck
+	hk.box("hair", Vector3(0, 0.14, -0.19 + 0.06 - mane), Vector3(mane, 0.34, 0.08), [])  # mane down the back of the neck
 	hk.box("fur", Vector3(0, 0.24, -0.28), Vector3(0.17, 0.2, 0.36), [])  # skull
 	hk.box("fur", Vector3(0, 0.18, -0.48), Vector3(0.13, 0.14, 0.16), [])  # muzzle
 	hk.box("dark", Vector3(0, 0.16, -0.56), Vector3(0.09, 0.08, 0.04), [])  # nose
 	hk.box("dark", Vector3(0.075, 0.26, -0.3), Vector3(0.03, 0.03, 0.03), [])  # eyes
 	hk.box("dark", Vector3(-0.075, 0.26, -0.3), Vector3(0.03, 0.03, 0.03), [])
-	hk.box("fur", Vector3(0.06, 0.42, -0.2), Vector3(0.05, 0.26, 0.05), [])  # ears, long as a mule's
-	hk.box("fur", Vector3(-0.06, 0.42, -0.2), Vector3(0.05, 0.26, 0.05), [])
+	for sx: float in [0.06, -0.06]:
+		hk.box("fur", Vector3(sx, 0.29 + ears / 2.0, -0.2), Vector3(0.05, ears, 0.05), [])  # ears
 	var hm := MeshInstance3D.new()
 	hm.mesh = hk.commit()
-	_head.add_child(hm)
-	_ear_l = _head
-	# tail on its own pivot
-	_tail = Node3D.new()
-	# on the rear face of the rump, not buried in it
-	_tail.position = Vector3(0, BODY_Y + 0.12, TAIL_Z)
-	add_child(_tail)
+	head.add_child(hm)
+	# tail on its own pivot, on the rear face of the rump, not buried in it
+	var tail := Node3D.new()
+	tail.position = Vector3(0, BODY_Y + 0.12, TAIL_Z)
+	root.add_child(tail)
 	var tk := MeshKit.new()
 	tk.box("hair", Vector3(0, -0.28, 0.01), Vector3(0.055, 0.56, 0.055), [])
 	tk.box("dark", Vector3(0, -0.6, 0.02), Vector3(0.1, 0.14, 0.1), [])
 	var tm := MeshInstance3D.new()
 	tm.mesh = tk.commit()
-	_tail.add_child(tm)
+	tail.add_child(tm)
+	return {"legs": legs, "head": head, "tail": tail}
 
 
 ## The next place to go: mostly a tuft, sometimes the trough. Returns where

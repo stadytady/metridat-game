@@ -25,12 +25,12 @@ const DREAM := 1.25
 ## The prologue's hour: dusk the day before, the sun just down, lamps coming on.
 const PROLOGUE := 0.82
 ## The town's own lights (door lamps, braziers, lit windows, the pier's lantern)
-## come on from this hour: with fourteen finds, at the tenth (10/14 = 0.71), when
-## it is already getting dark; not at the ninth (0.64). Ships keep their own.
+## come on from this hour: with sixteen finds, at the eleventh (11/16 = 0.69),
+## when it is already getting dark; not at the tenth (0.625). Ships keep their own.
 ## The dusk is a fraction of the evening, not a counter, so a find can be added
 ## without moving it to a different part of the evening; the test reads it back.
 const LAMPS_ON := 0.65
-const LAMPS_ON_AT_FIND := 10
+const LAMPS_ON_AT_FIND := 11
 
 
 static func sample(t: float) -> Dictionary:
