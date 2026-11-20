@@ -14,6 +14,7 @@ extends RefCounted
 ##   at: Vector2 (x, z) where the player stands, on Topo.surface
 ##   look: Vector3 the player looks at        pad: true to hold the gamepad
 ##   lang: "en" / "ru" (not saved)            timeout: seconds (default 120)
+##   weather: Game.weather_seed (0, the default, is a dry walk)
 
 ## The runner (tests/qa/qa_runner.gd): it owns the world, the log and the clock.
 var runner: Node

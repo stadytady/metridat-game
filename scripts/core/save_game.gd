@@ -31,6 +31,7 @@ static func snapshot(player_pos: Vector3, player_yaw: float) -> Dictionary:
 		"talks": Game.talks.duplicate(),
 		"quests": Game.quests.duplicate(),
 		"lamps": lamps,
+		"weather": Game.weather_seed,
 		"pos": player_pos,
 		"yaw": player_yaw,
 	}
@@ -75,6 +76,7 @@ static func apply(data: Dictionary) -> void:
 	var quests: Dictionary = data.get("quests", {})
 	for id: Variant in quests:
 		Game.quests[String(id)] = int(quests[id])
+	Game.weather_seed = int(data.get("weather", 0))
 	var lit: Array = data.get("lamps", [])
 	for l: Node in Game.lamps:
 		if lamp_key((l as Node3D).global_position) in lit:

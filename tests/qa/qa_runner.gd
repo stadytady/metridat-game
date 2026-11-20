@@ -86,7 +86,8 @@ func apply_fixture(fx: Dictionary) -> void:
 		if l is String and l == "all" or l is int and i < int(l):
 			lamps.append(SaveGame.lamp_key((Game.lamps[i] as Node3D).global_position))
 	SaveGame.apply({"version": SaveGame.VERSION, "found": found, "talked": fx.get("talked", {}),
-			"talks": fx.get("talks", {}), "quests": fx.get("quests", {}), "lamps": lamps})
+			"talks": fx.get("talks", {}), "quests": fx.get("quests", {}), "lamps": lamps,
+			"weather": int(fx.get("weather", 0))})
 	var p: CharacterBody3D = get_parent().player()
 	if fx.has("at"):
 		var at: Vector2 = fx.at
