@@ -14,4 +14,6 @@ Ariapeith: NPC_SCYTHIAN_1
 - LOC_SCYTHIAN_CHOICE_3
 	Ariapeith: LOC_SCYTHIAN_HORSE_1
 	Ariapeith: LOC_SCYTHIAN_HORSE_2
+- LOC_SCYTHIAN_CHOICE_SAW [if Game.has_found("coin_stater")]
+	Ariapeith: LOC_SCYTHIAN_SAW_1
 => END

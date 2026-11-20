@@ -16,4 +16,6 @@ Agathe: NPC_CARRIER_1
 	Agathe: LOC_Q_LAMP_1
 	Agathe: LOC_Q_LAMP_2
 	do Game.take_quest("lamp")
+- LOC_CARRIER_CHOICE_SAW [if Game.has_found("goddess_votive")]
+	Agathe: LOC_CARRIER_SAW_1
 => END

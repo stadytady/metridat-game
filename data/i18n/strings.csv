@@ -378,3 +378,29 @@ D_GOLD_PLAQUES_DESCRIPTION,"A handful of gold plaques no bigger than a thumbnail
 D_GOLD_PLAQUES_HISTORY,"Scythian nobles wore clothes sewn with hundreds of small stamped gold plaques, and much of that gold work was made by Greek goldsmiths of the Bosporan cities for steppe buyers. The Kul-Oba kurgan, a few kilometres from Panticapaeum and excavated in 1830, held a Scythian noble buried around the middle of the 4th century BCE in a stone vault built in the Greek manner, with gold plaques, weapons and an electrum vessel showing Scythians in hoods, coats and trousers. Herodotus describes the Sakai, whom he counts as Scythians, in tall stiff pointed caps and trousers.","Скифская знать носила одежду, расшитую сотнями маленьких штампованных золотых бляшек, и немалую часть этого золота делали для степных заказчиков греческие ювелиры боспорских городов. В кургане Куль-Оба, в нескольких километрах от Пантикапея, раскопанном в 1830 году, около середины IV века до н. э. был похоронен скифский знатный воин — в каменном склепе греческой кладки, с золотыми бляшками, оружием и электровым сосудом, на котором изображены скифы в башлыках, кафтанах и штанах. Геродот описывает саков, которых он считает скифами, в высоких жёстких остроконечных шапках и штанах."
 D_GOLD_PLAQUES_NARRATIVE,"Ariapeith, his furs, his horse and his bargain are the game's invention, and so are these plaques and their running deer.","Ариапиф, его меха, его лошадь и его сделка придуманы для игры, как и эти бляшки с бегущим оленем."
 D_GOLD_PLAQUES_HINT,"On the agora, on a hide spread out by a man from the steppe.","На агоре, на шкуре, расстеленной человеком из степи."
+LOC_FEDR_CHOICE_SAW,I saw a marble head by the walk in the park.,Я видел мраморную голову у дорожки в парке.
+LOC_FEDR_SAW_1,The one in the helmet? I've been stealing her face for a year. A mask has to look like somebody.,"Ту, что в шлеме? Я уже год ворую у неё лицо. Маска должна быть на кого-то похожа."
+LOC_FEDR_SAW_2,Don't tell her.,Только ей не говори.
+LOC_PRIEST_CHOICE_SAW,I've been up to Hecate's sanctuary.,Я поднимался в святилище Гекаты.
+LOC_PRIEST_SAW_1,"Then you know the city keeps two doors: his in the sun, hers in the dark. I keep the sunny one.","Тогда ты знаешь: у города две двери. Его — на солнце, её — в темноте. Я стерегу солнечную."
+LOC_PRIEST_SAW_2,Go to her at night if you must. But come back to the fire by morning.,"Ходи к ней ночью, раз нужно. Но к утру возвращайся к огню."
+LOC_STRIKER_CHOICE_SAW,I found a gold stater on the agora.,Я нашёл на агоре золотой статер.
+LOC_STRIKER_SAW_1,"Show me. No, not mine: see the satyr's beard running off the edge? Whoever struck that was thinking of his supper.","Покажи. Нет, не мой: видишь, борода сатира уходит за край? Кто бил, думал об ужине."
+LOC_STRIKER_SAW_2,Keep it. A bad coin spends like a good one. Only the striker blushes.,"Оставь себе. Плохая монета тратится так же, как хорошая. Краснеет только чеканщик."
+LOC_CARRIER_CHOICE_SAW,There's a little clay goddess at the foot of the statue in the park.,В парке у подножия статуи стоит маленькая глиняная богиня.
+LOC_CARRIER_SAW_1,The one with the tall headdress? Girls leave them there before a wedding. I left two. The second one worked.,В высоком уборе? Девушки оставляют таких перед свадьбой. Я оставила двух. Сработала вторая.
+LOC_POTTER_CHOICE_SAW,I saw a stamped jar in the street.,Я видел на улице амфору с клеймом.
+LOC_POTTER_SAW_1,Not mine. I don't stamp: everyone in this town knows my handles by the thumb.,Не моя. Я не клеймлю: мои ручки тут все узнают по пальцу.
+LOC_POTTER_SAW_2,Those come in full of wine and go out full of fish. A jar sees more of the world than I ever will.,"Такие приходят с вином, а уходят с рыбой. Амфора видит больше мира, чем я когда-нибудь увижу."
+LOC_BOY_CHOICE_SAW,I saw the master's mould for the goddesses.,Я видел хозяйскую форму для богинь.
+LOC_BOY_SAW_1,"I pressed one in it once, when he was out. It came out with three eyes. He keeps it on the shelf to laugh at.","Я раз оттиснул в ней, пока его не было. Вышла с тремя глазами. Он держит её на полке, чтобы смеяться."
+LOC_SCYTHIAN_CHOICE_SAW,I found one of the city's gold coins.,Я нашёл золотую монету города.
+LOC_SCYTHIAN_SAW_1,You count gold. We wear it. Which is wiser? On a coat you see at once who you are talking to.,"Вы золото считаете, мы его носим. Что умнее? По кафтану сразу видно, с кем говоришь."
+LOC_BAKER_CHOICE_SAW,"There's a big grain jar on the agora, with sacks stacked by it.","На агоре большой пифос с зерном, рядом сложены мешки."
+LOC_BAKER_SAW_1,"That wheat isn't for us. It goes down to the ships, and we buy back the bran.","Эта пшеница не для нас. Её везут к кораблям, а мы потом выкупаем отруби."
+LOC_BAKER_SAW_2,My jar holds a month. If the potter doesn't borrow.,Мой кувшин — на месяц. Если гончар не одалживает.
+LOC_FISHER_CHOICE_SAW,I found a jar of salt fish by the troughs.,Я нашёл у корыт кувшин с солёной рыбой.
+LOC_FISHER_SAW_1,"Leave it for the salt-woman, or she'll say it was me. Last time she counted the fish twice and me once.","Оставь солильщице, а то скажет, что это я. В прошлый раз она пересчитала рыбу дважды, а меня — один раз."
+LOC_SAILOR_CHOICE_SAW,There's a lead anchor stock lying on the planks.,На досках лежит свинцовый шток от якоря.
+LOC_SAILOR_SAW_1,Off some boat that lost the rest of its anchor and pretended not to mind. Every pier has one.,"С какой-то посудины, что потеряла остальной якорь и сделала вид, будто не жалко. На каждой пристани такой валяется."
+LOC_SAILOR_SAW_2,Mine is wood and stone. Cheaper to lose.,Мой — дерево и камень. Терять дешевле.
