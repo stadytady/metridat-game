@@ -5,7 +5,7 @@ extends RefCounted
 
 ## Baked to GLB. EXTRA kinds are small one-off models built at runtime.
 const MODELS := ["amphora", "pithos", "krater", "column_doric", "olive_tree", "cypress", "ship", "tripod", "figurine"]
-const EXTRA := ["coins", "sherds", "stele", "grain", "votive", "lampstand", "torch_post", "mould", "boat", "sinkers", "hekataion", "mirror", "marble_head", "loom_weights", "oil_lamp", "anchor_stock", "loom_weight", "fish_hook", "astragal"]
+const EXTRA := ["coins", "sherds", "stele", "grain", "votive", "lampstand", "torch_post", "mould", "boat", "sinkers", "hekataion", "mirror", "marble_head", "loom_weights", "oil_lamp", "anchor_stock", "loom_weight", "fish_hook", "astragal", "seal_ring", "loan_contract"]
 
 
 static func build(name: String) -> MeshKit:
@@ -70,6 +70,10 @@ static func build(name: String) -> MeshKit:
 			kit.xform = Transform3D.IDENTITY
 		"fish_hook":
 			fish_hook(kit)
+		"loan_contract":
+			loan_contract(kit)
+		"seal_ring":
+			seal_ring(kit)
 		"astragal":
 			astragal(kit)
 		"lampstand":
@@ -424,6 +428,30 @@ static func fish_hook(kit: MeshKit) -> void:
 	kit.box("bronze", Vector3(0, 0.006, 0.033), Vector3(0.03, 0.008, 0.008), [])  # the bend
 	kit.box("bronze", Vector3(0.014, 0.006, 0.022), Vector3(0.008, 0.008, 0.02), [])  # point
 	kit.box("cloth", Vector3(0, 0.004, -0.09), Vector3(0.004, 0.004, 0.13), [])  # the line
+
+
+## Two wooden writing tablets bound face to face, the cord crossed over them and
+## knotted under a lump of clay with a seal pressed in; a beach stone on top
+## against the wind. Origin on the ground, flat.
+static func loan_contract(kit: MeshKit) -> void:
+	kit.box("wood", Vector3(0, 0.012, 0), Vector3(0.2, 0.024, 0.14), [])
+	kit.box("bark", Vector3(0, 0.0245, 0), Vector3(0.21, 0.001, 0.145), ["bottom"])  # the seam
+	kit.box("wood", Vector3(0, 0.037, 0), Vector3(0.2, 0.024, 0.14), [])
+	kit.box("cloth", Vector3(0, 0.025, 0), Vector3(0.212, 0.052, 0.008), [])  # cord, across
+	kit.box("cloth", Vector3(0.03, 0.025, 0), Vector3(0.008, 0.052, 0.152), [])  # and along
+	kit.box("clay", Vector3(0.03, 0.052, 0), Vector3(0.036, 0.012, 0.03), [])  # the sealing
+	kit.box("dark", Vector3(0.03, 0.0585, 0), Vector3(0.016, 0.001, 0.014), [])  # the seal pressed in
+	kit.blob("rock", Vector3(-0.05, 0.065, 0.02), Vector3(0.045, 0.022, 0.035), 0.2, RandomNumberGenerator.new())
+
+
+## A bronze seal ring dropped on the shingle: the hoop and a flat bezel with an
+## ear of wheat cut into it.
+static func seal_ring(kit: MeshKit) -> void:
+	for i in 8:
+		var a := TAU * i / 8.0
+		kit.box("bronze", Vector3(cos(a) * 0.009, 0.003, sin(a) * 0.009), Vector3(0.006, 0.006, 0.006), [])
+	kit.box("bronze", Vector3(0.012, 0.004, 0), Vector3(0.01, 0.008, 0.012), [])  # the bezel
+	kit.box("dark", Vector3(0.012, 0.0085, 0), Vector3(0.002, 0.001, 0.008), [])  # the ear of wheat
 
 
 ## A knucklebone (astragalos) for the game of fives: a knobbly little bone.

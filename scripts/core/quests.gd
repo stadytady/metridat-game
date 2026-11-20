@@ -16,6 +16,7 @@ const LIST := {
 	"lamp": {"giver": "water_carrier", "title": "Q_LAMP_TITLE", "item": "Q_LAMP_ITEM", "model": "oil_lamp", "ask": "LOC_Q_LAMP_ASK"},
 	"hook": {"giver": "fisher", "title": "Q_HOOK_TITLE", "item": "Q_HOOK_ITEM", "model": "fish_hook", "ask": "LOC_Q_HOOK_ASK"},
 	"astragal": {"giver": "turner", "title": "Q_ASTRA_TITLE", "item": "Q_ASTRA_ITEM", "model": "astragal", "ask": "LOC_Q_ASTRA_ASK"},
+	"seal": {"giver": "measurer", "title": "Q_SEAL_TITLE", "item": "Q_SEAL_ITEM", "model": "seal_ring", "ask": "LOC_Q_SEAL_ASK"},
 }
 
 

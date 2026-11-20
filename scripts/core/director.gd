@@ -521,6 +521,19 @@ func _route() -> Array:
 	r.append(Vector2(62.8, 17.2))
 	r.append(Vector2(63.6, 14.4))
 	r.append(Vector2(56.0, 6.0))
+	# the measurer at the grain heap by the pier's root: a word, his errand, the
+	# agreement on his crate, his seal ring up the path, and back to him with it
+	r.append(Vector2(60.6, -3.0))
+	r.append(Vector2(62.0, -7.6))
+	r.append("talk:measurer")
+	r.append("take:seal")
+	r.append(Vector2(61.9, -8.8))
+	r.append("loan_contract")
+	r.append(Vector2(62.0, -7.6))
+	r.append(Vector2(60.9, -4.9))
+	r.append("pick:seal")
+	r.append(Vector2(62.0, -7.6))
+	r.append("give:seal")
 	# along the beach to the pier, out to the skipper by the gangway, and back
 	var px0 := Topo.pier_x0()
 	r.append(Vector2(px0 - 1.0, Topo.PIER_Z))

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="Discovery" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/interaction/discovery.gd" id="1_d"]
+[ext_resource type="PackedScene" path="res://scenes/interactables/models/loan_contract.tscn" id="2_m"]
+
+[resource]
+script = ExtResource("1_d")
+id = &"loan_contract"
+title = "D_LOAN_CONTRACT_TITLE"
+location = "LOC_SHORE"
+description = "D_LOAN_CONTRACT_DESCRIPTION"
+history = "D_LOAN_CONTRACT_HISTORY"
+sources = "Demosthenes 35 (Against Lacritus) 10-13; P. Millett, Lending and Borrowing in Ancient Athens (1991)."
+narrative = "D_LOAN_CONTRACT_NARRATIVE"
+hint = "D_LOAN_CONTRACT_HINT"
+model = ExtResource("2_m")
