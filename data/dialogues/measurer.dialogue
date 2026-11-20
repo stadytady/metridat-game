@@ -1,0 +1,27 @@
+# Nikon, measuring wheat into sacks on the shingle at the foot of the pier.
+# Three questions: where it goes, what a full measure is, who carries; an
+# errand (Quests): his seal ring dropped on the path down, thanked for when
+# found; and a word on the grain jar on the agora once the player has seen it.
+# Text is a key: the panel translates it, so EN/RU stay in strings.csv.
+# Indent with tabs: DM's INDENT_REGEX is ^\t+.
+
+~ start
+if Game.quest_ready("seal")
+	Nikon: LOC_Q_SEAL_DONE
+	do Game.complete_quest("seal")
+	=> END
+Nikon: NPC_MEASURER_1
+- LOC_MEASURER_CHOICE_1
+	Nikon: LOC_MEASURER_WHERE_1
+	Nikon: LOC_MEASURER_WHERE_2
+- LOC_MEASURER_CHOICE_2
+	Nikon: LOC_MEASURER_FULL_1
+- LOC_MEASURER_CHOICE_3
+	Nikon: LOC_MEASURER_PORTERS_1
+- LOC_Q_SEAL_ASK [if Game.quest_offered("seal")]
+	Nikon: LOC_Q_SEAL_1
+	Nikon: LOC_Q_SEAL_2
+	do Game.take_quest("seal")
+- LOC_MEASURER_CHOICE_SAW [if Game.has_found("grain_pithos")]
+	Nikon: LOC_MEASURER_SAW_1
+=> END

@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=15
+type="Resource"
+uid="uid://dk6ok3hsf5ruv"
+path="res://.godot/imported/measurer.dialogue-67e7a74510674da515f859d2c2f8f2a3.tres"
+
+[deps]
+
+source_file="res://data/dialogues/measurer.dialogue"
+dest_files=["res://.godot/imported/measurer.dialogue-67e7a74510674da515f859d2c2f8f2a3.tres"]
+
+[params]
+
+defaults=true
