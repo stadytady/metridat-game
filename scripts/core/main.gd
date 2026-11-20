@@ -70,6 +70,8 @@ func _ready() -> void:
 		$HUD.set_visible_ui(false)
 		title.started.connect(func() -> void:
 			$HUD.set_visible_ui(true)
+			# a new walk draws its weather: some afternoons a shower comes over the strait
+			Game.weather_seed = randi_range(1, 999999)
 			# the evening before: off the ship, a word with Damon, then morning
 			var prologue := Prologue.new()
 			prologue.name = "Prologue"

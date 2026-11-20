@@ -95,7 +95,8 @@ func _process(delta: float) -> void:
 
 
 func apply(hour: float) -> void:
-	var k := DayCycle.sample(hour)
+	# the hour's look, under cloud if this walk's shower is passing (Weather)
+	var k := Weather.apply(DayCycle.sample(hour), 0.0 if Game.dreaming or Game.prologue else Weather.rain_at(hour, Game.weather_seed))
 	sun.rotation_degrees = Vector3(-maxf(k.sun_elevation, 1.0), SUN_YAW, 0.0)
 	sun.light_color = k.sun_color
 	sun.light_energy = k.sun_energy

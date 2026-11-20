@@ -4,7 +4,7 @@ extends "res://tests/test_case.gd"
 ## base and asks only for fixture keys the runner knows.
 
 const QaLog := preload("res://tests/qa/qa_log.gd")
-const KEYS := ["found", "quests", "talked", "talks", "lamps", "hour", "at", "look", "pad", "lang", "timeout"]
+const KEYS := ["found", "quests", "talked", "talks", "lamps", "hour", "at", "look", "pad", "lang", "timeout", "weather"]
 
 
 func test_an_engine_error_is_filed_under_its_context() -> void:

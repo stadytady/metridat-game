@@ -41,6 +41,9 @@ const LANGUAGES := ["en", "ru"]
 ## id -> Discovery, filled by inspectables as they enter the tree.
 var registry := {}
 var found := {}
+## The walk's weather (Weather.rain_at): drawn at a new walk, kept in the save;
+## 0 is a dry walk, which is what automation always gets.
+var weather_seed := 0
 ## Overrides the hour for automation (screenshots); negative = follow progress.
 var time_override := -1.0
 ## Lamps along the route: registered as they enter the tree.

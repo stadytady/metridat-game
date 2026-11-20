@@ -711,7 +711,7 @@ def materials():
 SR = 22050
 
 
-LOOPS = {"wind", "waves", "fire", "dream_drone", "market", "wheel", "cicada", "symposium", "chorus"}
+LOOPS = {"wind", "waves", "fire", "dream_drone", "market", "wheel", "cicada", "symposium", "chorus", "rain"}
 
 
 def write_wav(name: str, x: np.ndarray) -> None:
@@ -1349,6 +1349,8 @@ def main() -> None:
     symposium(np.random.default_rng(544))
     # the evening's play in the hill theatre: chorus and aulos
     chorus(np.random.default_rng(545))
+    # a shower off the strait (Weather)
+    rain(np.random.default_rng(546))
     print(f"textures: {len(TEXTURES)}, materials: {len(MATERIALS)}, audio: {len(list(AUD.glob('*.wav')))}")
 
 
@@ -1440,6 +1442,28 @@ def chorus(rng):
     # out in the open air: a breath of the night under it
     air = lowpass(rng.standard_normal(n), 900) * 0.04
     write_wav("chorus", norm(lowpass(voices * 0.35 + pipe * 0.45 + air, 3200), 0.5))
+
+
+def rain(rng):
+    """A shower: the hiss of many drops (noise, its top end rolled off), and
+    close drops ticking on stone and tile one by one. Eight seconds, looped:
+    the hiss is noise wrapped round the loop (its last samples blended into
+    its first) and no tick crosses the join."""
+    dur = 8.0
+    n = int(SR * dur)
+    fade = int(SR * 0.5)
+    noise = rng.standard_normal(n + fade)
+    noise[:fade] = noise[:fade] * np.linspace(0, 1, fade) + noise[n:] * np.linspace(1, 0, fade)
+    hiss = bandpass(noise[:n], 400, 5000)
+    hiss = lowpass(hiss, 3500)
+    ticks = np.zeros(n)
+    for _ in range(260):
+        at = int(rng.uniform(0.0, dur - 0.05) * SR)
+        ln = int(SR * 0.03)
+        tt = np.arange(ln) / SR
+        f = rng.uniform(1800, 4200)
+        ticks[at:at + ln] += np.sin(2 * np.pi * f * tt) * np.exp(-tt * 180) * rng.uniform(0.2, 1.0)
+    write_wav("rain", norm(hiss * 0.6 + ticks * 0.5, 0.5))
 
 
 if __name__ == "__main__":
