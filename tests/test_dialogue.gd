@@ -64,3 +64,48 @@ func test_every_dialogue_offers_responses() -> void:
 			if Array(data.get("responses", [])).size() > 0:
 				with_responses += 1
 		check(with_responses >= 1, path + " has no responses")
+
+
+## Every `Game.has_found("<id>")` in a dialogue names a city find (not the
+## dream's), and each speaker has at least one such remark.
+func test_remarks_name_real_finds() -> void:
+	var re := RegEx.create_from_string("Game\\.has_found\\(\"([a-z_]+)\"\\)")
+	var speakers := 0
+	for path in _files():
+		var text := FileAccess.get_file_as_string(path)
+		var hits := re.search_all(text)
+		if not hits.is_empty():
+			speakers += 1
+		for m in hits:
+			var id := m.get_string(1)
+			var res_path := "res://data/discoveries/%s.tres" % id
+			check(ResourceLoader.exists(res_path), "%s: no find %s" % [path, id])
+			if ResourceLoader.exists(res_path):
+				var d: Discovery = load(res_path)
+				check(not d.epilogue, "%s: remark on the dream's find %s" % [path, id])
+	check(speakers >= 10, "only %d speakers remark on finds" % speakers)
+
+
+## The remark is a choice the player sees only once the find is made.
+func test_remark_waits_for_the_find() -> void:
+	var res: DialogueResource = load(DIR.path_join("sailor.dialogue"))
+	var saved := Game.found.duplicate()
+	Game.found.clear()
+	check(not await _offers(res, "LOC_SAILOR_CHOICE_SAW"), "the anchor remark is offered before the anchor stock is found")
+	Game.found[&"anchor_stock"] = true
+	check(await _offers(res, "LOC_SAILOR_CHOICE_SAW"), "the anchor remark is not offered after the find")
+	Game.found = saved
+
+
+func _offers(res: DialogueResource, key: String) -> bool:
+	var line: DialogueLine = await DialogueManager.get_next_dialogue_line(res, "start")
+	var guard := 0
+	while line != null and line.responses.is_empty() and guard < 10:
+		line = await DialogueManager.get_next_dialogue_line(res, line.next_id)
+		guard += 1
+	if line == null:
+		return false
+	for r: DialogueResponse in line.responses:
+		if (r.text == key or r.text == TranslationServer.translate(key)) and r.is_allowed:
+			return true
+	return false

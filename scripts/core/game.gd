@@ -202,6 +202,12 @@ func found_count() -> int:
 	return found.keys().filter(func(id: StringName) -> bool: return registry.has(id) and not registry[id].epilogue).size()
 
 
+## Whether the player has found this (dialogues ask it: people remark on what
+## the player found elsewhere in the town).
+func has_found(id: String) -> bool:
+	return found.has(StringName(id))
+
+
 func mark_found(d: Discovery) -> void:
 	var is_new := not found.has(d.id)
 	found[d.id] = true

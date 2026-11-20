@@ -18,4 +18,7 @@ Fedr: NPC_ACTOR_1
 - LOC_FEDR_CHOICE_SEATS
 	Fedr: LOC_FEDR_SEATS_1
 	Fedr: NPC_ACTOR_5
+- LOC_FEDR_CHOICE_SAW [if Game.has_found("goddess_head")]
+	Fedr: LOC_FEDR_SAW_1
+	Fedr: LOC_FEDR_SAW_2
 => END

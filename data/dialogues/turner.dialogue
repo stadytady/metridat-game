@@ -16,4 +16,6 @@ Boy: NPC_BOY_1
 	Boy: LOC_Q_ASTRA_1
 	Boy: LOC_Q_ASTRA_2
 	do Game.take_quest("astragal")
+- LOC_BOY_CHOICE_SAW [if Game.has_found("mould_figurine")]
+	Boy: LOC_BOY_SAW_1
 => END

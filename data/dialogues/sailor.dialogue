@@ -19,4 +19,7 @@ Damon: NPC_SAILOR_1
 - LOC_SAILOR_CHOICE_4
 	Damon: NPC_SAILOR_5
 	Damon: LOC_SAILOR_LEAVE_1
+- LOC_SAILOR_CHOICE_SAW [if Game.has_found("anchor_stock")]
+	Damon: LOC_SAILOR_SAW_1
+	Damon: LOC_SAILOR_SAW_2
 => END

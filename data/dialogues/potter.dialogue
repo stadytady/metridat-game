@@ -17,4 +17,7 @@ Kallias: NPC_POTTER_2
 - LOC_POTTER_CHOICE_3
 	Kallias: NPC_POTTER_3
 	Kallias: LOC_POTTER_GODS_1
+- LOC_POTTER_CHOICE_SAW [if Game.has_found("amphora_stamped")]
+	Kallias: LOC_POTTER_SAW_1
+	Kallias: LOC_POTTER_SAW_2
 => END

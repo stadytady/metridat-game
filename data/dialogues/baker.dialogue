@@ -25,4 +25,7 @@ Myrto: NPC_BAKER_1
 	Myrto: LOC_Q_LOOM_1
 	Myrto: LOC_Q_LOOM_2
 	do Game.take_quest("loom_weight")
+- LOC_BAKER_CHOICE_SAW [if Game.has_found("grain_pithos")]
+	Myrto: LOC_BAKER_SAW_1
+	Myrto: LOC_BAKER_SAW_2
 => END

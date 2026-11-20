@@ -14,4 +14,7 @@ Hippias: NPC_PRIEST_1
 - LOC_PRIEST_CHOICE_3
 	Hippias: LOC_PRIEST_TIME_1
 	Hippias: LOC_PRIEST_TIME_2
+- LOC_PRIEST_CHOICE_SAW [if Game.has_found("votive_figurine")]
+	Hippias: LOC_PRIEST_SAW_1
+	Hippias: LOC_PRIEST_SAW_2
 => END
