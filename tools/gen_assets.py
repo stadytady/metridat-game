@@ -711,7 +711,7 @@ def materials():
 SR = 22050
 
 
-LOOPS = {"wind", "waves", "fire", "dream_drone", "market", "wheel", "cicada", "symposium"}
+LOOPS = {"wind", "waves", "fire", "dream_drone", "market", "wheel", "cicada", "symposium", "chorus"}
 
 
 def write_wav(name: str, x: np.ndarray) -> None:
@@ -1347,6 +1347,8 @@ def main() -> None:
     astragal(np.random.default_rng(543))
     # the supper party behind a door on the Street of Jars, after dark
     symposium(np.random.default_rng(544))
+    # the evening's play in the hill theatre: chorus and aulos
+    chorus(np.random.default_rng(545))
     print(f"textures: {len(TEXTURES)}, materials: {len(MATERIALS)}, audio: {len(list(AUD.glob('*.wav')))}")
 
 
@@ -1393,6 +1395,51 @@ def symposium(rng):
     pipe += (np.sin(dph) + 0.4 * np.sin(3 * dph) + 0.2 * np.sin(5 * dph)) * 0.45 * drone_env
     # all of it behind a wall: the top end muffled
     write_wav("symposium", norm(lowpass(talk * 0.55 + laugh + pipe * 0.5, 1800), 0.45))
+
+
+def chorus(rng):
+    """The play in the hill theatre heard from the seats: a chorus of men
+    chanting in unison on a few notes (a sung "a" - harmonics shaped by two
+    formants, each voice a little off pitch and time so they thicken into a
+    body), over an aulos holding a drone and doubling the tune. Twelve
+    seconds, looped: every phrase ends before the join and the drone fades in
+    and out across it."""
+    dur = 12.0
+    n = int(SR * dur)
+    t = np.arange(n) / SR
+    voices = np.zeros(n)
+    # the chant: (start s, length s, Hz) - A, A, C, B, A, G, A in a narrow mode
+    tune = ((0.4, 1.1, 220.0), (1.5, 0.9, 220.0), (2.4, 1.4, 261.6), (3.8, 1.0, 246.9),
+            (5.6, 1.2, 220.0), (6.8, 1.4, 196.0), (8.2, 2.6, 220.0))
+    for v in range(5):
+        detune = 1 + rng.uniform(-0.012, 0.012)
+        lag = rng.uniform(0.0, 0.06)
+        for a, ln_s, f0 in tune:
+            i0, i1 = int((a + lag) * SR), int((a + lag + ln_s) * SR)
+            tt = t[i0:i1] - a - lag
+            vib = 1 + 0.008 * np.sin(2 * np.pi * rng.uniform(4.5, 6.0) * tt)
+            ph = 2 * np.pi * np.cumsum(f0 * detune * vib) / SR
+            tone = np.zeros(i1 - i0)
+            for h in range(1, 14):
+                fh = f0 * h
+                # an open "a": formants near 700 and 1150 Hz
+                g = np.exp(-((fh - 700) / 260) ** 2) + 0.6 * np.exp(-((fh - 1150) / 300) ** 2) + 0.25 / h
+                tone += g * np.sin(h * ph)
+            env = np.minimum(1, tt / 0.12) * np.minimum(1, (ln_s - tt) / 0.25)
+            voices[i0:i1] += tone * env
+    pipe = np.zeros(n)
+    for a, ln_s, f0 in tune:
+        i0, i1 = int(a * SR), int((a + ln_s) * SR)
+        tt = t[i0:i1] - a
+        ph = 2 * np.pi * np.cumsum(f0 * 2 * (1 + 0.005 * np.sin(2 * np.pi * 5.5 * tt))) / SR
+        tone = np.sin(ph) + 0.45 * np.sin(3 * ph) + 0.25 * np.sin(5 * ph) + 0.12 * np.sin(7 * ph)
+        pipe[i0:i1] += tone * np.minimum(1, tt / 0.06) * np.minimum(1, (ln_s - tt) / 0.15)
+    drone_env = np.minimum(1, t / 0.5) * np.minimum(1, (dur - t) / 0.5)
+    dph = 2 * np.pi * 110.0 * t
+    pipe += (np.sin(dph) + 0.4 * np.sin(3 * dph) + 0.2 * np.sin(5 * dph)) * 0.4 * drone_env
+    # out in the open air: a breath of the night under it
+    air = lowpass(rng.standard_normal(n), 900) * 0.04
+    write_wav("chorus", norm(lowpass(voices * 0.35 + pipe * 0.45 + air, 3200), 0.5))
 
 
 if __name__ == "__main__":
