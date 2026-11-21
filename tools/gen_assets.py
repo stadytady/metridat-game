@@ -720,7 +720,7 @@ def materials():
 SR = 22050
 
 
-LOOPS = {"wind", "waves", "fire", "dream_drone", "market", "wheel", "cicada", "symposium", "chorus", "rain"}
+LOOPS = {"wind", "waves", "fire", "dream_drone", "market", "wheel", "cicada", "symposium", "chorus", "rain", "gale"}
 
 
 def write_wav(name: str, x: np.ndarray) -> None:
@@ -1634,6 +1634,9 @@ def main() -> None:
     stag_plaque(np.random.default_rng(550))
     terracotta_goddess(np.random.default_rng(551))
     marble_face(np.random.default_rng(552))
+    # the storm (Weather): thunder after the bolts, and the gale under the rain
+    thunder(np.random.default_rng(553))
+    gale(np.random.default_rng(554))
     print(f"textures: {len(TEXTURES)}, materials: {len(MATERIALS)}, audio: {len(list(AUD.glob('*.wav')))}")
 
 
@@ -1747,6 +1750,41 @@ def rain(rng):
         f = rng.uniform(1800, 4200)
         ticks[at:at + ln] += np.sin(2 * np.pi * f * tt) * np.exp(-tt * 180) * rng.uniform(0.2, 1.0)
     write_wav("rain", norm(hiss * 0.6 + ticks * 0.5, 0.5))
+
+
+
+def thunder(rng):
+    """Thunder some kilometres off: a crack (a short burst of broadband noise,
+    already dulled by the distance), then a long rolling rumble of low noise
+    that swells two or three times as the sound comes back off the hills and
+    the strait, and dies away. Five seconds, played once per bolt."""
+    dur = 5.0
+    n = int(SR * dur)
+    t = np.arange(n) / SR
+    crack = bandpass(rng.standard_normal(n), 150, 2400) * np.exp(-t * 9.0) * (t < 0.6)
+    rumble = lowpass(rng.standard_normal(n), 120)
+    swell = np.zeros(n)
+    for at in (0.15, 0.9 + rng.uniform(0, 0.4), 1.9 + rng.uniform(0, 0.6)):
+        w = rng.uniform(0.5, 1.0)
+        swell += w * np.exp(-((t - at) / 0.55) ** 2)
+    env = (swell + 0.35 * np.exp(-t * 0.9)) * np.minimum(1, t / 0.04) * np.minimum(1, (dur - t) / 0.8)
+    write_wav("thunder", norm(lowpass(crack * 0.5 + rumble * env * 2.2, 1400), 0.85))
+
+
+def gale(rng):
+    """A storm wind: a deep roar under a higher whistle that rises and falls in
+    gusts (whole cycles over the loop, so it joins without a seam). Eight
+    seconds, looped; Weather swells it with its own gusts on top."""
+    dur = 8.0
+    n = int(SR * dur)
+    fade = int(SR * 0.5)
+    noise = rng.standard_normal(n + fade)
+    noise[:fade] = noise[:fade] * np.linspace(0, 1, fade) + noise[n:] * np.linspace(1, 0, fade)
+    noise = noise[:n]
+    roar = lowpass(noise, 260)
+    whistle = bandpass(noise, 500, 1300)
+    gusts = 0.45 + 0.55 * periodic_env(n, 2, rng, 1.5)
+    write_wav("gale", norm(roar * 1.4 * (0.6 + 0.4 * gusts) + whistle * 0.5 * gusts, 0.6))
 
 
 if __name__ == "__main__":

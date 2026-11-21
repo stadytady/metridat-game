@@ -1,7 +1,7 @@
 class_name AdminPanel
 extends CanvasLayer
-## The developer menu on the tilde key: the hour of the day, and a jump to any of
-## the viewpoints the screenshots use. Deliberately not in the controls legend and
+## The developer menu on the tilde key: the hour of the day, the weather, and a
+## jump to any of the viewpoints the screenshots use. Deliberately not in the controls legend and
 ## not translated like a player-facing panel — it is a tool, not a feature.
 
 signal travelled(place: String)
@@ -9,8 +9,10 @@ signal travelled(place: String)
 const WORLD := preload("res://scripts/world/world.gd")
 
 const PAGE_TIME := 0
-const PAGE_PLACES := 1
-const PAGE_SCENE := 2
+const PAGE_WEATHER := 1
+const PAGE_PLACES := 2
+const PAGE_SCENE := 3
+const PAGES := 4
 ## Actions that move the story rather than the camera: [id, translation key].
 const ACTIONS := [
 	["sleep", "UI_ADMIN_SLEEP_AT"],
@@ -24,6 +26,10 @@ const TIME_KEYS := [
 	"UI_ADMIN_NORMAL", "UI_ADMIN_MORNING", "UI_ADMIN_NOON", "UI_ADMIN_SUNSET",
 	"UI_ADMIN_DUSK", "UI_ADMIN_NIGHT", "UI_ADMIN_LATE", "UI_ADMIN_DREAM",
 ]
+## The weather: -1 hands it back to the walk's seed, the rest force a kind
+## (Game.weather_override, read by Weather.now()).
+const WEATHER_STEPS := [-1, Weather.DRY, Weather.SHOWER, Weather.STORM]
+const WEATHER_KEYS := ["UI_ADMIN_WEATHER_WALK", "UI_ADMIN_DRY", "UI_ADMIN_SHOWER", "UI_ADMIN_STORM"]
 const ROWS := 8
 
 var _card: PanelContainer
@@ -32,8 +38,8 @@ var _tabs: Array[Label] = []
 var _body: VBoxContainer
 var _hints: Label
 var _page := PAGE_TIME
-var _sel := [0, 0, 0]
-var _scroll := [0, 0, 0]
+var _sel := [0, 0, 0, 0]
+var _scroll := [0, 0, 0, 0]
 var _places: PackedStringArray = []
 ## Viewpoint names that already have a place name in the string table.
 const PLACE_KEYS := {
@@ -67,7 +73,7 @@ func _ready() -> void:
 	var tabs := HBoxContainer.new()
 	tabs.add_theme_constant_override("separation", 18)
 	col.add_child(tabs)
-	for i in 3:
+	for i in PAGES:
 		var l := UiStyle.label(tr(_tab_key(i)), 19, UiStyle.MUTED)
 		tabs.add_child(l)
 		_tabs.append(l)
@@ -85,6 +91,8 @@ func _tab_key(page: int) -> String:
 	match page:
 		PAGE_TIME:
 			return "UI_ADMIN_TIME"
+		PAGE_WEATHER:
+			return "UI_ADMIN_WEATHER"
 		PAGE_PLACES:
 			return "UI_ADMIN_PLACES"
 		_:
@@ -157,6 +165,8 @@ func _count() -> int:
 	match _page:
 		PAGE_TIME:
 			return TIME_STEPS.size()
+		PAGE_WEATHER:
+			return WEATHER_STEPS.size()
 		PAGE_PLACES:
 			return _places.size()
 		_:
@@ -166,6 +176,10 @@ func _count() -> int:
 func _apply() -> void:
 	if _page == PAGE_TIME:
 		Game.time_override = TIME_STEPS[_sel[_page]]
+		_refresh()
+		return
+	if _page == PAGE_WEATHER:
+		Game.weather_override = WEATHER_STEPS[_sel[_page]]
 		_refresh()
 		return
 	if _page == PAGE_SCENE:
@@ -234,6 +248,14 @@ func _row(i: int, selected: bool) -> Control:
 	if _page == PAGE_TIME:
 		name = tr(TIME_KEYS[i])
 		value = tr("UI_ADMIN_NORMAL_VALUE") if TIME_STEPS[i] < 0.0 else "%0.2f" % TIME_STEPS[i]
+	elif _page == PAGE_WEATHER:
+		name = tr(WEATHER_KEYS[i])
+		var w: int = WEATHER_STEPS[i]
+		if w < 0:
+			# what the walk itself brings, so the tool shows what "back" means
+			value = tr(WEATHER_KEYS[WEATHER_STEPS.find(Weather.kind(Game.weather_seed))])
+		if w == Game.weather_override:
+			mark.text = "*" if not selected else ">"
 	elif _page == PAGE_SCENE:
 		name = tr(ACTIONS[i][1])
 	else:

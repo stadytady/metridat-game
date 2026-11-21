@@ -7,12 +7,16 @@ const NATURE := preload("res://scripts/world/nature.gd")
 
 
 func test_sea_rocks_keep_their_feet_under_the_troughs() -> void:
-	# the deepest trough over the stretch the rocks are scattered on (_shore)
+	# the deepest trough over the stretch the rocks are scattered on (_shore),
+	# in the heaviest swell there is: a storm's (Weather)
+	var was := Sea.swell
+	Sea.swell = Weather.STORM_SWELL
 	var deepest := 0.0
 	for x in range(75, 111, 5):
 		for z in range(-90, 91, 15):
 			for i in 60:
 				deepest = minf(deepest, Sea.height_at(float(x), float(z), i * 0.37))
+	Sea.swell = was
 	check(deepest < -1.0, "the troughs out here are only %.2f m deep: the sample misses them" % deepest)
 	for k in 11:
 		var r := lerpf(1.5, 4.0, k / 10.0)

@@ -58,6 +58,9 @@ var found := {}
 ## The walk's weather (Weather.rain_at): drawn at a new walk, kept in the save;
 ## 0 is a dry walk, which is what automation always gets.
 var weather_seed := 0
+## The developer menu's weather (Weather.DRY / SHOWER / STORM) over the walk's
+## own; -1 follows the seed. Not saved: it is a tool, not part of the walk.
+var weather_override := -1
 ## Overrides the hour for automation (screenshots); negative = follow progress.
 var time_override := -1.0
 ## Lamps along the route: registered as they enter the tree.

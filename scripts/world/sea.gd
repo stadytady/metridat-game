@@ -37,6 +37,9 @@ static func calm_center() -> Vector2:
 
 ## Seconds on the sea's clock; the shader reads it as sea_time.
 static var clock := 0.0
+## How heavy the swell is over its calm-weather height: a storm raises it
+## (Weather), and the shader's amplitude and height_at() follow it together.
+static var swell := 1.0
 var _mat: ShaderMaterial
 
 
@@ -56,7 +59,7 @@ static func height_at(x: float, z: float, t: float = clock) -> float:
 		var s := sin(d.dot(Vector2(x, z)) * k - w * t + float(i) * 1.7)
 		h += a * (s + 0.25 * s * absf(s))
 	var calm := 1.0 - CALM * (1.0 - smoothstep(CALM_RADIUS * 0.5, CALM_RADIUS, Vector2(x, z).distance_to(calm_center())))
-	return h * AMPLITUDE * smoothstep(-1.0, 6.0, shore_d) * calm
+	return h * AMPLITUDE * swell * smoothstep(-1.0, 6.0, shore_d) * calm
 
 
 ## How a hull floats at `pos` heading `yaw` (rad about y; the model's bow is +x):
@@ -95,6 +98,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	clock = fmod(clock + delta, 3600.0)
 	_mat.set_shader_parameter("sea_time", clock)
+	_mat.set_shader_parameter("amplitude", AMPLITUDE * swell)
 
 
 static func _axis(segments: Array) -> PackedFloat32Array:

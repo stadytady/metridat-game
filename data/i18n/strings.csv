@@ -438,3 +438,10 @@ CAP_STRIKE,[hammer on the die],[молот бьёт по штемпелю]
 CAP_SYMPOSIUM,"[voices, laughter and the aulos behind a door]","[за дверью голоса, смех и авлос]"
 CAP_CHORUS,[the chorus chants to the aulos],[хор поёт под авлос]
 CAP_RAIN,[rain],[дождь]
+UI_ADMIN_WEATHER,Weather,Погода
+UI_ADMIN_WEATHER_WALK,As the walk brings,Как выпало
+UI_ADMIN_DRY,Dry,Сухо
+UI_ADMIN_SHOWER,Shower,Ливень
+UI_ADMIN_STORM,Storm,Шторм
+CAP_THUNDER,[thunder],[гром]
+CAP_STORM,[storm wind and rain],[шторм: ветер и дождь]
