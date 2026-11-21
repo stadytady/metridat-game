@@ -228,6 +228,36 @@ static func drift(t: float, storm := 0.0) -> Vector3:
 	return Vector3(Sea.ONSHORE.x, 0.0, Sea.ONSHORE.y) * w
 
 
+## How a drop flies (m/s): falling at FALL and carried inland by the wind. The
+## streak is drawn along this, so the harder the wind the more the rain slants.
+static func fall_velocity(t: float, storm := 0.0) -> Vector3:
+	return Vector3.DOWN * FALL + drift(t, storm)
+
+
+## How far from the vertical the rain slants (deg) at this velocity.
+static func slant_deg(v: Vector3) -> float:
+	return rad_to_deg(atan2(Vector2(v.x, v.z).length(), -v.y))
+
+
+## A streak as two crossed thin quads along y: aligned to its flight (not
+## billboarded, which would stand it upright), it still shows from any side.
+static func streak_mesh(mat: Material) -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var hw := 0.0125
+	var hh := 0.275
+	for side: Vector3 in [Vector3(hw, 0, 0), Vector3(0, 0, hw)]:
+		var up := Vector3(0, hh, 0)
+		var a := -side - up
+		var b := side - up
+		var c := side + up
+		var d := -side + up
+		for v: Vector3 in [a, b, c, a, c, d]:
+			st.add_vertex(v)
+	st.set_material(mat)
+	return st.commit()
+
+
 func _ready() -> void:
 	_pm = ParticleProcessMaterial.new()
 	_pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
@@ -237,21 +267,18 @@ func _ready() -> void:
 	_pm.initial_velocity_min = FALL
 	_pm.initial_velocity_max = FALL * 1.15
 	_pm.gravity = Vector3.ZERO
+	# the streak lies along its flight: slanted by the wind, not standing upright
+	_pm.particle_flag_align_y = true
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.albedo_color = Color(0.62, 0.66, 0.72)
-	# a streak that stays upright as you turn: drops, not confetti
-	mat.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
-	mat.billboard_keep_scale = true
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 	# a drop a hand's breadth from the eye is a white bar across the screen:
 	# dither it out up close (a screen-door, no blending)
 	mat.distance_fade_mode = BaseMaterial3D.DISTANCE_FADE_PIXEL_DITHER
 	mat.distance_fade_min_distance = 0.8
 	mat.distance_fade_max_distance = 2.5
-	var quad := QuadMesh.new()
-	quad.size = Vector2(0.025, 0.55)
-	quad.material = mat
 	_rain = GPUParticles3D.new()
 	_rain.name = "Rain"
 	_rain.amount = DROPS
@@ -260,7 +287,7 @@ func _ready() -> void:
 	_rain.fixed_fps = 15
 	_rain.local_coords = false
 	_rain.process_material = _pm
-	_rain.draw_pass_1 = quad
+	_rain.draw_pass_1 = streak_mesh(mat)
 	_rain.visibility_aabb = AABB(-BOX, BOX * 2.0)
 	_rain.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_rain.emitting = false
@@ -320,12 +347,18 @@ func step(r: float, storm := 0.0) -> void:
 	# rain is everywhere: its caption once at the start and now and then after
 	if r > 0.3:
 		Game.caption("CAP_STORM" if storm > 0.5 else "CAP_RAIN", _rain.global_position, INF, 30000)
-	var d := drift(_t, storm)
-	_pm.gravity = d
+	# the wind goes into each new drop's speed, so it flies (and is drawn)
+	# slanted; drops already falling keep the gust they left with
+	var v := fall_velocity(_t, storm)
+	_pm.direction = v.normalized()
+	_pm.initial_velocity_min = v.length()
+	_pm.initial_velocity_max = v.length() * 1.15
 	var cam := get_viewport().get_camera_3d()
 	if cam != null:
 		var c := cam.global_position
-		_rain.global_position = Vector3(c.x, c.y + BOX.y * 0.35, c.z) - d * 0.5
+		# born upwind, so that where they land is round the camera
+		var d := drift(_t, storm)
+		_rain.global_position = Vector3(c.x, c.y + BOX.y * 0.35, c.z) - d * _rain.lifetime * 0.5
 	_sound.volume_db = linear_to_db(maxf(r, 0.001)) - 4.0 + 4.0 * storm
 	# the wind is only heard in a storm, and it surges with the gusts
 	_wind.volume_db = linear_to_db(maxf(storm * lerpf(0.55, 1.0, gust(_t)), 0.001)) - 2.0
@@ -334,3 +367,8 @@ func step(r: float, storm := 0.0) -> void:
 ## Whether it is raining now (for tests and scenarios).
 func raining() -> bool:
 	return _rain.emitting
+
+
+## How far the new drops slant from the vertical now (deg), for scenarios.
+func slant() -> float:
+	return slant_deg(_pm.direction)

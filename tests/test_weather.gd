@@ -243,3 +243,26 @@ func test_the_storm_raises_the_swell() -> void:
 	Sea.swell = was
 	check(absf(calm) > 0.05, "the sample point has no wave")
 	check(is_equal_approx(rough, calm * W.STORM_SWELL), "the storm swell is not the calm one scaled")
+
+
+## The rain slants with the wind: a little in a shower, hard in a storm, and
+## always with its foot inland, the way the wind blows.
+func test_the_rain_slants_with_the_wind() -> void:
+	var inland := Vector2(Sea.ONSHORE.x, Sea.ONSHORE.y).normalized()
+	var t := 0.0
+	while t < 30.0:
+		var shower := W.fall_velocity(t, 0.0)
+		var storm := W.fall_velocity(t, 1.0)
+		check(is_equal_approx(storm.y, -W.FALL), "the wind changes how fast the rain falls")
+		check(Vector2(storm.x, storm.z).normalized().dot(inland) > 0.99, "the rain slants out to sea at %.1f s" % t)
+		var a := W.slant_deg(shower)
+		var b := W.slant_deg(storm)
+		check(a > 8.0 and a < 25.0, "a shower slants %.0f deg at %.1f s" % [a, t])
+		check(b > a + 10.0, "the storm slants no more than the shower (%.0f vs %.0f deg)" % [b, a])
+		check(b > 20.0 and b < 50.0, "a storm slants %.0f deg at %.1f s" % [b, t])
+		t += 0.5
+	check(is_equal_approx(W.slant_deg(Vector3.DOWN), 0.0), "straight rain reads as slanted")
+	# the streak is drawn along y, the axis the particles align to their flight
+	var m := W.streak_mesh(StandardMaterial3D.new())
+	var box := m.get_aabb()
+	check(box.size.y > box.size.x * 10.0 and box.size.y > box.size.z * 10.0, "the streak does not lie along y: %s" % box)
