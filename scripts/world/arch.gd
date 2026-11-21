@@ -139,6 +139,9 @@ const COTTAGE_WALL := 0.32
 ## The room floor stands this much above the plinth: two faces at the same height
 ## flicker against each other, and the earth showed through in patches.
 const FLOOR_LIFT := 0.06
+## A room's floor is beaten earth (mud), not the ground outside: `earth` has the
+## slope's grass in it, and a cottage floor in it read as grass growing indoors.
+const COTTAGE_FLOOR := "mud"
 
 ## The two pieces of the front wall either side of the doorway, as [from, to] in x.
 static func cottage_front_segments(w: float) -> Array[Vector2]:
@@ -164,7 +167,7 @@ static func cottage(kit: MeshKit, xf: Transform3D, w: float, d: float, h: float,
 	# the floor keeps its top face — skipping it leaves a hole to the sea — and it
 	# sits a hair above the plinth so the two surfaces cannot z-fight
 	kit.solid_box("plaster", Vector3(0, socle - 0.1 + FLOOR_LIFT, -d / 2.0),
-			Vector3(w - 2.0 * t + 0.08, 0.2, d - 2.0 * t + 0.08), ["bottom"], {"top": "earth"})
+			Vector3(w - 2.0 * t + 0.08, 0.2, d - 2.0 * t + 0.08), ["bottom"], {"top": COTTAGE_FLOOR})
 	# front wall with the doorway, and the lintel over it
 	for seg: Vector2 in cottage_front_segments(w):
 		kit.solid_box("plaster", Vector3((seg.x + seg.y) * 0.5, mid, -t * 0.5),

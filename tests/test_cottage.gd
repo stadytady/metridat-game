@@ -75,3 +75,13 @@ func test_the_steps_stay_at_the_door() -> void:
 	for step: float in info["steps"]:
 		check(step < floor_y, "a tread stands above the floor at %.2f" % step)
 		check(step > floor_y - 1.2, "a tread hangs %.2f below the threshold" % (floor_y - step))
+
+func test_room_floor_has_no_grass() -> void:
+	var img: Image = (load("res://assets/textures/%s.png" % Arch.COTTAGE_FLOOR) as Texture2D).get_image()
+	var green := 0
+	for y in img.get_height():
+		for x in img.get_width():
+			var c := img.get_pixel(x, y)
+			if c.g > c.r:
+				green += 1
+	check(green == 0, "the room floor (%s) has %d grass-green texels" % [Arch.COTTAGE_FLOOR, green])

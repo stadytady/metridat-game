@@ -5,7 +5,7 @@ extends RefCounted
 
 ## Baked to GLB. EXTRA kinds are small one-off models built at runtime.
 const MODELS := ["amphora", "pithos", "krater", "column_doric", "olive_tree", "cypress", "ship", "tripod", "figurine"]
-const EXTRA := ["coins", "sherds", "stele", "grain", "votive", "lampstand", "torch_post", "mould", "boat", "sinkers", "hekataion", "mirror", "marble_head", "loom_weights", "oil_lamp", "anchor_stock", "loom_weight", "fish_hook", "astragal", "seal_ring", "loan_contract"]
+const EXTRA := ["coins", "sherds", "stele", "grain", "votive", "lampstand", "torch_post", "mould", "boat", "sinkers", "hekataion", "mirror", "marble_head", "loom_weights", "oil_lamp", "anchor_stock", "loom_weight", "fish_hook", "astragal", "seal_ring", "loan_contract", "mason_block"]
 
 
 static func build(name: String) -> MeshKit:
@@ -72,6 +72,8 @@ static func build(name: String) -> MeshKit:
 			fish_hook(kit)
 		"loan_contract":
 			loan_contract(kit)
+		"mason_block":
+			mason_block(kit)
 		"seal_ring":
 			seal_ring(kit)
 		"astragal":
@@ -442,6 +444,25 @@ static func loan_contract(kit: MeshKit) -> void:
 	kit.box("clay", Vector3(0.03, 0.052, 0), Vector3(0.036, 0.012, 0.03), [])  # the sealing
 	kit.box("dark", Vector3(0.03, 0.0585, 0), Vector3(0.016, 0.001, 0.014), [])  # the seal pressed in
 	kit.blob("rock", Vector3(-0.05, 0.065, 0.02), Vector3(0.045, 0.022, 0.035), 0.2, RandomNumberGenerator.new())
+
+
+## A cut limestone block lying on its side, as the mason left it: the long
+## faces only rough-dressed (the edges knocked about), and on the top face at one
+## corner the mark the gang cut in, a stroke and a hook. Origin on the ground.
+static func mason_block(kit: MeshKit) -> void:
+	var l := 0.9
+	var h := 0.42
+	var d := 0.5
+	kit.box("limestone", Vector3(0, h / 2.0, 0), Vector3(l, h, d), [])
+	# rough dressing: a few knocks off the edges, a lip left proud on one face
+	kit.box("limestone", Vector3(-0.2, h + 0.012, 0.05), Vector3(0.34, 0.025, 0.3), ["bottom"])
+	kit.box("limestone", Vector3(0.28, h + 0.01, -0.1), Vector3(0.22, 0.02, 0.2), ["bottom"])
+	kit.box("limestone", Vector3(0.05, 0.22, d / 2.0 + 0.012), Vector3(0.5, 0.18, 0.025), [])
+	# the mark, cut into the top at the corner: a stroke, and a hook off its end
+	var c := Vector3(l / 2.0 - 0.12, h + 0.001, d / 2.0 - 0.1)
+	kit.box("dark", c, Vector3(0.012, 0.002, 0.12), ["bottom"])
+	kit.box("dark", c + Vector3(-0.025, 0, -0.055), Vector3(0.05, 0.002, 0.012), ["bottom"])
+	kit.box("dark", c + Vector3(-0.05, 0, -0.04), Vector3(0.012, 0.002, 0.035), ["bottom"])
 
 
 ## A bronze seal ring dropped on the shingle: the hoop and a flat bezel with an

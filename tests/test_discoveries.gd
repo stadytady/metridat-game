@@ -44,3 +44,28 @@ func test_each_has_scene() -> void:
 			if n is Inspectable:
 				check((n as Inspectable).discovery.id == d.id, path + " points at another discovery")
 			n.free()
+
+
+## Each find shows its own model: a model shared by two finds once put a
+## standing inscribed stele in the panel of a rough block with a mason's mark.
+## The two seated terracottas are the same kind of object, so they may share.
+const SHARED_MODELS := {"res://scenes/interactables/models/votive.tscn": ["goddess_votive", "votive_figurine"]}
+
+
+func test_each_find_has_its_own_model() -> void:
+	var by_model := {}
+	for f: String in DirAccess.get_files_at("res://data/discoveries"):
+		if not f.ends_with(".tres"):
+			continue
+		var d: Discovery = load("res://data/discoveries/" + f)
+		if d == null or d.model == null:
+			continue
+		var path := d.model.resource_path
+		if not by_model.has(path):
+			by_model[path] = []
+		by_model[path].append(String(d.id))
+	for path: String in by_model:
+		var ids: Array = by_model[path]
+		ids.sort()
+		if ids.size() > 1:
+			check(SHARED_MODELS.get(path, []) == ids, "%s shown for %s" % [path.get_file(), ids])
