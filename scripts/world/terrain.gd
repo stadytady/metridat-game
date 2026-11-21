@@ -33,7 +33,8 @@ static func axis(core_min: float, core_max: float, outer: float) -> PackedFloat3
 
 
 func _ready() -> void:
-	var xs := axis(-150.0, 90.0, 1200.0)
+	# fine cells out to the Royal Kurgan's terrace on the steppe (Topo.KURGAN_CENTER)
+	var xs := axis(-180.0, 90.0, 1200.0)
 	var zs := axis(-120.0, 120.0, 1200.0)
 	var h := PackedFloat32Array()
 	h.resize(xs.size() * zs.size())

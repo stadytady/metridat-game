@@ -30,7 +30,7 @@ const PROLOGUE := 0.82
 ## The dusk is a fraction of the evening, not a counter, so a find can be added
 ## without moving it to a different part of the evening; the test reads it back.
 const LAMPS_ON := 0.65
-const LAMPS_ON_AT_FIND := 12
+const LAMPS_ON_AT_FIND := 13
 
 
 static func sample(t: float) -> Dictionary:

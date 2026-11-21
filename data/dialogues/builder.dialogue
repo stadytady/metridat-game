@@ -1,0 +1,19 @@
+# Xanthos, master builder of the king's tomb out on the steppe, at the mouth of
+# its dromos. Three questions: whose tomb, how the vault holds, where the stone
+# comes from; and a word on the mason's mark once the player has seen it.
+# Text is a key: the panel translates it, so EN/RU stay in strings.csv.
+# Indent with tabs: DM's INDENT_REGEX is ^\t+.
+
+~ start
+Xanthos: NPC_BUILDER_1
+- LOC_BUILDER_CHOICE_1
+	Xanthos: LOC_BUILDER_WHOSE_1
+	Xanthos: LOC_BUILDER_WHOSE_2
+- LOC_BUILDER_CHOICE_2
+	Xanthos: LOC_BUILDER_VAULT_1
+	Xanthos: LOC_BUILDER_VAULT_2
+- LOC_BUILDER_CHOICE_3
+	Xanthos: LOC_BUILDER_STONE_1
+- LOC_BUILDER_CHOICE_SAW [if Game.has_found("mason_mark")]
+	Xanthos: LOC_BUILDER_SAW_1
+=> END

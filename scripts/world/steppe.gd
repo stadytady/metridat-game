@@ -1,17 +1,18 @@
 extends District
 ## The steppe west of the town, the way it looks from the hill: dry grass, burial
 ## mounds with stone women on top, a shepherd's fold and a flock that grazes
-## there. Nothing here is on the route and nothing collides: it is the land the
-## city looks at, not a place to walk to.
+## there. Nothing here is on the route: it is the land the city looks at. The
+## mounds are solid, since the Royal Kurgan's pocket (royal_kurgan.gd) and the
+## west slope bring a few in reach.
 
 const SHEEP := preload("res://scripts/npc/sheep.gd")
 
 ## Burial mounds, the way the Bosporan steppe is dotted with them: (x, z, radius,
 ## height). The further out, the bigger they read — a mound has to clear the rise
 ## of the ground behind it or it disappears into the plain.
+## (The mound that stood at -122, 26 made way for the Royal Kurgan's terrace.)
 const KURGANS := [
 	[-114.0, -18.0, 11.0, 3.0],
-	[-122.0, 26.0, 13.0, 3.6],
 	[-136.0, -44.0, 15.0, 4.2],
 	[-152.0, -56.0, 16.0, 4.4],
 	[-168.0, 12.0, 19.0, 5.2],
@@ -75,6 +76,10 @@ func _field() -> void:
 	while x > FIELD_TO:
 		var z := -FIELD_Z
 		while z < FIELD_Z:
+			# not over the Royal Kurgan's floors: the straw would lie in its passage
+			if RoyalKurgan.over_stone(Rect2(x - FIELD_CELL, z, FIELD_CELL, FIELD_CELL)):
+				z += FIELD_CELL
+				continue
 			var a := Vector3(x, Topo.terrain(x, z) + 0.18, z)
 			var b := Vector3(x - FIELD_CELL, Topo.terrain(x - FIELD_CELL, z) + 0.18, z)
 			var c := Vector3(x - FIELD_CELL, Topo.terrain(x - FIELD_CELL, z + FIELD_CELL) + 0.18, z + FIELD_CELL)
@@ -118,7 +123,10 @@ func _kurgans() -> void:
 			var top := at + Vector3(0, h - 0.15, 0)
 			kit.box("limestone", top + Vector3(0, 0.55, 0), Vector3(0.34, 1.1, 0.22), ["bottom"], {})
 			kit.box("limestone", top + Vector3(0, 1.22, 0), Vector3(0.24, 0.28, 0.24), ["bottom"], {})
-	add_child(kit.build("Kurgans"))
+	var root := kit.build("Kurgans")
+	add_child(root)
+	# the Royal Kurgan's pocket brings some of them in reach: walk over, not into
+	root.add_child(District.trimesh_body((root.get_node("Mesh") as MeshInstance3D).mesh, &"dirt"))
 
 
 ## Dry grass: crossed blades, batched into one mesh. At this distance they read as
@@ -134,17 +142,20 @@ func _grass() -> void:
 		if y < 6.0:
 			continue
 		var p := Vector3(x, y, z)
+		# none through the Royal Kurgan's stone or its earth: built into a scratch
+		# kit, so the rng runs on and every other tuft stays where it was
+		var k := MeshKit.new() if RoyalKurgan.covers(x, z) else kit
 		var s := rng.randf_range(0.22, 0.5)
 		var w := s * 0.5
 		var lean := rng.randf_range(0.1, 0.35) * s
 		var a := rng.randf() * PI
 		var d := Vector3(cos(a), 0, sin(a)) * w
 		var up := Vector3(rng.randf_range(-0.2, 0.2) * s, s, rng.randf_range(-0.2, 0.2) * s)
-		kit.quad("steppe", p - d, p + d, p + d + up + Vector3(lean * d.x, 0, lean * d.z), p - d + up - Vector3(lean * d.x, 0, lean * d.z))
+		k.quad("steppe", p - d, p + d, p + d + up + Vector3(lean * d.x, 0, lean * d.z), p - d + up - Vector3(lean * d.x, 0, lean * d.z))
 		if i % 3 == 0:
 			var a2 := a + PI * 0.5
 			var d2 := Vector3(cos(a2), 0, sin(a2)) * w
-			kit.quad("steppe", p - d2, p + d2, p + d2 + up, p - d2 + up)
+			k.quad("steppe", p - d2, p + d2, p + d2 + up, p - d2 + up)
 	add_child(kit.build("Grass"))
 
 

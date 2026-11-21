@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="Discovery" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/interaction/discovery.gd" id="1_d"]
+[ext_resource type="PackedScene" path="res://scenes/interactables/models/earth_basket.tscn" id="2_m"]
+
+[resource]
+script = ExtResource("1_d")
+id = &"earth_basket"
+title = "D_EARTH_BASKET_TITLE"
+location = "LOC_KURGAN"
+description = "D_EARTH_BASKET_DESCRIPTION"
+history = "D_EARTH_BASKET_HISTORY"
+sources = "Herodotus 4.71; Wikipedia, 'Royal Kurgan' (height and perimeter of the mound)."
+narrative = "D_EARTH_BASKET_NARRATIVE"
+hint = "D_EARTH_BASKET_HINT"
+model = ExtResource("2_m")

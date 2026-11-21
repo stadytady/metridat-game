@@ -5,7 +5,7 @@ extends RefCounted
 
 ## Baked to GLB. EXTRA kinds are small one-off models built at runtime.
 const MODELS := ["amphora", "pithos", "krater", "column_doric", "olive_tree", "cypress", "ship", "tripod", "figurine"]
-const EXTRA := ["coins", "sherds", "stele", "grain", "votive", "lampstand", "torch_post", "mould", "boat", "sinkers", "hekataion", "mirror", "marble_head", "loom_weights", "oil_lamp", "anchor_stock", "loom_weight", "fish_hook", "astragal", "seal_ring", "loan_contract", "mason_block", "amphora_thasian", "goddess_terracotta", "goddess_worn"]
+const EXTRA := ["coins", "sherds", "stele", "grain", "votive", "lampstand", "torch_post", "mould", "boat", "sinkers", "hekataion", "mirror", "marble_head", "loom_weights", "oil_lamp", "anchor_stock", "loom_weight", "fish_hook", "astragal", "seal_ring", "loan_contract", "mason_block", "amphora_thasian", "goddess_terracotta", "goddess_worn", "corbel_block", "earth_basket"]
 
 
 static func build(name: String) -> MeshKit:
@@ -80,6 +80,10 @@ static func build(name: String) -> MeshKit:
 			amphora_thasian(kit)
 		"mason_block":
 			mason_block(kit)
+		"corbel_block":
+			corbel_block(kit)
+		"earth_basket":
+			earth_basket(kit)
 		"seal_ring":
 			seal_ring(kit)
 		"astragal":
@@ -599,6 +603,49 @@ static func mason_block(kit: MeshKit) -> void:
 	kit.box("dark", c, Vector3(0.012, 0.002, 0.12), ["bottom"])
 	kit.box("dark", c + Vector3(-0.025, 0, -0.055), Vector3(0.05, 0.002, 0.012), ["bottom"])
 	kit.box("dark", c + Vector3(-0.05, 0, -0.04), Vector3(0.012, 0.002, 0.035), ["bottom"])
+
+
+## A block for the corbel vault of the Royal Kurgan: dressed square, one long face
+## cut back at a slant so that, set in its course, its top edge reaches out over
+## the course below and the stepped vault reads as a line; a red ochre mark across
+## the top for the next course. Origin on the ground, the slanted face to +z.
+static func corbel_block(kit: MeshKit) -> void:
+	var l := 0.9
+	var h := 0.42
+	var d := 0.5
+	var lip := 0.12
+	var z0 := d / 2.0 - lip
+	var z1 := d / 2.0
+	var L := l / 2.0
+	kit.box("limestone", Vector3(0, h / 2.0, (z0 - d / 2.0) / 2.0), Vector3(l, h, z0 + d / 2.0), [])
+	# the overhanging lip: a wedge whose underside is the slanted face
+	var a := Vector3(-L, 0, z0)
+	var b := Vector3(L, 0, z0)
+	var c := Vector3(L, h, z1)
+	var dd := Vector3(-L, h, z1)
+	var e := Vector3(-L, h, z0)
+	var f := Vector3(L, h, z0)
+	kit.quad("limestone", a, b, c, dd)
+	kit.quad("limestone", e, dd, c, f)
+	kit.tri("limestone", a, dd, e, Vector2(0, 0), Vector2(0.2, 1), Vector2(0, 1))
+	kit.tri("limestone", b, f, c, Vector2(0, 0), Vector2(0, 1), Vector2(0.2, 1))
+	# the setting-out line in red ochre, across the top
+	kit.box("chiton_red", Vector3(0.18, h + 0.002, -0.02), Vector3(0.025, 0.004, d - 0.06), ["bottom"])
+
+
+## A digger's basket, deep and wicker, with rope handles, heaped with earth: the
+## mound of the kurgan rises a load at a time. Origin on the ground.
+static func earth_basket(kit: MeshKit) -> void:
+	kit.lathe("basket", PackedVector2Array([Vector2(0.13, 0.0), Vector2(0.17, 0.06), Vector2(0.2, 0.2), Vector2(0.21, 0.3)]),
+			12, Vector3.ZERO, 2.0, false, "basket", false)
+	# the load: dug earth, brown (the "earth" ground texture reads as turf)
+	kit.lathe("mud", PackedVector2Array([Vector2(0.205, 0.29), Vector2(0.16, 0.33), Vector2(0.08, 0.36), Vector2(0.0, 0.37)]),
+			12, Vector3.ZERO, 1.0, false)
+	# rope handles: a loop over the rim on each side
+	for sx: float in [-1.0, 1.0]:
+		for sz: float in [-1.0, 1.0]:
+			kit.box("bark", Vector3(sx * 0.21, 0.35, sz * 0.055), Vector3(0.022, 0.11, 0.022), [])
+		kit.box("bark", Vector3(sx * 0.21, 0.405, 0), Vector3(0.022, 0.022, 0.132), [])
 
 
 ## A bronze seal ring dropped on the shingle: the hoop and a flat bezel with an

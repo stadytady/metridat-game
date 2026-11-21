@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="Discovery" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/interaction/discovery.gd" id="1_d"]
+[ext_resource type="PackedScene" path="res://scenes/interactables/models/corbel_block.tscn" id="2_m"]
+
+[resource]
+script = ExtResource("1_d")
+id = &"corbel_block"
+title = "D_CORBEL_BLOCK_TITLE"
+location = "LOC_KURGAN"
+description = "D_CORBEL_BLOCK_DESCRIPTION"
+history = "D_CORBEL_BLOCK_HISTORY"
+sources = "Encyclopedia of Ukraine, 'Tsarskyi kurhan'; Wikipedia, 'Royal Kurgan' (dimensions, dating, the Leukon attribution as a hypothesis, excavation 1833-1837)."
+narrative = "D_CORBEL_BLOCK_NARRATIVE"
+hint = "D_CORBEL_BLOCK_HINT"
+model = ExtResource("2_m")

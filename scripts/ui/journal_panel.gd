@@ -4,7 +4,7 @@ extends CanvasLayer
 ## "? ? ?" with a hint where to look, so no find stays lost.
 
 ## Walking order of the districts; finds sort by it, then by id.
-const ORDER := ["LOC_HILL", "LOC_STREET", "LOC_AGORA", "LOC_SHORE", "LOC_SANCTUARY", "LOC_DREAM"]
+const ORDER := ["LOC_HILL", "LOC_KURGAN", "LOC_STREET", "LOC_AGORA", "LOC_SHORE", "LOC_SANCTUARY", "LOC_DREAM"]
 
 var _panel: PanelContainer
 var _title: Label

@@ -395,6 +395,23 @@ func _route() -> Array:
 	r.append(Vector2(-94.6, 19.0))
 	r.append(Vector2(-96.2, 19.6))
 	r.append("goddess_votive")
+	# off the end of the park and down the slope to the Royal Kurgan on the
+	# steppe: a word with Xanthos at the dromos mouth, the block on his pile,
+	# the basket on the mound; and back up to the park the same way
+	var k := Topo.KURGAN_CENTER
+	r.append(Vector2(-97.0, 24.0))
+	r.append(Vector2(-126.0, 47.0))
+	r.append(k + Vector2(25.0, -1.0))
+	r.append("talk:builder")
+	r.append(k + Vector2(24.9, 3.4))
+	r.append("corbel_block")
+	# into the cut, to the basket by its south wall, and out again
+	r.append(k + Vector2(20.0, 0.0))
+	r.append(k + Vector2(16.4, -0.6))
+	r.append("earth_basket")
+	r.append(k + Vector2(24.0, 0.0))
+	r.append(Vector2(-126.0, 47.0))
+	r.append(Vector2(-97.0, 24.0))
 	r.append(Vector2(-86.0, 19.0))
 	r.append(Vector2(-86.0, 6.6))
 	r.append(Vector2(c.x + 3.0, -4.6))

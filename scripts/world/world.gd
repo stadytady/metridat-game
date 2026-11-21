@@ -18,6 +18,7 @@ func _ready() -> void:
 	_zone("LOC_AGORA", Topo.AGORA_CENTER, Topo.AGORA_HALF - Vector2(1, 1), Topo.AGORA_H)
 	_zone("LOC_SANCTUARY", Topo.SANCT_CENTER, Topo.SANCT_HALF, Topo.SANCT_H)
 	_zone("LOC_SHORE", Vector2(64, 0), Vector2(6, 75), 1.0, 12.0)
+	_zone("LOC_KURGAN", Topo.KURGAN_CENTER, Topo.KURGAN_PAD, Topo.KURGAN_H, 14.0)
 
 
 func _zone(title: String, c: Vector2, half: Vector2, y: float, h: float = 6.0) -> void:
@@ -77,6 +78,12 @@ static func viewpoints() -> Dictionary:
 		"steppe_riders": [Vector3(-97.5, Topo.HILL_PLATFORM_TOP + 1.6, 0.0), Vector3(-120.0, Topo.terrain(-120.0, 3.0) + 1.2, 3.0)],
 		"symposium": [Vector3(-33.0, Topo.street_height(-33.0) + 1.6, Topo.street_z(-33.0) - 0.8), (TownDay.house_front(TownDay.SYMPOSIUM_X)[0] as Vector3) + Vector3(0, 1.2, 0)],
 		"donkeys": [Vector3(-47.0, Topo.street_height(-47.0) + 1.6, Topo.street_z(-47.0) - 1.4), Vector3(-53.0, Topo.street_height(-53.0) + 1.0, Topo.street_z(-53.0) + 0.7)],
+		# the Royal Kurgan on the steppe: from the slope below the park, at the
+		# mouth of the dromos, inside the chamber under the dome, and the quarry
+		"kurgan": [Vector3(-121.0, Topo.terrain(-121.0, 52.0) + 1.7, 52.0), Vector3(Topo.KURGAN_CENTER.x + 12.0, Topo.KURGAN_H + 3.5, Topo.KURGAN_CENTER.y)],
+		"kurgan_mouth": [Vector3(Topo.KURGAN_CENTER.x + 19.5, Topo.KURGAN_H + 1.6, Topo.KURGAN_CENTER.y + 0.4), Vector3(Topo.KURGAN_CENTER.x + 12.0, Topo.KURGAN_H + 2.6, Topo.KURGAN_CENTER.y)],
+		"kurgan_dome": [Vector3(Topo.KURGAN_CENTER.x + 1.0, Topo.KURGAN_H + 1.5, Topo.KURGAN_CENTER.y + 1.4), Vector3(Topo.KURGAN_CENTER.x, Topo.KURGAN_H + 8.0, Topo.KURGAN_CENTER.y)],
+		"quarry": [Vector3(-128.0, Topo.terrain(-128.0, 62.5) + 1.7, 62.5), Vector3(-121.0, Topo.terrain(-121.0, 60.0) + 1.0, 60.0)],
 		"strait": [Vector3(Topo.pier_x1() - 1.0, 3.2, Topo.PIER_Z + 1.0), Vector3(102.0, 0.3, 22.0)],
 		"stoa_shade": [Vector3(18.2, Topo.AGORA_H + 1.6, 0.0), Vector3(18.2, Topo.AGORA_H + 0.6, -4.8)],
 		"saltery": [Vector3(63.0, Topo.terrain(63.0, 22.2) + 1.7, 22.2), Vector3(60.2, Topo.terrain(60.2, 24.6) - 0.2, 24.6)],
