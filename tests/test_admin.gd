@@ -60,3 +60,16 @@ func test_the_story_leaps_are_named_and_unique() -> void:
 		check(table.has(String(a[1])), "%s is missing from strings.csv" % a[1])
 	for needed: String in ["sleep", "dream", "wake", "lamps"]:
 		check(ids.has(needed), "the menu cannot %s" % needed)
+
+
+## The weather page: back to the walk first, then every kind Weather knows, each
+## with its label.
+func test_the_weather_page_offers_every_kind() -> void:
+	var table := _table()
+	check(A.WEATHER_STEPS.size() == A.WEATHER_KEYS.size(), "the weather and its labels disagree")
+	check(A.WEATHER_STEPS[0] == -1, "the first weather does not give it back to the walk")
+	for kind: int in [Weather.DRY, Weather.SHOWER, Weather.STORM]:
+		check(A.WEATHER_STEPS.has(kind), "the menu cannot make weather %d" % kind)
+	for key: String in A.WEATHER_KEYS:
+		check(table.has(key), "%s is missing from strings.csv" % key)
+	check(table.has("UI_ADMIN_WEATHER"), "the weather page has no title")

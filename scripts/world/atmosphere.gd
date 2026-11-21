@@ -19,6 +19,9 @@ var env: Environment
 var sky_mat: ShaderMaterial
 ## Current hour (0..1); eases towards Game.time_target().
 var t := 0.0
+## The weather and the bolt's light last drawn, to notice when they change.
+var _weather := Vector2(-1, -1)
+var _flash := 0.0
 
 
 func _ready() -> void:
@@ -84,7 +87,10 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	var target := Game.time_target()
-	if is_equal_approx(t, target):
+	# the weather can change under a still hour (a bolt, the developer menu)
+	var w := Weather.now(t)
+	var f := Weather.flash(Weather.clock, w.y)
+	if is_equal_approx(t, target) and w == _weather and f == _flash:
 		return
 	# Automation (screenshots, trailer) jumps straight to its hour.
 	# Automation and the dream (entered and left behind a fade) jump straight there.
@@ -96,7 +102,11 @@ func _process(delta: float) -> void:
 
 func apply(hour: float) -> void:
 	# the hour's look, under cloud if this walk's shower is passing (Weather)
-	var k := Weather.apply(DayCycle.sample(hour), 0.0 if Game.dreaming or Game.prologue else Weather.rain_at(hour, Game.weather_seed))
+	var w := Weather.now(hour)
+	var k := Weather.apply(DayCycle.sample(hour), w.x, w.y)
+	_weather = w
+	_flash = Weather.flash(Weather.clock, w.y)
+	k = Weather.lit_by_bolt(k, _flash)
 	sun.rotation_degrees = Vector3(-maxf(k.sun_elevation, 1.0), SUN_YAW, 0.0)
 	sun.light_color = k.sun_color
 	sun.light_energy = k.sun_energy

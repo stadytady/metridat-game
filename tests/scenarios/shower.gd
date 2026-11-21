@@ -18,6 +18,7 @@ func run() -> void:
 	check(Weather.rain_at(0.38, 1) > 0.9, "seed 1 has no shower at 0.38")
 	await seconds(1.0)
 	check(w.raining(), "no rain falls at the height of the shower")
+	check(w.slant() > 5.0 and w.slant() < 30.0, "the shower slants %.0f deg" % w.slant())
 	var dry: Dictionary = DayCycle.sample(0.38)
 	check(atm.sun.light_energy < float(dry.sun_energy) * 0.5, "the sun is not dimmed: %.2f" % atm.sun.light_energy)
 	check(atm.env.fog_depth_end < float(dry.fog_end) * 0.5, "the haze does not close in")
