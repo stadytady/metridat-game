@@ -5,7 +5,7 @@ extends RefCounted
 
 ## Baked to GLB. EXTRA kinds are small one-off models built at runtime.
 const MODELS := ["amphora", "pithos", "krater", "column_doric", "olive_tree", "cypress", "ship", "tripod", "figurine"]
-const EXTRA := ["coins", "sherds", "stele", "grain", "votive", "lampstand", "torch_post", "mould", "boat", "sinkers", "hekataion", "mirror", "marble_head", "loom_weights", "oil_lamp", "anchor_stock", "loom_weight", "fish_hook", "astragal", "seal_ring", "loan_contract", "mason_block", "amphora_thasian"]
+const EXTRA := ["coins", "sherds", "stele", "grain", "votive", "lampstand", "torch_post", "mould", "boat", "sinkers", "hekataion", "mirror", "marble_head", "loom_weights", "oil_lamp", "anchor_stock", "loom_weight", "fish_hook", "astragal", "seal_ring", "loan_contract", "mason_block", "amphora_thasian", "goddess_terracotta", "goddess_worn"]
 
 
 static func build(name: String) -> MeshKit:
@@ -43,6 +43,10 @@ static func build(name: String) -> MeshKit:
 			grain(kit)
 		"mould":
 			mould(kit)
+		"goddess_terracotta":
+			goddess_figurine(kit)
+		"goddess_worn":
+			goddess_figurine(kit, true)
 		"boat":
 			boat(kit)
 		"sinkers":
@@ -395,14 +399,60 @@ static func grain(kit: MeshKit) -> void:
 	kit.color = Color.WHITE
 
 
-## Two-piece clay mould for a figurine, opened: the front half shows the
-## hollow of a seated goddess, the back half lies beside it.
+## A mould-made terracotta of a seated goddess as the Bosporan workshops made
+## them: tall polos, veil, hands laid on the knees, feet on a footstool, on a
+## throne, the front from the mould (`terracotta_goddess`, with what is left of
+## its white slip and red paint) and the back plain. About 24 cm here. The front
+## is cut to the figure's outline in blocks - polos, shoulders and veil, throne
+## and lap, base - each showing its own part of the picture, so it does not read
+## as a tile from the side. `worn`: one arm broken away and the base chipped, as
+## an offering left out in the weather. Faces +z, origin on the ground.
+static func goddess_figurine(kit: MeshKit, worn := false) -> void:
+	var px := 0.00375  # one texel of the 32x64 picture, in metres (0.12 x 0.24)
+	# [texel rect x0, y0, x1, y1, depth]
+	var blocks := [[0, 60, 32, 64, 0.07], [0, 28, 32, 60, 0.06], [5, 9, 27, 28, 0.045], [10, 1, 22, 9, 0.035]]
+	for b: Array in blocks:
+		var x0: float = (float(b[0]) - 16.0) * px
+		var x1: float = (float(b[2]) - 16.0) * px
+		var y0: float = (64.0 - float(b[3])) * px
+		var y1: float = (64.0 - float(b[1])) * px
+		var dz: float = b[4]
+		var cut: bool = worn and int(b[1]) == 60
+		if cut:
+			x0 += 6.0 * px  # a corner of the base knocked off
+		kit.box("figurine", Vector3((x0 + x1) / 2.0, (y0 + y1) / 2.0, -dz / 2.0 + 0.035), Vector3(x1 - x0, y1 - y0, dz), [])
+		var z := 0.0352
+		var u0: float = (float(b[0]) + (6.0 if cut else 0.0)) / 32.0
+		var u1: float = float(b[2]) / 32.0
+		var v0: float = float(b[1]) / 64.0
+		var v1: float = float(b[3]) / 64.0
+		kit.quad("terracotta_goddess", Vector3(x0, y0, z), Vector3(x1, y0, z), Vector3(x1, y1, z), Vector3(x0, y1, z),
+				PackedVector2Array([Vector2(u0, v1), Vector2(u1, v1), Vector2(u1, v0), Vector2(u0, v0)]))
+	if worn:
+		# where her left arm and hand were: the broken surface, plain clay
+		var bx0 := (18.0 - 16.0) * px
+		var bx1 := (26.0 - 16.0) * px
+		kit.quad("figurine", Vector3(bx0, (64.0 - 42.0) * px, 0.0356), Vector3(bx1, (64.0 - 42.0) * px, 0.0356),
+				Vector3(bx1, (64.0 - 24.0) * px, 0.0356), Vector3(bx0, (64.0 - 24.0) * px, 0.0356))
+
+
+## The two halves of a figurine mould, opened: the front half lying face up
+## shows the hollow of the seated goddess (the same picture, darkened: the
+## negative of the figure), the back half beside it, and a fresh figurine still
+## soft, set to dry. Moulds were taken from a model, so one figure could be
+## pressed again and again.
 static func mould(kit: MeshKit) -> void:
-	kit.box("clay", Vector3(-0.09, 0.05, 0), Vector3(0.15, 0.1, 0.24), [])
-	kit.box("dark", Vector3(-0.09, 0.101, 0.01), Vector3(0.07, 0.002, 0.16), ["bottom"])
-	kit.box("dark", Vector3(-0.09, 0.101, -0.08), Vector3(0.04, 0.002, 0.04), ["bottom"])
-	kit.box("clay", Vector3(0.09, 0.05, 0.01), Vector3(0.15, 0.1, 0.24), [])
-	kit.blob("figurine", Vector3(0.0, 0.03, 0.2), Vector3(0.05, 0.03, 0.05), 0.2, RandomNumberGenerator.new())
+	kit.box("clay", Vector3(-0.08, 0.04, 0), Vector3(0.15, 0.08, 0.27), ["top"])
+	# the hollow, picture lying head to -z
+	var y := 0.0802
+	kit.quad("mould_hollow", Vector3(-0.14, y, -0.12), Vector3(-0.14, y, 0.12), Vector3(-0.02, y, 0.12), Vector3(-0.02, y, -0.12),
+			PackedVector2Array([Vector2(0, 0), Vector2(0, 1), Vector2(1, 1), Vector2(1, 0)]))
+	kit.box("clay", Vector3(0.1, 0.04, -0.03), Vector3(0.15, 0.08, 0.27), [])
+	kit.box("dark", Vector3(0.1, 0.0805, -0.03), Vector3(0.03, 0.001, 0.03), ["bottom"])  # the vent hole's key
+	# the fresh one, half size, drying beside them
+	kit.xform = Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * 0.5), Vector3(0.22, 0.0, 0.12))
+	goddess_figurine(kit)
+	kit.xform = Transform3D.IDENTITY
 
 
 ## Small open fishing boat, bow along +x, keel at y = 0: the ship's hull in
@@ -429,7 +479,8 @@ static func sinkers(kit: MeshKit) -> void:
 	kit.quad("net", Vector3(-0.2, 0.004, 0.16), Vector3(0.2, 0.004, 0.16), Vector3(0.2, 0.004, -0.16), Vector3(-0.2, 0.004, -0.16))
 	for i in 5:
 		var p := Vector3(-0.13 + i * 0.065, 0.0, rng.randf_range(-0.08, 0.08))
-		kit.lathe("clay", PackedVector2Array([Vector2(0.03, 0.0), Vector2(0.03, 0.014)]), 6, p, 1.0, true, "clay", true)
+		# discs cut from broken pots: two from black-glazed ware, the glaze still on top
+		kit.lathe("clay", PackedVector2Array([Vector2(0.03, 0.0), Vector2(0.03, 0.014)]), 6, p, 1.0, true, "dark" if i % 3 == 1 else "clay", true)
 		kit.box("dark", p + Vector3(0, 0.0145, 0), Vector3(0.008, 0.001, 0.008), ["bottom"])
 	for x: float in [-0.08, 0.1]:
 		var p := Vector3(x, 0.0, 0.11 * signf(x))
@@ -588,9 +639,11 @@ static func loom_weights(kit: MeshKit) -> void:
 		kit.xform = Transform3D(Basis(Vector3.UP, rng.randf_range(0, TAU)) * (Basis(Vector3.RIGHT, PI / 2.0) if lying else Basis.IDENTITY),
 				p + Vector3(0, 0.032 if lying else 0.0, 0))
 		kit.frustum("clay", Vector3.ZERO, Vector2(0.064, 0.064), Vector2(0.028, 0.028), 0.1, ["bottom"])
-		kit.box("dark", Vector3(0, 0.078, -0.02), Vector3(0.012, 0.012, 0.004), [])  # the hole for the string
-		if i == 4:
-			kit.box("dark", Vector3(0, 0.1005, 0), Vector3(0.014, 0.002, 0.014), [])  # a stamp on the top
+		for sz: float in [-1.0, 1.0]:
+			kit.box("dark", Vector3(0, 0.078, 0.02 * sz), Vector3(0.012, 0.012, 0.004), [])  # the hole for the string, right through
+		if i == 4 or i == 9:
+			# a stamp on the top: an oval seal impression, as some weights carry
+			kit.lathe("dark", PackedVector2Array([Vector2(0.011, 0.1003), Vector2(0.0, 0.1006)]), 8, Vector3.ZERO, 1.0, true, "dark", false)
 	kit.xform = Transform3D.IDENTITY
 
 

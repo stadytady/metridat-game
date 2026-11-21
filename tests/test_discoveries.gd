@@ -47,9 +47,9 @@ func test_each_has_scene() -> void:
 
 
 ## Each find shows its own model: a model shared by two finds once put a
-## standing inscribed stele in the panel of a rough block with a mason's mark.
-## The two seated terracottas are the same kind of object, so they may share.
-const SHARED_MODELS := {"res://scenes/interactables/models/votive.tscn": ["goddess_votive", "votive_figurine"]}
+## standing inscribed stele in the panel of a rough block with a mason's mark,
+## and the weathered terracotta in the park with its arm still on.
+const SHARED_MODELS := {}
 
 
 func test_each_find_has_its_own_model() -> void:
