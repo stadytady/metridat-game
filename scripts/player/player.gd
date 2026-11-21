@@ -186,6 +186,12 @@ func _track_surface() -> void:
 		_surface = col.get_meta(&"surface", &"dirt")
 
 
+## How much the camera sways with the walk (bob, run zoom): none with camera
+## motion turned off in the pause menu.
+static func camera_motion() -> float:
+	return 1.0 if Game.head_bob else 0.0
+
+
 func _bob_and_steps(delta: float, sprint: bool) -> void:
 	var hspeed := Vector2(velocity.x, velocity.z).length()
 	var moving := is_on_floor() and hspeed > 0.6
@@ -213,8 +219,8 @@ func _bob_and_steps(delta: float, sprint: bool) -> void:
 				stone_steps += 1
 			else:
 				dirt_steps += 1
-	var amp := bob_amount * clampf(hspeed / walk_speed, 0.0, 1.6) if moving else 0.0
+	var amp := bob_amount * clampf(hspeed / walk_speed, 0.0, 1.6) * camera_motion() if moving else 0.0
 	var target_y := _cam_base_y + sin(_bob * 2.0) * amp
 	camera.position.y = lerpf(camera.position.y, target_y, 1.0 - exp(-14.0 * delta))
-	var fov := Game.fov + (RUN_FOV if sprint and moving else 0.0)
+	var fov := Game.fov + (RUN_FOV * camera_motion() if sprint and moving else 0.0)
 	camera.fov = lerpf(camera.fov, fov, 1.0 - exp(-6.0 * delta))

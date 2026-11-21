@@ -13,6 +13,10 @@ var _desc: Label
 var _hist: Label
 var _src: Label
 var _story: Label
+## The texts scroll when they are taller than the screen leaves room for (a
+## long history at a large text size); the close hint stays below them.
+var _scroll: ScrollContainer
+var _col: VBoxContainer
 var _opened_frame := -1
 var _shown: Discovery
 var viewer: ItemViewer
@@ -29,10 +33,17 @@ func _ready() -> void:
 	viewer = ItemViewer.new()
 	viewer.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(viewer)
+	var side := VBoxContainer.new()
+	side.add_theme_constant_override("separation", 10)
+	row.add_child(side)
+	_scroll = ScrollContainer.new()
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	side.add_child(_scroll)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 10)
 	col.custom_minimum_size.x = TEXT_W
-	row.add_child(col)
+	_scroll.add_child(col)
+	_col = col
 	_title = UiStyle.label("", 36, UiStyle.BORDER)
 	_where = UiStyle.label("", 22, UiStyle.MUTED)
 	_desc = _wrap(UiStyle.label("", 24))
@@ -44,8 +55,9 @@ func _ready() -> void:
 	var foot := UiStyle.label("", 20, UiStyle.MUTED)
 	Keys.bind(foot, "UI_CLOSE")
 	foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	for n: Control in [_title, _where, _desc, _sep(), h1, _hist, _src, _sep(), h2, _story, foot]:
+	for n: Control in [_title, _where, _desc, _sep(), h1, _hist, _src, _sep(), h2, _story]:
 		col.add_child(n)
+	side.add_child(foot)
 	_panel.visible = false
 	Game.discovered.connect(_on_discovered)
 
@@ -83,7 +95,11 @@ func _fill(d: Discovery) -> void:
 	_center()
 
 
+## A ScrollContainer asks for no height of its own: give it the texts' height,
+## but no more than the screen has room for, and start at the top.
 func _center() -> void:
+	_scroll.custom_minimum_size.y = minf(_col.get_combined_minimum_size().y, UiStyle.screen(self).y - 170.0)
+	_scroll.scroll_vertical = 0
 	_panel.reset_size()
 	_panel.position = UiStyle.centred(self, _panel.size)
 
@@ -113,9 +129,13 @@ func close() -> void:
 	Game.inspect_closed.emit()
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	# The E that opened the panel must not close it in the same frame.
 	if not _panel.visible or Engine.get_process_frames() <= _opened_frame + 1:
 		return
+	# the long texts scroll on the stick or the arrows too, not only the wheel
+	var dy := Input.get_axis(&"ui_up", &"ui_down")
+	if absf(dy) > 0.2:
+		_scroll.scroll_vertical += roundi(dy * 900.0 * delta)
 	if Input.is_action_just_pressed(&"interact") or Input.is_action_just_pressed(&"back"):
 		close()

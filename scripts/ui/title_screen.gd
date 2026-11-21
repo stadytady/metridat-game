@@ -57,7 +57,7 @@ func _ready() -> void:
 	var latin := Label.new()
 	latin.text = "PANTICAPAEUM"
 	latin.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	latin.add_theme_font_size_override("font_size", 18)
+	UiStyle.font(latin, 18)
 	latin.add_theme_color_override("font_color", Color(UiStyle.MUTED, 0.75))
 	col.add_child(latin)
 	col.add_child(_band())
@@ -67,14 +67,14 @@ func _ready() -> void:
 	_start = UiStyle.button("UI_START")
 	_start.custom_minimum_size = Vector2(320, 64)
 	_start.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	_start.add_theme_font_size_override("font_size", 32)
+	UiStyle.font(_start, 32)
 	_start.pressed.connect(start)
 	_start.focus_mode = Control.FOCUS_ALL
 	col.add_child(_start)
 	_new = UiStyle.button("UI_NEW_GAME")
 	_new.custom_minimum_size = Vector2(320, 48)
 	_new.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	_new.add_theme_font_size_override("font_size", 24)
+	UiStyle.font(_new, 24)
 	_new.pressed.connect(start_over)
 	_new.focus_mode = Control.FOCUS_ALL
 	_new.visible = false

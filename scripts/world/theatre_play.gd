@@ -152,6 +152,7 @@ func step(hour: float, delta: float) -> void:
 	if not on:
 		return
 	_t += delta
+	Game.caption("CAP_CHORUS", _sound.global_position, 30.0)
 	var q := floorf(_t * 15.0) / 15.0
 	var s: Array = strophe(q)
 	var walking: bool = s[1]

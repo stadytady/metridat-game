@@ -89,4 +89,7 @@ static func viewpoints() -> Dictionary:
 		"surf": [Vector3(Topo.waterline_x(12) - 4.0, Topo.terrain(Topo.waterline_x(12) - 4.0, 12) + 1.6, 12),
 				Vector3(Topo.waterline_x(12) + 40.0, 0.0, -18)],
 		"shore": [Vector3(54, Topo.terrain(54, 18) + 1.6, 18), Vector3(400, 2, 60)],
+		"grain_quay": [Vector3(60.2, Topo.terrain(60.2, -5.6) + 1.9, -5.6), Vector3(64.0, Topo.terrain(64.0, -9.0) + 0.3, -9.2)],
+		"grain_pier": [Vector3(64.6, Topo.PIER_H + 1.6, -5.4), Vector3(72.0, Topo.PIER_H + 0.4, -6.9)],
+		"theatre_seats": [Vector3(-97.0, Topo.HILL_PLATFORM_TOP + 2.2, 0.6), Vector3(-89.0, Topo.HILL_PLATFORM_TOP + 0.8, 0.0)],
 	}

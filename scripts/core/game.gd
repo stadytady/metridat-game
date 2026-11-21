@@ -34,6 +34,20 @@ var invert_y := false
 ## Master volume, 0 (mute) .. 1; set_volume() applies it to the Master bus.
 var master_volume := 1.0
 var psx_effects := true
+## Camera sway: the head bob and the widening when running. Off for anyone who
+## gets sick from it; the view then moves only where the player moves it.
+var head_bob := true
+## Short lines for sounds heard off screen (a dog, the loom, the chorus, rain).
+var captions := false
+## Every UI text is drawn at its size times this (UiStyle).
+var text_scale := 1.0
+const TEXT_MIN := 1.0
+const TEXT_MAX := 1.4
+## A sound asks for its caption (HUD draws it): a translation key.
+signal caption_requested(key: String)
+## The same caption is not repeated sooner than this (ms, wall clock).
+const CAPTION_GAP_MS := 7000
+var _caption_at := {}
 ## "en" or "ru". Empty until settings load: then the system language decides.
 var language := ""
 const LANGUAGES := ["en", "ru"]
@@ -226,6 +240,9 @@ func load_settings() -> void:
 		psx_effects = bool(cfg.get_value("video", "psx_effects", true))
 		language = String(cfg.get_value("ui", "language", ""))
 		fov = clampf(float(cfg.get_value("video", "fov", 72.0)), FOV_MIN, FOV_MAX)
+		head_bob = bool(cfg.get_value("video", "head_bob", true))
+		captions = bool(cfg.get_value("ui", "captions", false))
+		text_scale = clampf(float(cfg.get_value("ui", "text_scale", 1.0)), TEXT_MIN, TEXT_MAX)
 		key_binds = {}
 		for a: StringName in Keys.DEFAULT_KEYS:
 			var k := int(cfg.get_value("keys", String(a), -1))
@@ -256,6 +273,35 @@ func set_volume(v: float) -> void:
 	save_settings()
 
 
+## Redraws every UI text at the new size, at once (UiStyle keeps each one's base).
+func set_text_scale(v: float) -> void:
+	text_scale = clampf(v, TEXT_MIN, TEXT_MAX)
+	UiStyle.rescale(get_tree().root)
+	save_settings()
+	settings_changed.emit()
+
+
+## A sound at `pos` asks for its caption: shown only with captions on, within
+## `reach` of the listener (the player, unless one is given) and not again
+## within `gap_ms` of the last time.
+func caption(key: String, pos: Vector3, reach: float, gap_ms := CAPTION_GAP_MS, listener := Vector3.INF) -> bool:
+	if not captions:
+		return false
+	if listener == Vector3.INF:
+		var p := get_tree().get_first_node_in_group(&"player") as Node3D
+		if p == null:
+			return false
+		listener = p.global_position
+	if listener.distance_to(pos) > reach:
+		return false
+	var now := Time.get_ticks_msec()
+	if now - int(_caption_at.get(key, -1000000)) < gap_ms:
+		return false
+	_caption_at[key] = now
+	caption_requested.emit(key)
+	return true
+
+
 ## Switches the UI and all texts; Labels holding translation keys update
 ## themselves, formatted ones listen for NOTIFICATION_TRANSLATION_CHANGED.
 func set_language(lang: String) -> void:
@@ -273,6 +319,9 @@ func save_settings() -> void:
 	cfg.set_value("video", "psx_effects", psx_effects)
 	cfg.set_value("ui", "language", language)
 	cfg.set_value("video", "fov", fov)
+	cfg.set_value("video", "head_bob", head_bob)
+	cfg.set_value("ui", "captions", captions)
+	cfg.set_value("ui", "text_scale", text_scale)
 	for a: StringName in key_binds:
 		cfg.set_value("keys", String(a), int(key_binds[a]))
 	var err := cfg.save(settings_path)

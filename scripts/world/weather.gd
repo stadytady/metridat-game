@@ -149,6 +149,9 @@ func step(r: float) -> void:
 	if not on:
 		return
 	_rain.amount_ratio = clampf(r, 0.05, 1.0)
+	# rain is everywhere: its caption once at the start and now and then after
+	if r > 0.3:
+		Game.caption("CAP_RAIN", _rain.global_position, INF, 30000)
 	_pm.gravity = drift(_t)
 	var cam := get_viewport().get_camera_3d()
 	if cam != null:

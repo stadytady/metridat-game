@@ -19,6 +19,8 @@ const SOUNDS := {
 }
 ## The voices that stop when the lamps come on: nobody beats a loom at midnight.
 const BY_DAY := ["hammer", "loom", "hum"]
+## Close enough to read what is heard behind the wall (Game.captions).
+const CAPTION_REACH := 16.0
 ## One house in this many has something to hear behind its wall.
 const EVERY := 7
 ## How far off the wall the sound sits, and how far it carries.
@@ -46,6 +48,11 @@ var _player: Node3D
 ## Where each voice is and what it is. A voice hangs on the wall of one house in
 ## EVERY, at the height of its window, half a metre out into the lane.
 ## [{pos, kind}]
+## The caption for a voice: CAP_ and its kind (CAP_BARK, CAP_LOOM ...).
+static func caption_key(kind: String) -> String:
+	return "CAP_" + kind.to_upper()
+
+
 static func placements(houses: Array) -> Array:
 	var out := []
 	var kinds: Array = SOUNDS.keys()
@@ -97,5 +104,6 @@ func _process(delta: float) -> void:
 			_wait[i] = 0.5
 			continue
 		_players[i].play()
+		Game.caption(caption_key(_kinds[i]), _players[i].global_position, CAPTION_REACH)
 		# at night the yard dogs have more to say than by day
 		_wait[i] = _gaps[i] * (NIGHT_BARK if (quiet and _kinds[i] == "bark") else 1.0)

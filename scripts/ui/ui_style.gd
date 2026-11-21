@@ -25,6 +25,24 @@ static func centred(n: Node, size: Vector2) -> Vector2:
 	return ((screen(n) - size) / 2.0).max(Vector2(40, 40))
 
 
+## Sets a control's font to `size` times Game.text_scale and remembers the
+## base, so rescale() can redraw it when the player changes the text size.
+static func font(c: Control, size: int) -> void:
+	c.set_meta(&"ui_font", size)
+	c.add_theme_font_size_override("font_size", scaled(size))
+
+
+static func scaled(size: int) -> int:
+	return roundi(size * Game.text_scale)
+
+
+## Every control under `root` that font() sized, at the current text scale.
+static func rescale(root: Node) -> void:
+	for c: Node in root.find_children("*", "Control", true, false):
+		if c.has_meta(&"ui_font"):
+			(c as Control).add_theme_font_size_override("font_size", scaled(int(c.get_meta(&"ui_font"))))
+
+
 static func panel() -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = BG
@@ -38,7 +56,7 @@ static func panel() -> StyleBoxFlat:
 static func label(text: String, size: int, color: Color = TEXT) -> Label:
 	var l := Label.new()
 	l.text = text
-	l.add_theme_font_size_override("font_size", size)
+	font(l, size)
 	l.add_theme_color_override("font_color", color)
 	l.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.8))
 	l.add_theme_constant_override("shadow_offset_x", 2)
@@ -49,7 +67,7 @@ static func label(text: String, size: int, color: Color = TEXT) -> Label:
 static func button(text: String) -> Button:
 	var b := Button.new()
 	b.text = text
-	b.add_theme_font_size_override("font_size", 26)
+	font(b, 26)
 	for state in ["normal", "hover", "pressed", "focus"]:
 		var sb := panel()
 		sb.set_content_margin_all(10)
