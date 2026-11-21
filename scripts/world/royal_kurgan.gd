@@ -79,6 +79,13 @@ const PORTER_DROP := 2
 ## The quarryman's pick, between blows (s).
 const TAP_EVERY := 1.6
 const TAP_REACH := 22.0
+## How much of the sky's light gets in (vertex alpha, psx_lit's AO): at the
+## mouth, at the back of the dromos, and in the chamber.
+const AMBIENT_MOUTH := 0.6
+const AMBIENT_DEEP := 0.03
+const AMBIENT_CHAMBER := 0.02
+## The dromos is built in pieces this long, so the dark can deepen along it.
+const DROMOS_PIECE := 1.0
 ## Tufts of dry grass and scrub on the mound.
 const TUFTS := 520
 const SCRUB := 26
@@ -144,6 +151,16 @@ static func dromos_x1() -> float:
 ## The mouth in the stone front, in the world.
 static func mouth() -> Vector2:
 	return Topo.KURGAN_CENTER + Vector2(FACADE_X, 0.0)
+
+
+## How much of the sky's ambient light reaches the stone at x (offset east of
+## the centre): falling off from the mouth to the back of the dromos, and the
+## chamber beyond its door darker still.
+static func ambient_at(x: float) -> float:
+	if x < dromos_x0():
+		return AMBIENT_CHAMBER
+	var u := clampf((x - dromos_x0()) / (FACADE_X - dromos_x0()), 0.0, 1.0)
+	return lerpf(AMBIENT_DEEP, AMBIENT_MOUTH, pow(u, 2.5))
 
 
 ## The mound's height at distance d from its centre: a full round crown.
@@ -281,6 +298,7 @@ func _ready() -> void:
 
 func _chamber(kit: MeshKit) -> void:
 	var c := center()
+	kit.color = Color(1, 1, 1, AMBIENT_CHAMBER)
 	kit.solid_box("limestone", c + Vector3(0, 0.03, 0), Vector3(CHAMBER_HALF * 2.0, 0.06, CHAMBER_HALF * 2.0), [])
 	for i in CHAMBER_COURSES:
 		var w := chamber_half(i)
@@ -302,27 +320,38 @@ func _chamber(kit: MeshKit) -> void:
 			kit.solid_box("limestone", Vector3(ex, y, c.z), Vector3(t, COURSE, w * 2.0), skip)
 	var top := c.y + chamber_height()
 	kit.solid_box("limestone", Vector3(c.x, top + 0.15, c.z), Vector3(CHAMBER_OUT * 2.0, 0.3, CHAMBER_OUT * 2.0), [])
+	kit.color = Color.WHITE
 
 
 func _dromos(kit: MeshKit) -> void:
 	var c := center()
-	var x0 := c.x + dromos_x0()
-	var x1 := c.x + dromos_x1()
-	var mid := (x0 + x1) / 2.0
-	var len := x1 - x0
-	# the floor, out through the front to its outer face
-	kit.solid_box("limestone", Vector3((x0 + c.x + FACADE_X) / 2.0, c.y + 0.03, c.z), Vector3(FACADE_X - dromos_x0(), 0.06, DROMOS_HALF * 2.0), [])
-	# the doorway's floor, through the chamber's wall
-	kit.solid_box("limestone", Vector3(c.x + (CHAMBER_HALF + CHAMBER_OUT) / 2.0, c.y + 0.03, c.z), Vector3(CHAMBER_OUT - CHAMBER_HALF, 0.06, DOOR_HALF * 2.0), [])
 	var n := dromos_courses()
-	for i in n:
-		var w := dromos_half(i)
-		var y := c.y + (i + 0.5) * COURSE
-		var t := DROMOS_OUT - w
-		var skip: Array = ["bottom"] if i < DROMOS_UPRIGHT else []
-		for s: float in [-1.0, 1.0]:
-			kit.solid_box("limestone", Vector3(mid, y, c.z + s * (w + t / 2.0)), Vector3(len, COURSE, t), skip)
-	kit.solid_box("limestone", Vector3(mid, c.y + n * COURSE + 0.15, c.z), Vector3(len, 0.3, DROMOS_OUT * 2.0), [])
+	# the doorway's floor, through the chamber's wall
+	kit.color = Color(1, 1, 1, AMBIENT_CHAMBER)
+	kit.solid_box("limestone", Vector3(c.x + (CHAMBER_HALF + CHAMBER_OUT) / 2.0, c.y + 0.03, c.z), Vector3(CHAMBER_OUT - CHAMBER_HALF, 0.06, DOOR_HALF * 2.0), [])
+	# in pieces along its length, each a shade lighter towards the mouth
+	var x := dromos_x0()
+	while x < FACADE_X - 0.001:
+		var x1 := minf(x + DROMOS_PIECE, FACADE_X)
+		kit.color = Color(1, 1, 1, ambient_at((x + x1) / 2.0))
+		var mid := c.x + (x + x1) / 2.0
+		var len := x1 - x
+		kit.solid_box("limestone", Vector3(mid, c.y + 0.03, c.z), Vector3(len, 0.06, DROMOS_HALF * 2.0), [])
+		# the walls stop at the back of the front; the floor runs out through it
+		if x < dromos_x1():
+			var wx1 := minf(x1, dromos_x1())
+			var wmid := c.x + (x + wx1) / 2.0
+			var wlen := wx1 - x
+			for i in n:
+				var w := dromos_half(i)
+				var y := c.y + (i + 0.5) * COURSE
+				var t := DROMOS_OUT - w
+				var skip: Array = ["bottom"] if i < DROMOS_UPRIGHT else []
+				for s: float in [-1.0, 1.0]:
+					kit.solid_box("limestone", Vector3(wmid, y, c.z + s * (w + t / 2.0)), Vector3(wlen, COURSE, t), skip)
+			kit.solid_box("limestone", Vector3(wmid, c.y + n * COURSE + 0.15, c.z), Vector3(wlen, 0.3, DROMOS_OUT * 2.0), [])
+		x = x1
+	kit.color = Color.WHITE
 
 
 ## The dressed front: coursed blocks up to the mound's surface, the mouth left

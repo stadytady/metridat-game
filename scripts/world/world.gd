@@ -82,6 +82,7 @@ static func viewpoints() -> Dictionary:
 		# mouth of the dromos, inside the chamber under the dome, and the quarry
 		"kurgan": [Vector3(-121.0, Topo.terrain(-121.0, 52.0) + 1.7, 52.0), Vector3(Topo.KURGAN_CENTER.x + 12.0, Topo.KURGAN_H + 3.5, Topo.KURGAN_CENTER.y)],
 		"kurgan_mouth": [Vector3(Topo.KURGAN_CENTER.x + 19.5, Topo.KURGAN_H + 1.6, Topo.KURGAN_CENTER.y + 0.4), Vector3(Topo.KURGAN_CENTER.x + 12.0, Topo.KURGAN_H + 2.6, Topo.KURGAN_CENTER.y)],
+		"kurgan_dromos": [Vector3(Topo.KURGAN_CENTER.x + 9.5, Topo.KURGAN_H + 1.6, Topo.KURGAN_CENTER.y + 0.3), Vector3(Topo.KURGAN_CENTER.x, Topo.KURGAN_H + 1.3, Topo.KURGAN_CENTER.y)],
 		"kurgan_dome": [Vector3(Topo.KURGAN_CENTER.x + 1.0, Topo.KURGAN_H + 1.5, Topo.KURGAN_CENTER.y + 1.4), Vector3(Topo.KURGAN_CENTER.x, Topo.KURGAN_H + 8.0, Topo.KURGAN_CENTER.y)],
 		"quarry": [Vector3(-128.0, Topo.terrain(-128.0, 62.5) + 1.7, 62.5), Vector3(-121.0, Topo.terrain(-121.0, 60.0) + 1.0, 60.0)],
 		"strait": [Vector3(Topo.pier_x1() - 1.0, 3.2, Topo.PIER_Z + 1.0), Vector3(102.0, 0.3, 22.0)],

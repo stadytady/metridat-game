@@ -115,3 +115,22 @@ func test_it_keeps_clear_of_the_steppe_and_the_town() -> void:
 func test_the_workers_go_home_with_the_lamps() -> void:
 	check(K.at_work(DayCycle.LAMPS_ON - 0.01), "the workers leave before dusk")
 	check(not K.at_work(DayCycle.LAMPS_ON), "the workers stay out after dusk")
+
+
+## Dark inside: the sky's ambient falls off from the mouth into the dromos and
+## is all but gone in the chamber; psx_lit reads it from the vertex alpha and
+## leaves direct light (the lamp) alone.
+func test_it_is_dark_inside() -> void:
+	var prev := 0.0
+	var x := K.dromos_x0()
+	while x <= K.FACADE_X:
+		var a := K.ambient_at(x)
+		check(a >= prev - 1e-5, "the dromos grows lighter going in at %.1f" % x)
+		check(a > 0.0 and a <= 1.0, "ambient %.2f out of range" % a)
+		prev = a
+		x += 0.5
+	check(K.ambient_at(0.0) < K.ambient_at(K.dromos_x0() + 0.1), "the chamber is no darker than the dromos")
+	check(K.ambient_at(0.0) <= 0.1, "the chamber keeps %.2f of the sky's light" % K.ambient_at(0.0))
+	check(K.ambient_at(K.FACADE_X) >= 0.6, "the mouth is as dark as the chamber")
+	var shader := FileAccess.get_file_as_string("res://assets/shaders/psx_lit.gdshader")
+	check(shader.contains("AO = COLOR.a") and shader.contains("AO_LIGHT_AFFECT = 0.0"), "psx_lit does not take its ambient from the vertex alpha")
