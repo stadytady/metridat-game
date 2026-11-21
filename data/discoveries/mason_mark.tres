@@ -11,6 +11,5 @@ location = "LOC_AGORA"
 description = "D_MASON_MARK_DESCRIPTION"
 history = "D_MASON_MARK_HISTORY"
 sources = "A. Burford, The Greek Temple Builders at Epidauros (Liverpool, 1969)."
-narrative = "D_MASON_MARK_NARRATIVE"
 hint = "D_MASON_MARK_HINT"
 model = ExtResource("2_m")

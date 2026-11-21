@@ -1,8 +1,8 @@
 extends CanvasLayer
 ## Panel shown when an object is inspected: the find large on the left (an
-## ItemViewer the player can turn), the texts on the right. History
-## (established, with sources) and the game's own story are separate,
-## labelled sections.
+## ItemViewer the player can turn), the texts on the right: what the find is,
+## and what is historically established about such things, with sources. No
+## fiction page: what the game made up is listed in README.
 
 const TEXT_W := 820.0
 
@@ -12,7 +12,6 @@ var _where: Label
 var _desc: Label
 var _hist: Label
 var _src: Label
-var _story: Label
 ## The texts scroll when they are taller than the screen leaves room for (a
 ## long history at a large text size); the close hint stays below them.
 var _scroll: ScrollContainer
@@ -50,12 +49,10 @@ func _ready() -> void:
 	var h1 := UiStyle.label("UI_HISTORY", 22, UiStyle.HISTORY)
 	_hist = _wrap(UiStyle.label("", 23))
 	_src = _wrap(UiStyle.label("", 19, UiStyle.MUTED))
-	var h2 := UiStyle.label("UI_STORY", 22, UiStyle.FICTION)
-	_story = _wrap(UiStyle.label("", 23, Color("#e8c9a8")))
 	var foot := UiStyle.label("", 20, UiStyle.MUTED)
 	Keys.bind(foot, "UI_CLOSE")
 	foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	for n: Control in [_title, _where, _desc, _sep(), h1, _hist, _src, _sep(), h2, _story]:
+	for n: Control in [_title, _where, _desc, _sep(), h1, _hist, _src]:
 		col.add_child(n)
 	side.add_child(foot)
 	_panel.visible = false
@@ -91,7 +88,6 @@ func _fill(d: Discovery) -> void:
 	_desc.text = tr(d.description)
 	_hist.text = tr(d.history)
 	_src.text = tr("UI_SOURCES") % d.sources
-	_story.text = tr(d.narrative)
 	_center()
 
 

@@ -11,6 +11,5 @@ location = "LOC_KURGAN"
 description = "D_CORBEL_BLOCK_DESCRIPTION"
 history = "D_CORBEL_BLOCK_HISTORY"
 sources = "Encyclopedia of Ukraine, 'Tsarskyi kurhan'; Wikipedia, 'Royal Kurgan' (dimensions, dating, the Leukon attribution as a hypothesis, excavation 1833-1837)."
-narrative = "D_CORBEL_BLOCK_NARRATIVE"
 hint = "D_CORBEL_BLOCK_HINT"
 model = ExtResource("2_m")

@@ -11,6 +11,5 @@ location = "LOC_HILL"
 description = "D_GODDESS_HEAD_DESCRIPTION"
 history = "D_GODDESS_HEAD_HISTORY"
 sources = "Pushkin State Museum of Fine Arts: hall of the Northern Black Sea coast and 'Archaeological excavations' (pushkinmuseum.art); 'Panticapaeum, capital of the Cimmerian Bosporus' (arts-museum.ru)."
-narrative = "D_GODDESS_HEAD_NARRATIVE"
 hint = "D_GODDESS_HEAD_HINT"
 model = ExtResource("2_m")
