@@ -1,6 +1,6 @@
 # Panticapaeum: Echoes of the Bosporus
 
-**[Играть в браузере](https://stadytady.github.io/metridat-game/)** · **[Скачать v0.0.10](https://github.com/stadytady/metridat-game/releases/tag/v0.0.10)** (Windows, Linux) · **[Трейлер](docs/trailer.mp4)**
+**[Играть в браузере](https://stadytady.github.io/metridat-game/)** · **[Скачать v0.0.11](https://github.com/stadytady/metridat-game/releases/tag/v0.0.11)** (Windows, Linux) · **[Трейлер](docs/trailer.mp4)**
 
 Поздний день, IV век до нашей эры. Вы стоите на холме над Киммерийским Боспором — проливом между Чёрным и Азовским морями. Внизу Пантикапей: черепичные крыши, ступенчатые улицы, площадь, святилище на террасе. По проливу идут корабли с зерном, дальний берег тонет в дымке.
 
