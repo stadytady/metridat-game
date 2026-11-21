@@ -552,7 +552,7 @@ static func stele(kit: MeshKit, xf: Transform3D) -> void:
 
 ## A mantle figure on its plinth, facing +z. Greek cities stood these around their
 ## squares and temples: most honorific statues were bronze, the marble ones were
-## the costly exception (the Panticapaeum goddess was marble, more than 2.5 m).
+## the costly exception (the goddess from the acropolis of Panticapaeum was marble).
 ## opts: h (figure height, m), mat ("bronze"/"column"), helmet (Corinthian, bool),
 ## plinth (base height, m), arm ("down"/"up"/"spear").
 ## Returns the total height of plinth and figure, for tests and layout.

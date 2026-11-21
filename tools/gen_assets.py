@@ -694,6 +694,7 @@ MATERIALS = {
     "terracotta_goddess": ("psx_lit", "terracotta_goddess", "#ffffff", (1.0, 1.0)),
     # The mould's hollow: the same figure, dark - the negative it was pressed in.
     "mould_hollow": ("psx_lit", "terracotta_goddess", "#6a4030", (1.0, 1.0)),
+    "marble_face": ("psx_lit", "marble_face", "#ffffff", (1.0, 1.0)),
 }
 
 
@@ -1540,6 +1541,33 @@ def terracotta_goddess(rng):
     save("terracotta_goddess", rgb)
 
 
+MARBLE_RELIEF = ["#6e6a62", "#948e84", "#b4aea2", "#cfc9bc", "#e4dfd2", "#f4f0e6"]
+
+def marble_face(rng):
+    """A calm classical face of the 4th century BCE, frontal, in marble: the
+    brow running into a straight nose, heavy-lidded almond eyes, a small full
+    mouth, a rounded chin; the hair parted and drawn back at the temples (the
+    helmet over it is modelled, not painted)."""
+    S, ss = 32, 8
+    im = Image.new("L", (S * ss, S * ss), 120)
+    d = ImageDraw.Draw(im)
+    k = ss
+    def P(pts): return [(x * k, y * k) for x, y in pts]
+    d.ellipse(P([(6, 2), (26, 32)]), fill=170)                         # the face's oval
+    d.polygon(P([(4, 2), (16, 6), (28, 2), (28, 12), (24, 8), (16, 8), (8, 8), (4, 12)]), fill=150)  # hair, parted
+    d.line(P([(9, 12), (14.5, 11.5)]), fill=205, width=int(1.4 * k))   # brows
+    d.line(P([(17.5, 11.5), (23, 12)]), fill=205, width=int(1.4 * k))
+    d.polygon(P([(10, 14), (12, 13), (14.5, 14), (12, 15)]), fill=110)  # eyes, almond
+    d.polygon(P([(17.5, 14), (20, 13), (22, 14), (20, 15)]), fill=110)
+    d.polygon(P([(15, 12), (17, 12), (18, 21), (14, 21)]), fill=215)   # nose
+    d.line(P([(13, 25), (19, 25)]), fill=125, width=int(1.2 * k))      # mouth
+    d.ellipse(P([(14, 25.5), (18, 27.5)]), fill=190)                   # lower lip
+    d.ellipse(P([(13, 28), (19, 32)]), fill=195)                       # chin
+    im = im.filter(ImageFilter.GaussianBlur(ss * 0.6)).resize((S, S), Image.LANCZOS)
+    h = np.asarray(im, dtype=np.float64) / 255.0
+    save("marble_face", relief_shade(h * 2.6, MARBLE_RELIEF, dither=0.5, base=0.5, lift=0.25))
+
+
 def main() -> None:
     for d in (TEX, MAT, AUD):
         d.mkdir(parents=True, exist_ok=True)
@@ -1605,6 +1633,7 @@ def main() -> None:
     kerch_sherd(np.random.default_rng(549))
     stag_plaque(np.random.default_rng(550))
     terracotta_goddess(np.random.default_rng(551))
+    marble_face(np.random.default_rng(552))
     print(f"textures: {len(TEXTURES)}, materials: {len(MATERIALS)}, audio: {len(list(AUD.glob('*.wav')))}")
 
 

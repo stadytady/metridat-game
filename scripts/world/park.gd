@@ -40,9 +40,9 @@ const BENCH_CLEAR := 1.9
 ## Figures: [x, |z|, kind, yaw on the north side in degrees]. Figures face +z
 ## (Arch.statue/herm); 180 turns them to the long walk, 90 down it to the east.
 ## The south side mirrors them (yaw 180 - a). They lean on one real find - the
-## marble goddess from Panticapaeum's palace well, more than 2.5 m in the
-## museum's description (see the README) - and she closes the long walk at its
-## west end, looking down it to the sea.
+## marble goddess from the acropolis of Panticapaeum, a statue larger than life
+## (see the goddess_head find) - and she closes the long walk at its west end,
+## looking down it to the sea.
 const FIGURES := [
 	[-98.4, 19.0, "goddess", 90.0],
 	[-89.6, 21.8, "youth", 180.0],

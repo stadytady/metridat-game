@@ -386,10 +386,17 @@ static func sherds(kit: MeshKit) -> void:
 	kit.xform = Transform3D.IDENTITY
 
 
+## A storage pithos of coarse clay, waist-high, with the raised cordons that
+## strengthened such jars and a stone for its lid, the wheat heaped in its mouth;
+## sacks of hard wheat stacked beside it, waiting to go down to the harbour.
 static func grain(kit: MeshKit) -> void:
 	kit.lathe("clay", PackedVector2Array([
 		Vector2(0.18, 0), Vector2(0.38, 0.2), Vector2(0.5, 0.6), Vector2(0.46, 1.0),
-		Vector2(0.3, 1.2), Vector2(0.33, 1.3)]), 8, Vector3.ZERO, 2.0, true, "dark", true)
+		Vector2(0.3, 1.2), Vector2(0.33, 1.3)]), 10, Vector3.ZERO, 2.0, true, "dark", true)
+	# applied cordons round the body, as on real pithoi
+	for y: float in [0.45, 0.75, 1.05]:
+		var r := 0.5 if y < 0.7 else (0.48 if y < 0.9 else 0.42)
+		kit.lathe("clay", PackedVector2Array([Vector2(r - 0.01, y - 0.025), Vector2(r + 0.025, y), Vector2(r - 0.01, y + 0.025)]), 10, Vector3.ZERO, 1.0, false)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 3
 	for s: Vector3 in [Vector3(0.75, 0.3, 0.1), Vector3(0.6, 0.3, -0.5), Vector3(0.7, 0.75, -0.2)]:
@@ -397,6 +404,10 @@ static func grain(kit: MeshKit) -> void:
 	kit.color = Color(1.0, 0.85, 0.55)
 	kit.blob("basket", Vector3(-0.15, 1.33, 0), Vector3(0.24, 0.08, 0.24), 0.2, rng)
 	kit.color = Color.WHITE
+	# the lid: a flat stone laid aside against the jar
+	kit.xform = Transform3D(Basis(Vector3.FORWARD, 1.2), Vector3(-0.52, 0.2, 0.2))
+	kit.lathe("rock", PackedVector2Array([Vector2(0.2, 0.0), Vector2(0.2, 0.05)]), 8, Vector3.ZERO, 1.0, true, "rock", true)
+	kit.xform = Transform3D.IDENTITY
 
 
 ## A mould-made terracotta of a seated goddess as the Bosporan workshops made
@@ -607,23 +618,33 @@ static func astragal(kit: MeshKit) -> void:
 	kit.box("dark", Vector3(0, 0.0275, 0), Vector3(0.012, 0.001, 0.02), [])  # the hollow on top
 
 
-## A marble head of a goddess, larger than life, broken at the neck, in a
-## Corinthian helmet pushed up on the brow, its crest knocked off; on straw.
-## Faces +z (towards the ItemViewer's camera), origin on the ground.
+## The marble head of the goddess from the acropolis of Panticapaeum, mid-4th
+## century BCE: larger than life, broken at the neck, a calm face (`marble_face`)
+## with the hair drawn back at the temples; on top, the stone Corinthian helmet
+## that replaced her metal headdress when she was made Athena - worn pushed up
+## off the face, so its eye openings and nose guard sit over the brow and the
+## cheek pieces frame the forehead; the crest knocked off. On straw. Faces +z,
+## origin on the ground.
 static func marble_head(kit: MeshKit) -> void:
 	kit.box("steppe", Vector3(0, 0.015, 0), Vector3(0.62, 0.03, 0.5), [])  # the straw
 	kit.lathe("column", PackedVector2Array([Vector2(0.075, 0.03), Vector2(0.07, 0.11)]), 8, Vector3.ZERO, 1.0, false, "column", true)  # neck, broken flat
-	kit.box("column", Vector3(0, 0.25, 0), Vector3(0.22, 0.3, 0.25), [])  # head
-	kit.box("column", Vector3(0, 0.22, 0.135), Vector3(0.04, 0.08, 0.035), [])  # nose
-	kit.box("column", Vector3(0, 0.13, 0.1), Vector3(0.13, 0.06, 0.06), [])  # chin
-	kit.box("column", Vector3(0, 0.27, -0.09), Vector3(0.2, 0.22, 0.1), [])  # hair drawn back
-	# the helmet sits high, its face-guard tipped up over the brow
-	kit.box("column", Vector3(0, 0.43, 0.01), Vector3(0.25, 0.08, 0.29), [])
-	kit.box("column", Vector3(0, 0.4, 0.14), Vector3(0.24, 0.05, 0.06), [])
-	kit.box("column", Vector3(0, 0.48, 0.0), Vector3(0.05, 0.03, 0.08), [])  # stump of the crest
+	kit.box("column", Vector3(0, 0.25, -0.01), Vector3(0.22, 0.3, 0.23), [])  # head
+	# the face: a slab carved forward of the skull, its front the marble_face picture
+	kit.box("column", Vector3(0, 0.24, 0.115), Vector3(0.18, 0.26, 0.03), ["pz"])
+	kit.quad("marble_face", Vector3(-0.09, 0.11, 0.1305), Vector3(0.09, 0.11, 0.1305), Vector3(0.09, 0.37, 0.1305), Vector3(-0.09, 0.37, 0.1305),
+			PackedVector2Array([Vector2(0, 1), Vector2(1, 1), Vector2(1, 0), Vector2(0, 0)]))
+	kit.box("column", Vector3(0, 0.215, 0.142), Vector3(0.03, 0.07, 0.024), [])  # the nose stands out of it
+	kit.box("column", Vector3(0, 0.27, -0.1), Vector3(0.2, 0.22, 0.08), [])  # hair drawn back into a knot
+	# the helmet, pushed up: bowl, the face-plate tipped over the brow with its
+	# eye openings and nose guard, cheek pieces down at the temples
+	kit.lathe("column", PackedVector2Array([Vector2(0.135, 0.37), Vector2(0.13, 0.43), Vector2(0.09, 0.48), Vector2(0.0, 0.5)]), 10,
+			Vector3(0, 0, -0.01), 1.0, true, "column", false)
+	kit.box("column", Vector3(0, 0.395, 0.135), Vector3(0.25, 0.06, 0.05), [])          # face-plate over the brow
 	for sx: float in [-1.0, 1.0]:
-		kit.box("dark", Vector3(0.055 * sx, 0.285, 0.127), Vector3(0.05, 0.016, 0.004), [])  # eyes, carved deep
-	kit.box("dark", Vector3(0, 0.165, 0.127), Vector3(0.05, 0.01, 0.004), [])  # the line of the lips
+		kit.box("dark", Vector3(0.055 * sx, 0.4, 0.161), Vector3(0.06, 0.025, 0.004), [])  # its eye openings
+		kit.box("column", Vector3(0.12 * sx, 0.33, 0.09), Vector3(0.03, 0.1, 0.08), [])   # cheek piece
+	kit.box("column", Vector3(0, 0.375, 0.163), Vector3(0.022, 0.04, 0.012), [])        # nose guard
+	kit.box("column", Vector3(0, 0.505, -0.01), Vector3(0.05, 0.03, 0.12), [])          # stump of the crest
 
 
 ## Pyramidal clay loom weights, pierced near the top, a dozen heaped by the
@@ -703,18 +724,21 @@ static func hekataion(kit: MeshKit) -> void:
 	kit.xform = Transform3D.IDENTITY
 
 
-## Greek bronze hand mirror lying on its back: a polished disc with a raised
-## rim and a turned handle ending in a knob. Origin under the disc's centre.
+## A Greek hand mirror: a disc of bronze, its face polished (still warm in the
+## light) and its back turned with fine concentric rings, greened at the rim; a
+## cast handle with a moulded collar, a shaft and a knob, lying flat.
 static func mirror(kit: MeshKit) -> void:
-	# disc: back (bronze, greened) and polished face
-	kit.lathe("bronze", PackedVector2Array([Vector2(0.0, 0.0), Vector2(0.11, 0.004), Vector2(0.13, 0.012), Vector2(0.13, 0.02)]), 12,
+	kit.lathe("bronze", PackedVector2Array([Vector2(0.0, 0.0), Vector2(0.11, 0.004), Vector2(0.13, 0.012), Vector2(0.13, 0.02)]), 16,
 			Vector3.ZERO, 1.0, true, "gold", true)
-	kit.lathe("bronze", PackedVector2Array([Vector2(0.13, 0.02), Vector2(0.135, 0.026), Vector2(0.125, 0.026)]), 12)
-	# handle: a tang with a moulded ring, a shaft and a knob, lying flat
+	kit.lathe("bronze", PackedVector2Array([Vector2(0.13, 0.02), Vector2(0.135, 0.026), Vector2(0.125, 0.026)]), 16)
+	# the turned rings on the back (the disc lies face up: they show at the edge)
+	for r: float in [0.04, 0.075, 0.105]:
+		kit.lathe("bronze_old", PackedVector2Array([Vector2(r, 0.0205), Vector2(r + 0.006, 0.0215), Vector2(r + 0.012, 0.0205)]), 16)
 	kit.box("bronze", Vector3(0, 0.012, 0.15), Vector3(0.05, 0.02, 0.05), [])
-	kit.box("bronze", Vector3(0, 0.014, 0.19), Vector3(0.035, 0.024, 0.04), [])
-	kit.box("bronze", Vector3(0, 0.012, 0.25), Vector3(0.026, 0.02, 0.09), [])
-	kit.box("bronze", Vector3(0, 0.014, 0.305), Vector3(0.04, 0.026, 0.03), [])
+	kit.box("bronze_old", Vector3(0, 0.016, 0.178), Vector3(0.045, 0.028, 0.014), [])  # the collar
+	kit.box("bronze", Vector3(0, 0.014, 0.205), Vector3(0.032, 0.024, 0.04), [])
+	kit.box("bronze", Vector3(0, 0.012, 0.26), Vector3(0.024, 0.02, 0.08), [])
+	kit.box("bronze_old", Vector3(0, 0.016, 0.31), Vector3(0.04, 0.028, 0.03), [])     # the knob
 
 
 ## Bronze lampstand with a clay oil lamp on top (flame at FLAME_Y["lampstand"]).
