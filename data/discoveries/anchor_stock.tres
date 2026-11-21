@@ -11,6 +11,5 @@ location = "LOC_SHORE"
 description = "D_ANCHOR_STOCK_DESCRIPTION"
 history = "D_ANCHOR_STOCK_HISTORY"
 sources = "D. Haldane, 'Anchors of Antiquity', Biblical Archaeologist 53.1 (1990); H. Frost, 'From Rope to Chain: on the Development of Anchors in the Mediterranean', The Mariner's Mirror 49 (1963)."
-narrative = "D_ANCHOR_STOCK_NARRATIVE"
 hint = "D_ANCHOR_STOCK_HINT"
 model = ExtResource("2_m")

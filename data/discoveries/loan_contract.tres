@@ -11,6 +11,5 @@ location = "LOC_SHORE"
 description = "D_LOAN_CONTRACT_DESCRIPTION"
 history = "D_LOAN_CONTRACT_HISTORY"
 sources = "Demosthenes 35 (Against Lacritus) 10-13; P. Millett, Lending and Borrowing in Ancient Athens (1991)."
-narrative = "D_LOAN_CONTRACT_NARRATIVE"
 hint = "D_LOAN_CONTRACT_HINT"
 model = ExtResource("2_m")

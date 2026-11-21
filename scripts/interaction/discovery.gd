@@ -1,7 +1,8 @@
 class_name Discovery
 extends Resource
-## One inspectable find. `history` must be historically established (with a
-## source); `narrative` is the game's own fiction and is shown as such.
+## One inspectable find: what it is, and what is historically established
+## about such things (with a source). There is no fiction page: what the game
+## made up around the finds is listed once, in README ("Правда и вымысел").
 ## Text fields hold translation keys (data/i18n/strings.csv); `sources` is a
 ## bibliography and stays untranslated.
 
@@ -11,7 +12,6 @@ extends Resource
 @export_multiline var description: String
 @export_multiline var history: String
 @export var sources: String
-@export_multiline var narrative: String
 ## Where to look, for the journal: a nudge, not a map pin.
 @export var hint: String
 ## The find itself: placed in the world by its Inspectable and shown large

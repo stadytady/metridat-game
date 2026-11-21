@@ -11,6 +11,5 @@ location = "LOC_AGORA"
 description = "D_GOLD_PLAQUES_DESCRIPTION"
 history = "D_GOLD_PLAQUES_HISTORY"
 sources = "Herodotus, Histories 7.64; From the Lands of the Scythians: Ancient Treasures from the Museums of the U.S.S.R. (Metropolitan Museum of Art, 1975); B. Piotrovsky, L. Galanina, N. Grach, Scythian Art (1987); The Golden Deer of Eurasia (Metropolitan Museum of Art, 2000)."
-narrative = "D_GOLD_PLAQUES_NARRATIVE"
 hint = "D_GOLD_PLAQUES_HINT"
 model = ExtResource("2_m")

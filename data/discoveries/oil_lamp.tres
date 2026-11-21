@@ -11,6 +11,5 @@ location = "LOC_AGORA"
 description = "D_OIL_LAMP_DESCRIPTION"
 history = "D_OIL_LAMP_HISTORY"
 sources = "R. H. Howland, Greek Lamps and Their Survivals, The Athenian Agora IV (1958); V. F. Gajdukevic, Das Bosporanische Reich (1971)."
-narrative = "D_OIL_LAMP_NARRATIVE"
 hint = "D_OIL_LAMP_HINT"
 model = ExtResource("2_m")

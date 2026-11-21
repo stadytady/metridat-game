@@ -38,10 +38,9 @@ location = "%s"
 description = "%s_DESCRIPTION"
 history = "%s_HISTORY"
 sources = "%s"
-narrative = "%s_NARRATIVE"
 hint = "%s_HINT"
 model = ExtResource("2_m")
-""" % [model, id, key, location_key, key, key, String(text.get("sources", "TODO: источники")), key, key])
+""" % [model, id, key, location_key, key, key, String(text.get("sources", "TODO: источники")), key])
 	written.append(tres)
 	_write(tscn, """[gd_scene load_steps=3 format=3]
 
@@ -59,7 +58,6 @@ marker_height = %s
 		[key + "_TITLE", text.get("title_en", "TODO title"), text.get("title_ru", "TODO заголовок")],
 		[key + "_DESCRIPTION", text.get("desc_en", "TODO description"), text.get("desc_ru", "TODO описание")],
 		[key + "_HISTORY", text.get("hist_en", "TODO: what is known"), text.get("hist_ru", "TODO: что известно")],
-		[key + "_NARRATIVE", text.get("story_en", "TODO: the fiction"), text.get("story_ru", "TODO: вымысел")],
 		[key + "_HINT", text.get("hint_en", "TODO: where to look"), text.get("hint_ru", "TODO: где искать")],
 	]
 	add_keys(rows)

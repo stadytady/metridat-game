@@ -11,7 +11,6 @@ location = "LOC_DREAM"
 description = "D_BRONZE_MIRROR_DESCRIPTION"
 history = "D_BRONZE_MIRROR_HISTORY"
 sources = "L. O. K. Congdon, Caryatid Mirrors of Ancient Greece (1981); R. Rolle, The World of the Scythians (1989); R. A. Higgins, Greek and Roman Jewellery (2nd ed., 1980)."
-narrative = "D_BRONZE_MIRROR_NARRATIVE"
 hint = "D_BRONZE_MIRROR_HINT"
 model = ExtResource("2_m")
 epilogue = true
