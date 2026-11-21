@@ -88,19 +88,21 @@ jobs:
         run: tools/export.sh windows linux web
       - name: Package
         run: tools/package.sh "$TAG"
+      - name: Month (the apt cache is renewed monthly, after the runner image moves on)
+        id: month
+        run: echo "ym=$(date +%Y-%m)" >> "$GITHUB_OUTPUT"
+      - name: Cache apt packages (wine)
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/apt
+          key: apt-ubuntu-24.04-wine-${{ steps.month.outputs.ym }}
+          restore-keys: apt-ubuntu-24.04-wine-
       - name: Install Wine (to run the Windows build)
-        # The Ubuntu mirror sometimes stalls for many minutes: give each try a
-        # deadline and try again, rather than hang until the job times out.
+        # From the cached .debs when they are there (no network); else from the
+        # mirror, each try with a deadline: it sometimes stalls for many minutes.
         timeout-minutes: 15
         run: |
-          for i in 1 2 3; do
-            if timeout 180 sudo apt-get update -qq -o Acquire::Retries=3 &&
-               timeout 300 sudo apt-get install -y -qq --no-install-recommends -o Acquire::Retries=3 wine wine64 xvfb; then
-              break
-            fi
-            echo "apt attempt $i stalled or failed, retrying"
-            sleep 15
-          done
+          tools/apt-cached.sh wine wine64 xvfb
           command -v wine
       - name: Smoke-test the packages (Linux natively, Windows under Wine)
         run: tools/smoke.sh
