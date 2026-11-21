@@ -41,6 +41,12 @@ const AGORA_H := 5.0
 ## and size.
 const FORECOURTS: Array[Rect2] = [Rect2(3.0, -11.0, 6.0, 11.0)]
 
+## The Royal Kurgan out on the steppe below the park (royal_kurgan.gd): a level
+## terrace cut into the west slope of the hill for the tomb and its mound.
+const KURGAN_CENTER := Vector2(-153.0, 52.0)
+const KURGAN_PAD := Vector2(23.0, 23.0)
+const KURGAN_H := 22.4
+const KURGAN_FALLOFF := 6.0
 const SANCT_CENTER := Vector2(46, -27)
 const SANCT_HALF := Vector2(8, 7)
 const SANCT_H := 8.5
@@ -170,6 +176,7 @@ static func terrain(x: float, z: float) -> float:
 	h = _apply_path(h, x, z, LANE, LANE_HALF + 1.0, 2.0, 0.25)
 	h = _apply_path(h, x, z, SANCT_STAIR, SANCT_STAIR_HALF + 1.0, 2.0, 0.25)
 	h = lerpf(h, SANCT_H - 0.25, _rect_weight(x, z, SANCT_CENTER, SANCT_HALF, 3.0))
+	h = lerpf(h, KURGAN_H, _rect_weight(x, z, KURGAN_CENTER, KURGAN_PAD, KURGAN_FALLOFF))
 	return h
 
 

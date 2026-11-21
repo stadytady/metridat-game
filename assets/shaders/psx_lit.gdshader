@@ -28,6 +28,11 @@ void fragment() {
 	vec2 uv = mix(UV, affine_uv.xy / affine_uv.z, psx_affine * affine_amount);
 	vec4 c = texture(albedo_tex, uv) * tint;
 	ALBEDO = c.rgb * COLOR.rgb;
+	// Vertex alpha is how much of the sky's ambient reaches the surface (1 out
+	// in the open; low deep inside a tomb). Direct lights - the sun through a
+	// doorway, a lamp - are left alone, so a lamp still glows in the dark.
+	AO = COLOR.a;
+	AO_LIGHT_AFFECT = 0.0;
 	ROUGHNESS = 1.0;
 	SPECULAR = 0.0;
 }

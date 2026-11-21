@@ -133,10 +133,21 @@ static func boundary_walls() -> Array:
 				out.append([prev, p])
 		prev = p
 		z += 4.0
-	out.append([Vector3(-128, 0, -80), Vector3(-128, 0, 80)])
+	# the west edge, with a pocket out onto the steppe for the Royal Kurgan
+	var p0 := POCKET_Z
+	var px := POCKET_X
+	out.append([Vector3(-128, 0, -80), Vector3(-128, 0, p0)])
+	out.append([Vector3(-128, 0, p0), Vector3(px, 0, p0)])
+	out.append([Vector3(px, 0, p0), Vector3(px, 0, 80)])
 	out.append([Vector3(-128, 0, -80), Vector3(prev.x, 0, -80)])
-	out.append([Vector3(-128, 0, 80), Vector3(prev.x, 0, 80)])
+	out.append([Vector3(px, 0, 80), Vector3(prev.x, 0, 80)])
 	return out
+
+
+## The pocket the west edge makes round the Royal Kurgan: from this z out to the
+## south edge, as far west as this x.
+const POCKET_Z := 26.0
+const POCKET_X := -184.0
 
 
 func _wall(body: StaticBody3D, a: Vector3, b: Vector3) -> void:

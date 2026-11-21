@@ -117,6 +117,17 @@ func spawn_quest_item(quest: String, pos: Vector3, yaw_deg: float = 0.0) -> Ques
 	return q
 
 
+## A static body whose shape is the mesh itself: for earthworks that boxes would
+## only rough out (a mound you can climb). `surface` picks the footsteps.
+static func trimesh_body(mesh: Mesh, surface: StringName = &"dirt") -> StaticBody3D:
+	var body := StaticBody3D.new()
+	body.set_meta(&"surface", surface)
+	var cs := CollisionShape3D.new()
+	cs.shape = mesh.create_trimesh_shape()
+	body.add_child(cs)
+	return body
+
+
 func spawn_inspectable(id: String, pos: Vector3, yaw_deg: float = 0.0) -> Node3D:
 	var path := "res://scenes/interactables/%s.tscn" % id
 	if not ResourceLoader.exists(path):
