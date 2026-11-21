@@ -300,6 +300,9 @@ func _ui_shots(player: CharacterBody3D) -> void:
 	await _frames(6)
 	_save("ui_controls_pad")
 	Game.set_pad(false)
+	pause.show_credits()
+	await _frames(6)
+	_save("ui_credits")
 	pause.close()
 
 

@@ -4,9 +4,13 @@ extends Node
 ## --write-movie + --fixed-fps make every frame exact, however slow the GPU.
 ##
 ## Afternoon to night, as the game goes, in eight long, slow shots: a crane
-## over the terraced city to the strait, the actor rehearsing in the summit theatre, through Myrto's door to
-## her oven, along the pier to the moored ship at sunset, the lit street at
-## night, Hecate's temple, the dream's stair down into the mound, and the hill at night. Each
+## over the terraced city to the strait, down the slope to the Royal Kurgan's
+## stone front, a storm driving rain down the street to the strait, along the
+## pier to the moored ship at sunset, the masked chorus in the hill theatre at
+## night, Hecate's temple, the dream's stair down into the mound, and the hill
+## at night. A shot may also set the weather ("weather": a Weather kind); the
+## storm shot sets the lightning clock so a bolt falls inside it, and the swell
+## at its height, and both are given back after it. Each
 ## shot sets its own hour (the atmosphere snaps to it) and, after dusk, the
 ## lamps are lit. Camera moves are Catmull-Rom splines through three points,
 ## short and gently eased at both ends, with a faint handheld drift; cuts are
@@ -33,23 +37,25 @@ const SHOTS := [
 	{"t": [0.0, 4.4], "hour": 0.0, "fov": [52.0, 48.0], "caption": "The Cimmerian Bosporus, 4th century BCE",
 		"pos": [Vector3(-54, 37, 54), Vector3(-46, 34, 47), Vector3(-38, 31, 40)],
 		"look": [Vector3(20, 2, 10), Vector3(30, 1.5, 7), Vector3(40, 1, 5)]},
-	# the summit theatre: from the top row, past the actor declaiming to the empty
-	# seats, and over his shoulder the city and the strait
-	{"t": [4.4, 8.2], "hour": 0.1, "fov": [46.0, 42.0], "caption": "",
-		"pos": [Vector3(-97.0, 30.3, -3.8), Vector3(-96.3, 30.15, -1.3), Vector3(-95.4, 30.0, 1.2)],
-		"look": [Vector3(-90.4, 29.3, 0.6), Vector3(-90.2, 29.3, 0.4), Vector3(-89.6, 29.2, 0.6)]},
-	# down the footpath, straight through the street door, then round to Myrto at her oven
-	{"t": [8.2, 12.2], "hour": 0.3, "fov": [52.0, 46.0], "caption": "",
-		"pos": [Vector3(26.0, 6.55, 11.6), Vector3(26.0, 6.45, 15.2), Vector3(27.0, 6.3, 17.4)],
-		"look": [Vector3(26.0, 6.1, 20.5), Vector3(26.6, 6.0, 20.2), Vector3(28.8, 5.6, 18.9)]},
+	# down the slope below the park to the Royal Kurgan: the mound, the cut
+	# between its rubble walls, the stone front with the dromos's narrow mouth
+	{"t": [4.4, 8.2], "hour": 0.1, "fov": [46.0, 40.0], "caption": "",
+		"pos": [Vector3(-119.0, 28.8, 50.5), Vector3(-124.5, 27.6, 51.3), Vector3(-129.5, 25.2, 51.8)],
+		"look": [Vector3(-141.0, 26.5, 52.0), Vector3(-141.5, 25.8, 52.0), Vector3(-142.0, 25.2, 52.0)]},
+	# a storm off the strait: down the street between the houses, rain slanting
+	# inland, the swell heavy below, lightning over the water
+	{"t": [8.2, 12.2], "hour": 0.35, "weather": 2, "fov": [54.0, 50.0], "caption": "",
+		"pos": [Vector3(-14.0, 10.3, -0.4), Vector3(-10.0, 9.6, -0.5), Vector3(-6.0, 8.6, -0.8)],
+		"look": [Vector3(40.0, 3.0, 2.0), Vector3(45.0, 2.5, 1.0), Vector3(50.0, 2.0, 0.0)]},
 	# sunset: along the middle of the pier to the Swallow, her crew and the skipper
 	{"t": [12.2, 16.6], "hour": 0.62, "fov": [50.0, 46.0], "caption": "",
 		"pos": [Vector3(70.0, 4.05, -5.6), Vector3(74.0, 4.0, -5.8), Vector3(77.5, 3.95, -6.0)],
 		"look": [Vector3(86.0, 3.4, -8.0), Vector3(87.5, 3.35, -8.2), Vector3(89.0, 3.3, -8.4)]},
-	# night: up the street between the lit lamps; someone stands at the turn
-	{"t": [16.6, 19.6], "hour": 1.0, "lamps": true, "fov": [56.0, 54.0], "caption": "",
-		"pos": [Vector3(-6, 8.5, -0.8), Vector3(-10.5, 9.8, -0.5), Vector3(-15, 11.4, 0.0)],
-		"look": [Vector3(-35, 15.2, 1.2), Vector3(-45, 17.6, 0.2), Vector3(-55, 20.0, 1.0)]},
+	# night: the play in the hill theatre, from behind the audience on the tiers,
+	# the masked chorus in the orchestra and the lit city beyond
+	{"t": [16.6, 19.6], "hour": 1.0, "lamps": true, "fov": [48.0, 42.0], "caption": "",
+		"pos": [Vector3(-98.6, 30.9, -1.0), Vector3(-97.8, 30.6, -0.4), Vector3(-97.0, 30.3, 0.2)],
+		"look": [Vector3(-89.0, 28.9, 0.3), Vector3(-88.6, 28.8, 0.1), Vector3(-88.2, 28.7, 0.0)]},
 	# Hecate's temple at night, straight on: the altar fire, the torches, and
 	# through the open doors the triple goddess glowing inside; a slow push-in
 	{"t": [19.6, 22.2], "hour": 1.0, "lamps": true, "fov": [50.0, 40.0], "caption": "",
@@ -218,6 +224,18 @@ func _finish_benchmark() -> void:
 ## The shot's hour, snapped (time_override); after dusk every lamp is lit.
 func _set_time(shot: Dictionary) -> void:
 	Game.time_override = shot.hour
+	var weather: int = shot.get("weather", -1)
+	Game.weather_override = weather
+	if weather == Weather.STORM:
+		# the lightning is a clock (Weather.flash): set it so a bolt falls a
+		# second and a half into the shot, and the swell at its height
+		var n := 1
+		while Weather.bolt_time(n) < 0.0:
+			n += 1
+		Weather.clock = Weather.bolt_time(n) - 1.5
+		Sea.swell = Weather.STORM_SWELL
+	else:
+		Sea.swell = 1.0
 	if shot.get("lamps", false):
 		for lamp: Lamp in Game.lamps:
 			lamp.interact()
