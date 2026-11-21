@@ -15,7 +15,7 @@ import wave
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parent.parent
 TEX = ROOT / "assets" / "textures"
@@ -686,6 +686,11 @@ MATERIALS = {
     "awning_blue": ("psx_lit", "white", "#31527d", (1.0, 1.0)),
     "awning_cream": ("psx_lit", "white", "#d9c9a6", (1.0, 1.0)),
     "ribbon": ("psx_lit", "white", "#c66a34", (1.0, 1.0)),
+    # The finds' own faces (drawn from their historical models, see the generators).
+    "stater": ("psx_lit", "stater", "#ffffff", (1.0, 1.0)),
+    "amphora_stamp": ("psx_lit", "amphora_stamp", "#ffffff", (1.0, 1.0)),
+    "kerch_sherd": ("psx_lit", "kerch_sherd", "#ffffff", (1.0, 1.0)),
+    "stag_plaque": ("psx_lit", "stag_plaque", "#ffffff", (1.0, 1.0)),
 }
 
 
@@ -1292,6 +1297,204 @@ def astragal(rng):
     write_wav("astragal", norm(bandpass(out, 400, 7000), 0.5))
 
 
+# ---------------------------------------------------------------- finds, drawn
+# Faces of the finds drawn from their historical models: a coin's dies, an
+# amphora stamp, a painted sherd, a sewn plaque. Drawn large with strokes and
+# polygons, shrunk to the PS1 size; struck or stamped relief is shaded from a
+# height field, painted ground is flat colour.
+
+# Greek capitals as strokes in a unit box (x right, y down), for small inscriptions.
+GLYPHS = {
+    "Π": [[(0, 1), (0, 0), (1, 0), (1, 1)]],
+    "Α": [[(0, 1), (0.5, 0), (1, 1)], [(0.22, 0.6), (0.78, 0.6)]],
+    "Ν": [[(0, 1), (0, 0), (1, 1), (1, 0)]],
+    "Θ": [[(0.5, 0), (1, 0.3), (1, 0.7), (0.5, 1), (0, 0.7), (0, 0.3), (0.5, 0)], [(0.3, 0.5), (0.7, 0.5)]],
+    "Σ": [[(1, 0), (0, 0), (0.55, 0.5), (0, 1), (1, 1)]],
+    "Ι": [[(0.5, 0), (0.5, 1)]],
+    "Ω": [[(0.1, 1), (0.35, 1), (0.1, 0.65), (0.1, 0.3), (0.5, 0), (0.9, 0.3), (0.9, 0.65), (0.65, 1), (0.9, 1)]],
+    "Ο": [[(0.5, 0), (1, 0.3), (1, 0.7), (0.5, 1), (0, 0.7), (0, 0.3), (0.5, 0)]],
+    "Ε": [[(1, 0), (0, 0), (0, 1), (1, 1)], [(0, 0.5), (0.7, 0.5)]],
+    "Κ": [[(0, 0), (0, 1)], [(1, 0), (0, 0.55), (1, 1)]],
+    "Λ": [[(0, 1), (0.5, 0), (1, 1)]],
+    "Μ": [[(0, 1), (0, 0), (0.5, 0.6), (1, 0), (1, 1)]],
+    "Τ": [[(0, 0), (1, 0)], [(0.5, 0), (0.5, 1)]],
+    "Υ": [[(0, 0), (0.5, 0.5), (1, 0)], [(0.5, 0.5), (0.5, 1)]],
+    "Δ": [[(0, 1), (0.5, 0), (1, 1), (0, 1)]],
+    "Ρ": [[(0, 1), (0, 0), (0.8, 0), (1, 0.25), (0.8, 0.5), (0, 0.5)]],
+    "Χ": [[(0, 0), (1, 1)], [(1, 0), (0, 1)]],
+}
+
+
+def letters(d, text, x, y, h, w, gap, width, fill):
+    for ch in text:
+        for stroke in GLYPHS[ch]:
+            d.line([(x + px * w, y + py * h) for px, py in stroke], fill=fill, width=width, joint="curve")
+        x += w + gap
+    return x
+
+
+def relief_shade(height, colors, light=(-1, -1), dither=0.6, base=0.5, amp=1.6, lift=0.12):
+    """A raised field lit from the top left: an edge facing the light catches it,
+    the edge away from it falls into shadow, the flat tops stay mid-tone (a
+    little brighter where higher), as a struck coin reads in a raking light."""
+    gy, gx = np.gradient(height)
+    lit = -(gx * light[0] + gy * light[1])
+    field = base + amp * lit + lift * (height - 0.35)
+    return ramp(np.clip(field, 0, 1), colors, dither)
+
+
+GOLD_RELIEF = ["#5a3d12", "#8c6420", "#b88a30", "#dcb04a", "#f2d27a", "#fff0b8"]
+
+
+def coin_face(draw_fn, size=64, ss=4):
+    S = size * ss
+    im = Image.new("L", (S, S), 0)
+    d = ImageDraw.Draw(im)
+    d.ellipse([2 * ss, 2 * ss, S - 2 * ss, S - 2 * ss], fill=90)  # the flan
+    draw_fn(d, S)
+    im = im.filter(ImageFilter.GaussianBlur(ss * 0.7)).resize((size, size), Image.LANCZOS)
+    h = np.asarray(im, dtype=np.float64) / 255.0
+    rgb = relief_shade(h * 2.2, GOLD_RELIEF)
+    mask = h < 0.15
+    rgb[mask] = hexc("#2a1e10")  # outside the flan (the disc mesh hides it)
+    return rgb
+
+
+def satyr(d, S):
+    k = S / 64.0
+    def P(pts): return [(x * k, y * k) for x, y in pts]
+    # bearded head, three-quarter left: skull, brow, nose, beard, pointed ear, ivy
+    d.ellipse(P([(20, 12), (46, 40)]), fill=200)
+    d.polygon(P([(18, 26), (13, 31), (17, 33), (20, 31)]), fill=215)          # nose
+    d.polygon(P([(18, 33), (16, 44), (22, 54), (32, 56), (40, 50), (42, 38), (30, 36)]), fill=185)  # beard
+    for y in range(38, 54, 4):
+        d.line(P([(20, y), (38, y + 2)]), fill=150, width=int(1.2 * k))
+    d.polygon(P([(42, 18), (50, 8), (48, 22)]), fill=210)                       # goat's ear
+    d.line(P([(21, 22), (30, 20)]), fill=235, width=int(2 * k))                 # brow
+    d.ellipse(P([(24, 22), (28, 25)]), fill=120)                                # eye
+    for cx, cy in [(24, 12), (31, 10), (38, 11), (44, 15)]:                     # ivy wreath
+        d.ellipse(P([(cx - 3, cy - 2.5), (cx + 3, cy + 2.5)]), fill=240)
+    d.line(P([(30, 46), (24, 48)]), fill=140, width=int(1 * k))                 # mouth
+
+
+def griffin(d, S):
+    k = S / 64.0
+    def P(pts): return [(x * k, y * k) for x, y in pts]
+    # ear of wheat along the bottom, the griffin walking left on it
+    d.line(P([(10, 50), (54, 50)]), fill=170, width=int(1.5 * k))
+    for i in range(7):
+        x = 14 + i * 5.5
+        d.ellipse(P([(x, 46), (x + 4, 49)]), fill=200)
+        d.ellipse(P([(x, 51), (x + 4, 54)]), fill=200)
+    d.ellipse(P([(22, 30), (46, 42)]), fill=200)                                 # body
+    d.polygon(P([(32, 32), (40, 14), (50, 12), (46, 22), (52, 22), (44, 32)]), fill=225)  # wing
+    d.line(P([(40, 16), (44, 28)]), fill=160, width=int(1 * k))
+    d.line(P([(44, 15), (48, 26)]), fill=160, width=int(1 * k))
+    d.polygon(P([(24, 32), (18, 22), (12, 22), (10, 26), (16, 28), (20, 34)]), fill=210)  # neck and head
+    d.polygon(P([(10, 24), (6, 27), (10, 27)]), fill=220)                       # beak
+    d.line(P([(15, 22), (13, 15)]), fill=230, width=int(1.6 * k))               # horn
+    d.line(P([(4, 30), (16, 24)]), fill=235, width=int(1.2 * k))                # spear in the jaws
+    for x0, x1 in [(24, 22), (28, 27), (40, 41), (44, 46)]:                     # legs
+        d.line(P([(x0, 40), (x1, 47)]), fill=190, width=int(2 * k))
+    d.line(P([(46, 36), (54, 30), (56, 34)]), fill=190, width=int(1.5 * k))     # tail
+    letters(d, "ΠΑΝ", 20 * k, 6 * k, 6 * k, 4.5 * k, 2.5 * k, int(1.5 * k), 235)
+
+
+
+
+
+def stater(rng):
+    """The gold stater of Panticapaeum, both faces side by side (obverse left,
+    reverse right): the bearded satyr's head in an ivy wreath; the horned
+    griffin with a spear in its jaws on an ear of wheat, PAN above. Struck
+    relief lit from the top left."""
+    save("stater", np.concatenate([coin_face(satyr), coin_face(griffin)], axis=1))
+
+
+# Thasian amphora stamp: a sunk rectangle, two lines raised in it and an emblem
+def amphora_stamp(rng):
+    W, H, ss = 64, 32, 4
+    im = Image.new("L", (W * ss, H * ss), 150)          # the handle's clay
+    d = ImageDraw.Draw(im)
+    d.rectangle([3 * ss, 3 * ss, (W - 3) * ss, (H - 3) * ss], fill=70)   # the die's frame, sunk
+    k = ss
+    letters(d, "ΘΑΣΙΩΝ", 7 * k, 6 * k, 8 * k, 5 * k, 2.6 * k, int(2 * k), 230)
+    letters(d, "ΚΛΕΩΝ", 9 * k, 18 * k, 8 * k, 5 * k, 2.6 * k, int(2 * k), 230)
+    d.line([(50 * k, 18 * k), (55 * k, 27 * k)], fill=210, width=int(2.4 * k))   # emblem: a club
+    d.ellipse([(48.5 * k, 16.5 * k), (52.5 * k, 20.5 * k)], fill=210)
+    im = im.filter(ImageFilter.GaussianBlur(ss * 0.6)).resize((W, H), Image.LANCZOS)
+    h = np.asarray(im, dtype=np.float64) / 255.0
+    save("amphora_stamp", relief_shade(h * 2.0, ["#5a3020", "#8a4a2c", "#b0663c", "#c98250", "#dda070"]))
+
+
+# Kerch-style red-figure sherd: a griffin - eagle's head with the beak open and
+# the tongue out, a spiky mane down the neck, a lion's forepaw raised - painted in
+# added white with the mane gilt, against the black; an Arimasp's spear from the right
+def kerch_sherd(rng):
+    S, ss = 64, 4
+    im = Image.new("RGB", (S * ss, S * ss), (27, 21, 18))
+    d = ImageDraw.Draw(im)
+    k = ss
+    def P(pts): return [(x * k, y * k) for x, y in pts]
+    red = (192, 112, 58); white = (232, 224, 205); gild = (226, 176, 70); line = (60, 34, 22)
+    d.rectangle(P([(0, 55), (64, 64)]), fill=red)
+    for x in range(2, 64, 8):
+        d.ellipse(P([(x, 57), (x + 4, 62)]), fill=(27, 21, 18))
+    # neck and chest sweeping down to the body, out of the sherd at the bottom right
+    d.polygon(P([(22, 20), (30, 22), (36, 34), (46, 40), (64, 42), (64, 55), (34, 55), (26, 42), (20, 30)]), fill=white)
+    # the head: crown of the skull, the hooked upper beak, the open lower beak
+    d.polygon(P([(12, 14), (20, 11), (26, 15), (26, 22), (20, 24), (14, 22)]), fill=white)
+    d.polygon(P([(14, 15), (6, 17), (4, 21), (8, 20), (13, 19)]), fill=white)     # upper beak, hooked
+    d.polygon(P([(13, 21), (6, 24), (13, 24)]), fill=white)                       # lower beak
+    d.line(P([(7, 21), (12, 22)]), fill=(170, 60, 40), width=k)                   # tongue
+    d.ellipse(P([(17, 14), (20, 17)]), fill=line)                                 # eye
+    # the mane: gilt spikes down the back of the neck
+    for i, (x, y) in enumerate([(24, 11), (27, 15), (30, 20), (33, 25), (37, 30)]):
+        d.polygon(P([(x - 2, y + 3), (x + 4, y - 3), (x + 2, y + 4)]), fill=gild)
+    # a lion's forepaw raised in front of the chest
+    d.polygon(P([(26, 40), (16, 36), (12, 38), (14, 40), (24, 46)]), fill=white)
+    for x in (11, 13, 15):
+        d.line(P([(x, 37), (x - 1, 40)]), fill=line, width=k)
+    d.line(P([(30, 30), (40, 38)]), fill=line, width=k)                           # muscle line
+    # an Arimasp's spear thrust in from the right, plain red-figure
+    d.line(P([(64, 18), (36, 30)]), fill=red, width=int(1.5 * k))
+    d.polygon(P([(36, 30), (40, 26), (41, 30)]), fill=red)
+    im = im.resize((S, S), Image.LANCZOS)
+    save("kerch_sherd", np.asarray(im, dtype=np.float64))
+
+
+# Gold plaque for sewing on: a stag lying with its legs folded under it, the
+# antlers swept back along its body - the steppe's animal style; a raised rim
+# and a hole at each corner
+def stag_plaque(rng):
+    S, ss = 64, 4
+    im = Image.new("L", (S * ss, S * ss), 70)
+    d = ImageDraw.Draw(im)
+    k = ss
+    def P(pts): return [(x * k, y * k) for x, y in pts]
+    d.rectangle(P([(2, 2), (62, 62)]), fill=120)
+    d.rectangle(P([(5, 5), (59, 59)]), fill=85)
+    d.polygon(P([(14, 44), (18, 32), (30, 28), (46, 30), (54, 36), (54, 46), (44, 50), (18, 50)]), fill=200)  # body
+    d.polygon(P([(18, 34), (14, 24), (8, 26), (6, 32), (10, 34), (16, 40)]), fill=205)  # neck and head
+    d.polygon(P([(6, 30), (3, 36), (8, 34)]), fill=205)                          # muzzle, lowered
+    d.ellipse(P([(9, 27), (12, 30)]), fill=140)                                  # eye
+    d.line(P([(13, 24), (22, 14), (36, 12), (52, 16), (58, 24)]), fill=225, width=int(2.2 * k))  # antler beam over the back
+    for x, y in [(22, 14), (30, 12), (38, 12), (46, 14), (54, 19)]:
+        d.line(P([(x, y), (x + 3, y - 7)]), fill=225, width=int(1.8 * k))        # tines, curled up
+        d.ellipse(P([(x + 1.5, y - 9), (x + 5, y - 5.5)]), fill=225)
+    d.polygon(P([(20, 50), (30, 46), (34, 48), (24, 52)]), fill=160)             # folded forelegs
+    d.polygon(P([(40, 50), (50, 46), (52, 49), (44, 52)]), fill=160)             # folded hind legs
+    d.line(P([(26, 34), (34, 44)]), fill=150, width=int(1.2 * k))                # the shoulder, in a curl
+    d.line(P([(42, 34), (48, 44)]), fill=150, width=int(1.2 * k))                # the haunch
+    for (x, y) in [(8, 8), (56, 8), (8, 56), (56, 56)]:
+        d.ellipse(P([(x - 2, y - 2), (x + 2, y + 2)]), fill=0)                   # sewing holes
+    im = im.filter(ImageFilter.GaussianBlur(ss * 0.5)).resize((S, S), Image.LANCZOS)
+    h = np.asarray(im, dtype=np.float64) / 255.0
+    rgb = relief_shade(h * 2.0, GOLD_RELIEF)
+    rgb[h < 0.08] = hexc("#1a1208")
+    save("stag_plaque", rgb)
+
+
 def main() -> None:
     for d in (TEX, MAT, AUD):
         d.mkdir(parents=True, exist_ok=True)
@@ -1351,6 +1554,11 @@ def main() -> None:
     chorus(np.random.default_rng(545))
     # a shower off the strait (Weather)
     rain(np.random.default_rng(546))
+    # the finds' own faces, drawn from their historical models
+    stater(np.random.default_rng(547))
+    amphora_stamp(np.random.default_rng(548))
+    kerch_sherd(np.random.default_rng(549))
+    stag_plaque(np.random.default_rng(550))
     print(f"textures: {len(TEXTURES)}, materials: {len(MATERIALS)}, audio: {len(list(AUD.glob('*.wav')))}")
 
 

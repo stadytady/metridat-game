@@ -5,7 +5,7 @@ extends RefCounted
 
 ## Baked to GLB. EXTRA kinds are small one-off models built at runtime.
 const MODELS := ["amphora", "pithos", "krater", "column_doric", "olive_tree", "cypress", "ship", "tripod", "figurine"]
-const EXTRA := ["coins", "sherds", "stele", "grain", "votive", "lampstand", "torch_post", "mould", "boat", "sinkers", "hekataion", "mirror", "marble_head", "loom_weights", "oil_lamp", "anchor_stock", "loom_weight", "fish_hook", "astragal", "seal_ring", "loan_contract", "mason_block"]
+const EXTRA := ["coins", "sherds", "stele", "grain", "votive", "lampstand", "torch_post", "mould", "boat", "sinkers", "hekataion", "mirror", "marble_head", "loom_weights", "oil_lamp", "anchor_stock", "loom_weight", "fish_hook", "astragal", "seal_ring", "loan_contract", "mason_block", "amphora_thasian"]
 
 
 static func build(name: String) -> MeshKit:
@@ -72,6 +72,8 @@ static func build(name: String) -> MeshKit:
 			fish_hook(kit)
 		"loan_contract":
 			loan_contract(kit)
+		"amphora_thasian":
+			amphora_thasian(kit)
 		"mason_block":
 			mason_block(kit)
 		"seal_ring":
@@ -311,24 +313,72 @@ static func align_y(from: Vector3, to: Vector3) -> Transform3D:
 	return Transform3D(Basis(x, y, x.cross(y)), from)
 
 
-## A clay dish with a few gold staters (scaled up a little: at 640x360 a
-## real 2 cm coin would be a single pixel).
+## Two gold staters of Panticapaeum on a scrap of dark cloth, one face up,
+## one turned to show the other: the bearded satyr in an ivy wreath, and the
+## horned griffin holding a spear on an ear of wheat, PAN above (the c. 340-310
+## BCE type; about 9.1 g, some 20 mm across - drawn here a little larger, so the
+## dies read). The faces come from the `stater` texture, obverse in its left half.
 static func coins(kit: MeshKit) -> void:
-	kit.lathe("clay", PackedVector2Array([Vector2(0.06, 0), Vector2(0.15, 0.03), Vector2(0.16, 0.05)]), 8,
-			Vector3.ZERO, 1.0, true, "clay", true)
-	for c: Vector3 in [Vector3(0.0, 0.05, 0.0), Vector3(0.05, 0.058, 0.03), Vector3(-0.04, 0.055, 0.04)]:
-		kit.lathe("gold", PackedVector2Array([Vector2(0.032, c.y), Vector2(0.032, c.y + 0.008)]), 8,
-				Vector3(c.x, 0, c.z), 1.0, true, "gold", true)
+	kit.box("dark", Vector3(0, 0.003, 0), Vector3(0.22, 0.006, 0.16), [])
+	stater(kit, Vector3(-0.045, 0.006, 0.01), 0.042, true, 0.3)
+	stater(kit, Vector3(0.05, 0.006, -0.012), 0.042, false, -0.5)
 
 
+## One stater at `c` (on its lower face), radius r: a gold edge and a struck
+## face from the `stater` texture - the obverse or the reverse - turned by yaw.
+static func stater(kit: MeshKit, c: Vector3, r: float, obverse: bool, yaw: float) -> void:
+	var h := 0.006
+	var n := 16
+	kit.lathe("gold", PackedVector2Array([Vector2(r, 0.0), Vector2(r, h)]), n, c, 2.0, true, "gold", false)
+	# the die's circle fills 30/64 of each half of the texture
+	var uc := Vector2(0.25 if obverse else 0.75, 0.5)
+	var ur := Vector2(30.0 / 128.0, 30.0 / 64.0)
+	var top := c + Vector3(0, h, 0)
+	for i in n:
+		var a0 := TAU * i / n
+		var a1 := TAU * (i + 1) / n
+		var p0 := top + Vector3(cos(a0) * r, 0, sin(a0) * r)
+		var p1 := top + Vector3(cos(a1) * r, 0, sin(a1) * r)
+		# the picture turns with the coin: sample it at the angle less the yaw
+		var t0 := uc + Vector2(cos(a0 - yaw) * ur.x, sin(a0 - yaw) * ur.y)
+		var t1 := uc + Vector2(cos(a1 - yaw) * ur.x, sin(a1 - yaw) * ur.y)
+		kit.tri("stater", top, p1, p0, uc, t1, t0)
+
+
+## Three sherds of a Kerch-style pelike (the last Attic red-figure, c. 375-330
+## BCE, named for the finds at Kerch): black glaze, a griffin painted in added
+## white with its mane gilt - an eagle's head with the beak open, a lion's paw -
+## an Arimasp's spear coming in, and the band below. Each piece shows its own part
+## of the `kerch_sherd` picture, with the clay's edge showing round it.
 static func sherds(kit: MeshKit) -> void:
-	var pieces := [[Vector3(0, 0.01, 0), 0.0], [Vector3(0.14, 0.01, 0.05), 0.9], [Vector3(-0.1, 0.01, 0.1), 2.1]]
-	for p: Array in pieces:
-		kit.xform = Transform3D(Basis.from_euler(Vector3(0.15, p[1], 0.1)), p[0])
-		var w := 0.12
-		kit.quad("redfigure", Vector3(-w, 0, w), Vector3(w, 0, w * 0.7), Vector3(w * 0.8, 0.02, -w), Vector3(-w * 0.9, 0.03, -w * 0.8),
-				PackedVector2Array([Vector2(0.1, 0.9), Vector2(0.6, 0.9), Vector2(0.6, 0.3), Vector2(0.1, 0.3)]))
-		kit.quad("clay", Vector3(-w, -0.01, w), Vector3(-w * 0.9, 0.02, -w * 0.8), Vector3(w * 0.8, 0.01, -w), Vector3(w, -0.01, w * 0.7))
+	# [centre, yaw, outline in the piece's frame, where the outline sits on the picture (uv of its first point), uv scale]
+	var pieces := [
+		[Vector3(-0.02, 0.0, 0.0), 0.1, [Vector2(-0.1, -0.08), Vector2(0.06, -0.1), Vector2(0.11, 0.0), Vector2(0.05, 0.09), Vector2(-0.09, 0.07)], Vector2(0.05, 0.12)],
+		[Vector3(0.15, 0.0, 0.05), -0.5, [Vector2(-0.06, -0.07), Vector2(0.07, -0.05), Vector2(0.06, 0.06), Vector2(-0.07, 0.05)], Vector2(0.5, 0.15)],
+		[Vector3(-0.08, 0.0, 0.14), 0.9, [Vector2(-0.07, -0.03), Vector2(0.08, -0.04), Vector2(0.07, 0.04), Vector2(-0.08, 0.03)], Vector2(0.1, 0.8)],
+	]
+	var th := 0.012
+	for pc: Array in pieces:
+		var o: Vector3 = pc[0]
+		kit.xform = Transform3D(Basis(Vector3.UP, pc[1]).rotated(Vector3.RIGHT, 0.04), o)
+		var outline: Array = pc[2]
+		var base: Vector2 = pc[3]
+		var lo: Vector2 = outline[0]
+		var uv_of := func(q: Vector2) -> Vector2:
+			return base + (q - lo) * 2.4  # 2.4 picture-widths per metre: a sherd shows a part
+		var cen := Vector2.ZERO
+		for q: Vector2 in outline:
+			cen += q
+		cen /= outline.size()
+		var c3 := Vector3(cen.x, th, cen.y)
+		for i in outline.size():
+			var a: Vector2 = outline[i]
+			var b: Vector2 = outline[(i + 1) % outline.size()]
+			var pa := Vector3(a.x, th, a.y)
+			var pb := Vector3(b.x, th, b.y)
+			# outline runs clockwise seen from above (+x right, +z down): centre, b, a is up
+			kit.tri("kerch_sherd", c3, pb, pa, uv_of.call(cen), uv_of.call(b), uv_of.call(a))
+			kit.quad("clay", Vector3(a.x, 0, a.y), Vector3(b.x, 0, b.y), pb, pa)
 	kit.xform = Transform3D.IDENTITY
 
 
@@ -407,21 +457,25 @@ static func salt_fish(kit: MeshKit) -> void:
 	kit.box("plaster", Vector3(0.17, 0.004, 0.08), Vector3(0.07, 0.008, 0.05), ["bottom"])
 
 
-## A handful of thin gold plaques for sewing on a coat, on a scrap of fur: each
-## a square with a raised border and a deer leaping across it, two of them
-## turned over. Origin on the ground, flat.
+## A handful of gold plaques for sewing on a coat, on a scrap of fur: each a
+## stag lying with its legs folded under it and its antlers swept back over its
+## body - the recumbent stag of the steppe's animal style, best known from the
+## great gold stag from Kul-Oba - in a raised rim, a hole at each corner for the
+## thread. Two lie turned over, plain. Origin on the ground, flat.
 static func gold_plaques(kit: MeshKit) -> void:
-	kit.box("fur", Vector3(0, 0.005, 0), Vector3(0.26, 0.01, 0.2), ["bottom"])
-	var spots := [Vector2(-0.07, -0.05), Vector2(0.0, -0.06), Vector2(0.07, -0.04), Vector2(-0.06, 0.04), Vector2(0.02, 0.03), Vector2(0.08, 0.06)]
-	for i in spots.size():
-		var p: Vector2 = spots[i]
-		var c := Vector3(p.x, 0.012, p.y)
-		kit.box("gold", c, Vector3(0.045, 0.004, 0.045), ["bottom"])
-		if i % 3 != 2:  # face up: a border and the deer
-			kit.box("dark", c + Vector3(0, 0.0025, 0), Vector3(0.03, 0.001, 0.006), [])  # body
-			kit.box("dark", c + Vector3(0.012, 0.0025, -0.008), Vector3(0.004, 0.001, 0.012), [])  # neck and head
-			kit.box("dark", c + Vector3(-0.01, 0.0025, 0.009), Vector3(0.004, 0.001, 0.01), [])  # legs
-			kit.box("dark", c + Vector3(0.008, 0.0025, 0.009), Vector3(0.004, 0.001, 0.01), [])
+	kit.box("fur", Vector3(0, 0.005, 0), Vector3(0.28, 0.01, 0.22), ["bottom"])
+	var spots := [[Vector2(-0.075, -0.055), 0.2, true], [Vector2(0.0, -0.06), -0.15, true], [Vector2(0.075, -0.045), 0.1, false],
+			[Vector2(-0.065, 0.045), -0.3, true], [Vector2(0.015, 0.035), 0.25, true], [Vector2(0.085, 0.06), -0.1, false]]
+	var s := 0.026  # half a plaque's side
+	for sp: Array in spots:
+		var p: Vector2 = sp[0]
+		kit.xform = Transform3D(Basis(Vector3.UP, sp[1]), Vector3(p.x, 0.0105, p.y))
+		kit.box("gold", Vector3(0, 0.001, 0), Vector3(s * 2.0, 0.002, s * 2.0), ["top", "bottom"])
+		var mat := "stag_plaque" if sp[2] else "gold"
+		# counter-clockwise seen from above (x right, z towards the viewer): faces up
+		kit.quad(mat, Vector3(-s, 0.002, -s), Vector3(-s, 0.002, s), Vector3(s, 0.002, s), Vector3(s, 0.002, -s),
+				PackedVector2Array([Vector2(0, 0), Vector2(0, 1), Vector2(1, 1), Vector2(1, 0)]))
+	kit.xform = Transform3D.IDENTITY
 
 
 ## A bronze fish hook on a scrap of line, lying on the ground.
@@ -431,6 +485,26 @@ static func fish_hook(kit: MeshKit) -> void:
 	kit.box("bronze", Vector3(0.014, 0.006, 0.022), Vector3(0.008, 0.008, 0.02), [])  # point
 	kit.box("cloth", Vector3(0, 0.004, -0.09), Vector3(0.004, 0.004, 0.13), [])  # the line
 
+
+## A Thasian wine amphora of the 4th century BCE: tall and slender, a long neck
+## with a thickened rim, handles from the neck to the shoulder, a body tapering
+## to a spiked toe. On the top of one handle, the stamp (`amphora_stamp`):
+## THASION, the eponymous magistrate's name, and an emblem - the club; Thasian
+## stamps name the city, the year's magistrate and, by the 330s, an emblem
+## instead of the potter, which is how they are dated.
+static func amphora_thasian(kit: MeshKit) -> void:
+	kit.lathe("clay", PackedVector2Array([
+		Vector2(0.0, 0.0), Vector2(0.022, 0.02), Vector2(0.026, 0.07), Vector2(0.05, 0.12), Vector2(0.13, 0.3),
+		Vector2(0.15, 0.45), Vector2(0.13, 0.56), Vector2(0.07, 0.62), Vector2(0.05, 0.66), Vector2(0.048, 0.8),
+		Vector2(0.058, 0.82), Vector2(0.06, 0.845), Vector2(0.046, 0.85)]), 10, Vector3.ZERO, 2.0, true, "dark", true)
+	# the handles stand front and back (+z, -z), so the stamped one faces whoever looks
+	for sz: float in [1.0, -1.0]:
+		kit.box("clay", Vector3(0, 0.78, 0.075 * sz), Vector3(0.045, 0.03, 0.06), [])     # from the neck
+		kit.box("clay", Vector3(0, 0.68, 0.11 * sz), Vector3(0.064, 0.2, 0.035), [])      # down to the shoulder
+	# the stamp on the outer face of the front handle's upper part, facing +z
+	var z := 0.1285
+	kit.quad("amphora_stamp", Vector3(-0.03, 0.765, z), Vector3(-0.03, 0.735, z), Vector3(0.03, 0.735, z), Vector3(0.03, 0.765, z),
+			PackedVector2Array([Vector2(0, 0), Vector2(0, 1), Vector2(1, 1), Vector2(1, 0)]))
 
 ## Two wooden writing tablets bound face to face, the cord crossed over them and
 ## knotted under a lump of clay with a seal pressed in; a beach stone on top
@@ -520,14 +594,25 @@ static func loom_weights(kit: MeshKit) -> void:
 	kit.xform = Transform3D.IDENTITY
 
 
-## A wheel-made lamp in black glaze: round body, filling hole, short nozzle
-## sooted at the tip. Nozzle along -z, origin on the surface it stands on.
+## A wheel-made Attic black-glazed lamp of the 4th century BCE (the kind Howland
+## sorts in The Athenian Agora IV): a low round body on a ring foot, the shoulder
+## curving in to a raised rim round the filling hole, a long nozzle with a
+## rounded tip and the wick hole sooted, and a small lug on one side. Glazed all
+## over but the underside of the foot. Nozzle along -z, origin on the ground.
 static func oil_lamp(kit: MeshKit) -> void:
-	kit.lathe("dark", PackedVector2Array([Vector2(0.035, 0.0), Vector2(0.05, 0.015), Vector2(0.045, 0.03), Vector2(0.02, 0.036)]), 10,
-			Vector3.ZERO, 1.0, true, "dark", false)
-	kit.box("dark", Vector3(0, 0.017, -0.07), Vector3(0.03, 0.022, 0.06), ["bottom"])  # nozzle
-	kit.box("hair", Vector3(0, 0.029, -0.099), Vector3(0.02, 0.003, 0.008), ["bottom"])  # the soot at the wick hole
-	kit.box("clay", Vector3(0, 0.0365, 0), Vector3(0.014, 0.001, 0.014), ["bottom"])  # filling hole, clay showing
+	kit.lathe("clay", PackedVector2Array([Vector2(0.026, 0.0), Vector2(0.028, 0.004)]), 12, Vector3.ZERO, 1.0, true, "clay", false)  # the reserved foot
+	kit.lathe("dark", PackedVector2Array([Vector2(0.028, 0.004), Vector2(0.044, 0.01), Vector2(0.048, 0.02),
+			Vector2(0.042, 0.03), Vector2(0.026, 0.036), Vector2(0.016, 0.037)]), 12, Vector3.ZERO, 1.0, true, "dark", false)
+	kit.lathe("dark", PackedVector2Array([Vector2(0.016, 0.037), Vector2(0.017, 0.042), Vector2(0.012, 0.042)]), 12, Vector3.ZERO, 1.0, true, "dark", false)  # rim
+	kit.lathe("clay", PackedVector2Array([Vector2(0.012, 0.042), Vector2(0.0, 0.032)]), 12, Vector3.ZERO, 1.0, true, "clay", false)  # the hole, clay inside
+	# the nozzle: a tapering box run out along -z (frustum builds up +y, turned onto -z)
+	kit.xform = Transform3D(Basis(Vector3.RIGHT, -PI / 2.0), Vector3(0, 0.018, -0.03))
+	kit.frustum("dark", Vector3.ZERO, Vector2(0.03, 0.022), Vector2(0.022, 0.018), 0.062, [])
+	kit.xform = Transform3D(Basis(Vector3.RIGHT, -PI / 2.0), Vector3(0, 0.018, -0.092))
+	kit.lathe("dark", PackedVector2Array([Vector2(0.011, 0.0), Vector2(0.011, 0.006), Vector2(0.006, 0.01)]), 8, Vector3.ZERO, 1.0, true, "dark", true)  # its rounded tip
+	kit.xform = Transform3D.IDENTITY
+	kit.box("hair", Vector3(0, 0.0245, -0.097), Vector3(0.012, 0.002, 0.012), ["bottom"])  # wick hole, black with soot
+	kit.box("dark", Vector3(0.05, 0.022, 0.0), Vector3(0.012, 0.01, 0.014), [])  # the side lug
 
 
 ## The lead stock of an anchor: a bar tapering to both ends, a slot through
