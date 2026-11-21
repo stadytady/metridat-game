@@ -426,3 +426,15 @@ LOC_Q_SEAL_ASK,You keep patting your belt. Lost something?,Ты всё хлоп�
 LOC_Q_SEAL_1,"My seal. A little bronze ring with an ear of wheat on it. Without it the sacks go aboard unsealed, and unsealed sacks arrive light.","Печать. Бронзовый перстенёк с колосом. Без него мешки уходят на борт без печати, а без печати они приходят лёгкими."
 LOC_Q_SEAL_2,"I had it coming down the path from the town, before the first sack. It must be up there in the grass.","Он был при мне, когда я спускался тропой из города, до первого мешка. Наверное, лежит там в траве."
 LOC_Q_SEAL_DONE,"That's it, the ear of wheat! Now let the master count my seals and weep.","Он самый, с колосом! Теперь пусть хозяин считает мои печати и плачет."
+UI_CAMERA_MOTION,"Camera sway (head bob, run zoom)","Покачивание камеры (шаги, бег)"
+UI_CAPTIONS,Captions for sounds,Подписи к звукам
+UI_TEXT_SIZE,Text size: %d%%,Размер текста: %d%%
+CAP_HAMMER,[hammering behind a wall],[за стеной стучит молоток]
+CAP_LOOM,[a loom clacks],[стучит ткацкий станок]
+CAP_CHILD_CRY,[a child cries],[плачет ребёнок]
+CAP_BARK,[a dog barks],[лает собака]
+CAP_HUM,[someone hums a song],[кто-то напевает]
+CAP_STRIKE,[hammer on the die],[молот бьёт по штемпелю]
+CAP_SYMPOSIUM,"[voices, laughter and the aulos behind a door]","[за дверью голоса, смех и авлос]"
+CAP_CHORUS,[the chorus chants to the aulos],[хор поёт под авлос]
+CAP_RAIN,[rain],[дождь]

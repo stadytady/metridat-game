@@ -9,6 +9,7 @@ extends Node
 
 var _out := "user://shots"
 var _only: PackedStringArray = []
+## --text=1.4: every UI text at that size (the accessibility setting).
 ## A single shot from anywhere: "--at=x,z" and "--yaw=degrees".
 var _at := ""
 var _at_yaw := 0.0
@@ -31,6 +32,10 @@ func _ready() -> void:
 			# Not Game.set_language(): automation must not overwrite saved settings.
 			Game.language = a.substr(7)
 			TranslationServer.set_locale(Game.language)
+		elif a.begins_with("--text="):
+			# the text size, as the pause menu's slider sets it (not saved)
+			Game.text_scale = clampf(a.substr(7).to_float(), Game.TEXT_MIN, Game.TEXT_MAX)
+			UiStyle.rescale.call_deferred(get_tree().root)
 		elif a.begins_with("--at="):
 			# A shot from anywhere: --at=x,z looks along --yaw (degrees, 0 = -z).
 			_at = a.substr(5)

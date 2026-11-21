@@ -409,7 +409,7 @@ func _build_overlay() -> void:
 	_legend.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_legend.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_legend.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_legend.add_theme_font_size_override("font_size", 28)
+	UiStyle.font(_legend, 28)
 	_legend.add_theme_color_override("font_color", Color("#efe2c4"))
 	_legend.add_theme_color_override("font_outline_color", Color(0.08, 0.05, 0.03, 0.9))
 	_legend.add_theme_constant_override("outline_size", 8)
@@ -423,6 +423,6 @@ func _build_overlay() -> void:
 	_skip_hint.offset_bottom = -16.0
 	_skip_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	Keys.bind(_skip_hint, "UI_VOYAGE_SKIP")
-	_skip_hint.add_theme_font_size_override("font_size", 16)
+	UiStyle.font(_skip_hint, 16)
 	_skip_hint.add_theme_color_override("font_color", Color(0.94, 0.88, 0.76, 0.6))
 	layer.add_child(_skip_hint)

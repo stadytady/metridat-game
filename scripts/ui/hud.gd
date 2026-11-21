@@ -7,6 +7,10 @@ var _counter: Label
 var _toast: Label
 var _hint: KeysBar
 var _toast_tween: Tween
+## The caption line for sounds off screen (Game.captions), over the key strip.
+var _caption: Label
+var _caption_tween: Tween
+var _caption_key := ""
 var _perf: Label
 var _target: Node
 var _legend_tween: Tween
@@ -59,6 +63,16 @@ func _ready() -> void:
 	root.add_child(_perf)
 
 
+	_caption = UiStyle.label("", 26, UiStyle.MUTED)
+	_caption.name = "Caption"
+	_caption.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_caption.position += Vector2(-700, -130)
+	_caption.size = Vector2(1400, 40)
+	_caption.modulate.a = 0.0
+	root.add_child(_caption)
+	Game.caption_requested.connect(show_caption)
+
 	# The controls legend: key caps in one quiet strip along the bottom.
 	_hint = KeysBar.new()
 	_hint.name = "KeysBar"
@@ -100,6 +114,8 @@ func _notification(what: int) -> void:
 		_on_target(_target)
 		if _toast_key != "":
 			_toast.text = _toast_text()
+		if _caption_key != "":
+			_caption.text = tr(_caption_key)
 
 
 func _process(_delta: float) -> void:
@@ -173,6 +189,22 @@ func show_toast(key: String, prefix_key: String = "") -> void:
 	_toast_tween.tween_property(_toast, "modulate:a", 1.0, 0.4)
 	_toast_tween.tween_interval(3.5)
 	_toast_tween.tween_property(_toast, "modulate:a", 0.0, 1.2)
+
+
+## A sound's caption: in, held a moment, out; a new one replaces it.
+func show_caption(key: String) -> void:
+	_caption_key = key
+	_caption.text = tr(key)
+	if _caption_tween:
+		_caption_tween.kill()
+	_caption_tween = create_tween()
+	_caption_tween.tween_property(_caption, "modulate:a", 1.0, 0.25)
+	_caption_tween.tween_interval(3.0)
+	_caption_tween.tween_property(_caption, "modulate:a", 0.0, 0.8)
+
+
+func caption_text() -> String:
+	return _caption.text if _caption.modulate.a > 0.01 or (_caption_tween != null and _caption_tween.is_running()) else ""
 
 
 ## Puts the toast out at once: the shots jump from place to place faster than

@@ -16,6 +16,10 @@ var _fov_label: Label
 var _fov: HSlider
 var _invert: CheckBox
 var _psx: CheckBox
+var _motion: CheckBox
+var _captions: CheckBox
+var _text_label: Label
+var _text: HSlider
 var _lang: Array[Button] = []
 ## action -> its key button on the controls page.
 var _key_buttons := {}
@@ -65,26 +69,49 @@ func _build_main() -> VBoxContainer:
 	_resume = UiStyle.button("UI_RESUME")
 	_resume.pressed.connect(close)
 	col.add_child(_resume)
+	# two columns: in one the page outgrew a 1080 screen, and the text size
+	# setting makes every row taller still
+	var cols := HBoxContainer.new()
+	cols.add_theme_constant_override("separation", 40)
+	col.add_child(cols)
+	var left := VBoxContainer.new()
+	left.add_theme_constant_override("separation", 10)
+	cols.add_child(left)
+	var right := VBoxContainer.new()
+	right.add_theme_constant_override("separation", 14)
+	cols.add_child(right)
 	_sens_label = UiStyle.label("", 24)
-	col.add_child(_sens_label)
+	left.add_child(_sens_label)
 	_sens = _slider(0.1, 4.0, 0.05, _on_sens)
-	col.add_child(_sens)
+	left.add_child(_sens)
 	_vol_label = UiStyle.label("", 24)
-	col.add_child(_vol_label)
+	left.add_child(_vol_label)
 	_vol = _slider(0.0, 1.0, 0.05, _on_volume)
-	col.add_child(_vol)
+	left.add_child(_vol)
 	_fov_label = UiStyle.label("", 24)
-	col.add_child(_fov_label)
+	left.add_child(_fov_label)
 	_fov = _slider(Game.FOV_MIN, Game.FOV_MAX, 1.0, _on_fov)
-	col.add_child(_fov)
+	left.add_child(_fov)
+	_text_label = UiStyle.label("", 24)
+	left.add_child(_text_label)
+	_text = _slider(Game.TEXT_MIN, Game.TEXT_MAX, 0.1, _on_text)
+	left.add_child(_text)
 	_invert = _check("UI_INVERT_Y", func(on: bool) -> void:
 		Game.invert_y = on
 		Game.save_settings())
-	col.add_child(_invert)
+	right.add_child(_invert)
 	_psx = _check("UI_PSX", func(on: bool) -> void:
 		Game.psx_effects = on
 		Game.save_settings())
-	col.add_child(_psx)
+	right.add_child(_psx)
+	_motion = _check("UI_CAMERA_MOTION", func(on: bool) -> void:
+		Game.head_bob = on
+		Game.save_settings())
+	right.add_child(_motion)
+	_captions = _check("UI_CAPTIONS", func(on: bool) -> void:
+		Game.captions = on
+		Game.save_settings())
+	right.add_child(_captions)
 	var lang_row := HBoxContainer.new()
 	lang_row.add_theme_constant_override("separation", 12)
 	lang_row.add_child(UiStyle.label("UI_LANGUAGE", 24))
@@ -98,7 +125,7 @@ func _build_main() -> VBoxContainer:
 		b.pressed.connect(func() -> void: Game.set_language(code))
 		lang_row.add_child(b)
 		_lang.append(b)
-	col.add_child(lang_row)
+	right.add_child(lang_row)
 	var controls := UiStyle.button("UI_CONTROLS")
 	controls.pressed.connect(show_keys)
 	col.add_child(controls)
@@ -155,7 +182,7 @@ func _slider(lo: float, hi: float, step: float, on_change: Callable) -> HSlider:
 	s.min_value = lo
 	s.max_value = hi
 	s.step = step
-	s.custom_minimum_size = Vector2(560, 32)
+	s.custom_minimum_size = Vector2(480, 32)
 	s.value_changed.connect(on_change)
 	return s
 
@@ -163,7 +190,7 @@ func _slider(lo: float, hi: float, step: float, on_change: Callable) -> HSlider:
 func _check(key: String, on_toggle: Callable) -> CheckBox:
 	var c := CheckBox.new()
 	c.text = key
-	c.add_theme_font_size_override("font_size", 24)
+	UiStyle.font(c, 24)
 	c.toggled.connect(on_toggle)
 	return c
 
@@ -257,6 +284,7 @@ func _labels() -> void:
 	_sens_label.text = tr("UI_SENSITIVITY") % Game.mouse_sensitivity
 	_vol_label.text = tr("UI_VOLUME") % roundi(Game.master_volume * 100.0)
 	_fov_label.text = tr("UI_FOV") % roundi(Game.fov)
+	_text_label.text = tr("UI_TEXT_SIZE") % roundi(Game.text_scale * 100.0)
 
 
 func is_open() -> bool:
@@ -272,6 +300,9 @@ func open() -> void:
 	for b in _lang:
 		b.set_pressed_no_signal(b.text.to_lower() == Game.language)
 	_psx.set_pressed_no_signal(Game.psx_effects)
+	_motion.set_pressed_no_signal(Game.head_bob)
+	_captions.set_pressed_no_signal(Game.captions)
+	_text.set_value_no_signal(Game.text_scale)
 	_keys.visible = false
 	_main.visible = true
 	_root.visible = true
@@ -294,6 +325,13 @@ func _on_sens(v: float) -> void:
 	Game.mouse_sensitivity = v
 	_sens_label.text = tr("UI_SENSITIVITY") % v
 	Game.save_settings()
+
+
+## The text grows under the player's eyes (the centre container keeps the
+## bigger panel in the middle).
+func _on_text(v: float) -> void:
+	Game.set_text_scale(v)
+	_labels()
 
 
 func _on_volume(v: float) -> void:

@@ -281,6 +281,7 @@ func _step(delta: float) -> void:
 		if _hammer_sound.is_inside_tree():
 			_hammer_sound.pitch_scale = 0.94 + 0.04 * float(hits % 3)
 			_hammer_sound.play()
+			Game.caption("CAP_STRIKE", _hammer_sound.global_position, 14.0)
 
 
 ## The hammer arm for a lift, on top of whatever the Npc posed (head and all).

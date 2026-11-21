@@ -282,6 +282,8 @@ func step(delta: float) -> void:
 			_party_sound.play()
 		elif not party:
 			_party_sound.stop()
+	if party:
+		Game.caption("CAP_SYMPOSIUM", _party_sound.global_position, 14.0)
 	# the donkeys go home with the light, like the day workers
 	for d in get_children():
 		if d is Rider:
