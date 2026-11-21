@@ -691,6 +691,9 @@ MATERIALS = {
     "amphora_stamp": ("psx_lit", "amphora_stamp", "#ffffff", (1.0, 1.0)),
     "kerch_sherd": ("psx_lit", "kerch_sherd", "#ffffff", (1.0, 1.0)),
     "stag_plaque": ("psx_lit", "stag_plaque", "#ffffff", (1.0, 1.0)),
+    "terracotta_goddess": ("psx_lit", "terracotta_goddess", "#ffffff", (1.0, 1.0)),
+    # The mould's hollow: the same figure, dark - the negative it was pressed in.
+    "mould_hollow": ("psx_lit", "terracotta_goddess", "#6a4030", (1.0, 1.0)),
 }
 
 
@@ -1495,6 +1498,48 @@ def stag_plaque(rng):
     save("stag_plaque", rgb)
 
 
+TERRA_RELIEF = ["#5c2c18", "#8a4426", "#b0603a", "#c97b4e", "#dc9c6c", "#ecc29a"]
+
+def terracotta_goddess(rng):
+    """The front of a mould-made seated goddess, as the Bosporan workshops made
+    them: tall polos, a veil falling to the shoulders, the face, the chiton in
+    folds over the knees, the hands laid on them, feet on a footstool; the
+    throne's arms either side. Relief from the mould, with traces of the white
+    slip they were coated in and a touch of red."""
+    W, H, ss = 32, 64, 8
+    im = Image.new("L", (W * ss, H * ss), 70)
+    d = ImageDraw.Draw(im)
+    k = ss
+    def P(pts): return [(x * k, y * k) for x, y in pts]
+    d.rectangle(P([(1, 30), (31, 56)]), fill=100)                      # throne
+    d.rectangle(P([(1, 30), (5, 46)]), fill=130); d.rectangle(P([(27, 30), (31, 46)]), fill=130)  # its arms
+    d.rectangle(P([(10, 1), (22, 9)]), fill=200)                        # polos
+    d.polygon(P([(8, 10), (24, 10), (27, 28), (5, 28)]), fill=150)      # veil over the shoulders
+    d.ellipse(P([(11, 9), (21, 21)]), fill=210)                         # face
+    d.rectangle(P([(13, 13), (14.6, 14.6)]), fill=120); d.rectangle(P([(17.4, 13), (19, 14.6)]), fill=120)  # eyes
+    d.line(P([(16, 14), (16, 17.5)]), fill=240, width=int(1.3 * k))    # nose
+    d.line(P([(14.5, 18.6), (17.5, 18.6)]), fill=140, width=k)          # mouth
+    for x in (11, 13.5, 16, 18.5, 21):
+        d.ellipse(P([(x - 1.2, 8.4), (x + 1.2, 10.8)]), fill=220)       # hair in curls under the polos
+    d.polygon(P([(9, 22), (23, 22), (25, 40), (7, 40)]), fill=185)      # body
+    for x in (11, 14, 17, 20):
+        d.line(P([(x, 24), (x + (x - 16) * 0.3, 40)]), fill=150, width=k)   # folds
+    d.polygon(P([(6, 38), (26, 38), (26, 48), (6, 48)]), fill=200)      # knees, the lap
+    d.ellipse(P([(8, 36), (13, 40)]), fill=225); d.ellipse(P([(19, 36), (24, 40)]), fill=225)  # hands on the knees
+    for x in (9, 13, 17, 21, 24):
+        d.line(P([(x, 48), (x, 56)]), fill=160, width=k)                # the skirt to the feet
+    d.rectangle(P([(6, 56), (26, 60)]), fill=175)                       # footstool
+    d.rectangle(P([(0, 60), (32, 64)]), fill=120)                       # base
+    im = im.filter(ImageFilter.GaussianBlur(ss * 0.5)).resize((W, H), Image.LANCZOS)
+    h = np.asarray(im, dtype=np.float64) / 255.0
+    rgb = relief_shade(h * 2.0, TERRA_RELIEF)
+    slip = (vnoise(32, 12, rng, 64) > 0.74) & (h > 0.55) & ~((np.arange(64)[:, None] > 7) & (np.arange(64)[:, None] < 22))
+    rgb[slip] = hexc("#e8e0d0")                                       # the white slip, mostly gone
+    red = (vnoise(32, 10, rng, 64) > 0.84) & (h > 0.6) & (np.arange(64)[:, None] > 24) & (np.arange(64)[:, None] < 48)
+    rgb[red] = hexc("#b04a3a")                                        # a touch of red on the dress
+    save("terracotta_goddess", rgb)
+
+
 def main() -> None:
     for d in (TEX, MAT, AUD):
         d.mkdir(parents=True, exist_ok=True)
@@ -1559,6 +1604,7 @@ def main() -> None:
     amphora_stamp(np.random.default_rng(548))
     kerch_sherd(np.random.default_rng(549))
     stag_plaque(np.random.default_rng(550))
+    terracotta_goddess(np.random.default_rng(551))
     print(f"textures: {len(TEXTURES)}, materials: {len(MATERIALS)}, audio: {len(list(AUD.glob('*.wav')))}")
 
 

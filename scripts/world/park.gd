@@ -193,7 +193,9 @@ func _ready() -> void:
 	# the marble head on its straw by the north gate walk, looking at the walk
 	spawn_inspectable("goddess_head", Vector3(HEAD_FIND.x, Topo.terrain(HEAD_FIND.x, HEAD_FIND.y), HEAD_FIND.y), -90.0)
 	# a terracotta left at the foot of the goddess at the walk's west end
-	spawn_inspectable("goddess_votive", Vector3(VOTIVE_FIND.x, Topo.terrain(VOTIVE_FIND.x, VOTIVE_FIND.y) + 0.02, VOTIVE_FIND.y), 150.0)
+	# the terracotta's moulded front (its local +z) turned to the goddess on her plinth
+	var to_goddess := Vector2(FIGURES[0][0], FIGURES[0][1]) - VOTIVE_FIND
+	spawn_inspectable("goddess_votive", Vector3(VOTIVE_FIND.x, Topo.terrain(VOTIVE_FIND.x, VOTIVE_FIND.y) + 0.02, VOTIVE_FIND.y), rad_to_deg(atan2(to_goddess.x, to_goddess.y)))
 
 
 func _grove(kit: MeshKit) -> void:
