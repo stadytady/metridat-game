@@ -6,7 +6,7 @@ extends CanvasLayer
 signal woke
 
 const GOLD := Color("#d9a75a")
-const CREDITS := ["UI_CREDITS_1", "UI_CREDITS_2", "UI_CREDITS_3", "UI_CREDITS_4", "UI_CREDITS_5"]
+const CREDITS := ["UI_CREDITS_1", "UI_CREDITS_2", "UI_CREDITS_3", "UI_CREDITS_4", "UI_CREDITS_5", "UI_CREDITS_6"]
 const SCROLL_SECONDS := 9.0
 
 var finished := false

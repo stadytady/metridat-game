@@ -448,3 +448,11 @@ LOC_BUILDER_STONE_1,"From the slope up there, under the park. You can hear the p
 LOC_BUILDER_CHOICE_SAW,I saw a block with a mason's mark in the town.,Я видел в городе блок с меткой каменщика.
 LOC_BUILDER_SAW_1,"A stroke and a hook? That gang worked for me once. Good hands, bad at counting.","Черта и крючок? Эта артель когда-то работала на меня. Руки хорошие, считать не умеют."
 CAP_QUARRY,[a pick on stone],[кирка бьёт по камню]
+UI_CREDITS_LICENSES,Credits & licences,Авторы и лицензии
+UI_CREDITS_GAME,The game,Игра
+UI_CREDITS_AUTHOR,Made by stadytady,Автор: stadytady
+UI_CREDITS_LIBS,Libraries,Библиотеки
+UI_CREDITS_ENGINE,Godot Engine (MIT licence),Движок Godot (лицензия MIT)
+UI_CREDITS_THIRD,Inside Godot: third-party components and their licences,Внутри Godot: сторонние компоненты и их лицензии
+UI_CREDITS_LEGAL,"Licence texts are given in English, as published.","Тексты лицензий приведены на английском, как они опубликованы."
+UI_CREDITS_6,Credits and licences: pause menu,Авторы и лицензии — в меню паузы

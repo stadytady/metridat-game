@@ -1,12 +1,18 @@
 extends CanvasLayer
 ## Esc (or START): pause the world, release the mouse, adjust settings. A second
-## page moves the keys. Walked with the mouse, or with the stick and A on a pad.
+## page moves the keys, a third gives the credits and the licences of what the
+## game ships. Walked with the mouse, or with the stick and A on a pad.
 
 signal closed
 
 var _root: Control
 var _main: VBoxContainer
 var _keys: VBoxContainer
+var _credits: VBoxContainer
+var _credits_scroll: ScrollContainer
+var _credits_back: Button
+## How fast the stick scrolls the credits (px/s).
+const CREDITS_SCROLL := 900.0
 var _resume: Button
 var _sens_label: Label
 var _sens: HSlider
@@ -53,6 +59,9 @@ func _ready() -> void:
 	_keys = _build_keys()
 	pages.add_child(_keys)
 	_keys.visible = false
+	_credits = _build_credits()
+	pages.add_child(_credits)
+	_credits.visible = false
 	_root.visible = false
 	Game.device_changed.connect(func() -> void:
 		if _root.visible and Game.pad:
@@ -129,6 +138,9 @@ func _build_main() -> VBoxContainer:
 	var controls := UiStyle.button("UI_CONTROLS")
 	controls.pressed.connect(show_keys)
 	col.add_child(controls)
+	var credits := UiStyle.button("UI_CREDITS_LICENSES")
+	credits.pressed.connect(show_credits)
+	col.add_child(credits)
 	var quit := UiStyle.button("UI_QUIT")
 	quit.pressed.connect(func() -> void:
 		Game.save_requested.emit()
@@ -177,6 +189,74 @@ func _build_keys() -> VBoxContainer:
 	return col
 
 
+## The credits page: who made the game and with what, then the licences of
+## what it ships that is not its own - Godot's (and its components', straight
+## from the engine) and Dialogue Manager's. Long: it scrolls, with the wheel or
+## the stick.
+func _build_credits() -> VBoxContainer:
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 10)
+	var title := UiStyle.label("UI_CREDITS_LICENSES", 40, UiStyle.BORDER)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(title)
+	_credits_scroll = ScrollContainer.new()
+	_credits_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	# a ScrollContainer asks for no height of its own (see the journal)
+	_credits_scroll.custom_minimum_size = Vector2(1100, 620)
+	col.add_child(_credits_scroll)
+	var body := VBoxContainer.new()
+	body.add_theme_constant_override("separation", 8)
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_credits_scroll.add_child(body)
+	_credits_back = UiStyle.button("UI_BACK")
+	_credits_back.pressed.connect(show_main)
+	col.add_child(_credits_back)
+	return col
+
+
+## Fills the credits on first sight: the engine's licence texts run to dozens of
+## labels, and building them with the menu would slow every start for a page
+## most players never open.
+func _fill_credits() -> void:
+	var body: VBoxContainer = _credits_scroll.get_child(0)
+	if body.get_child_count() > 0:
+		return
+	var head := func(key: String) -> void:
+		var h := UiStyle.label(key, 26, UiStyle.HISTORY)
+		body.add_child(h)
+	var line := func(text: String, size: int, color: Color) -> void:
+		var l := UiStyle.label(text, size, color)
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l.custom_minimum_size.x = 1060
+		body.add_child(l)
+	head.call("UI_CREDITS_GAME")
+	for key: String in ["UI_CREDITS_1", "UI_CREDITS_AUTHOR", "UI_CREDITS_2", "UI_CREDITS_3", "UI_CREDITS_4", "UI_CREDITS_5"]:
+		line.call(key, 22, UiStyle.TEXT)
+	head.call("UI_CREDITS_LIBS")
+	line.call("UI_CREDITS_LEGAL", 18, UiStyle.MUTED)
+	head.call("UI_CREDITS_ENGINE")
+	_plain(line, Engine.get_license_text())
+	head.call(Licenses.DIALOGUE_MANAGER_NAME)
+	_plain(line, Licenses.DIALOGUE_MANAGER)
+	head.call("UI_CREDITS_THIRD")
+	for c: String in Licenses.godot_components():
+		_plain(line, c, 16)
+	var texts: Dictionary = Licenses.godot_component_licences()
+	for name: String in texts:
+		var h := UiStyle.label(name, 20, UiStyle.BORDER)
+		h.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+		body.add_child(h)
+		_plain(line, texts[name], 14)
+	UiStyle.rescale(body)
+
+
+## A line of legal text: shown as written, never looked up as a key.
+func _plain(line: Callable, text: String, size := 16) -> void:
+	line.call(text, size, UiStyle.MUTED)
+	var l: Label = (_credits_scroll.get_child(0) as Control).get_child(-1)
+	l.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+
+
 func _slider(lo: float, hi: float, step: float, on_change: Callable) -> HSlider:
 	var s := HSlider.new()
 	s.min_value = lo
@@ -201,12 +281,17 @@ func _refresh_keys() -> void:
 		b.text = tr("UI_PRESS_KEY") if action == waiting else Keys.key_name(Game.key_for(action))
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if waiting != &"" or Engine.get_process_frames() == _taken_frame:
 		return
+	if _root.visible and _credits.visible:
+		# the stick (or W/S) scrolls the long licence texts
+		var dy := Input.get_axis(&"move_forward", &"move_back")
+		if absf(dy) > 0.2:
+			_credits_scroll.scroll_vertical += int(dy * CREDITS_SCROLL * delta)
 	if _root.visible:
 		if Input.is_action_just_pressed(&"pause") or Input.is_action_just_pressed(&"back"):
-			if _keys.visible:
+			if _keys.visible or _credits.visible:
 				show_main()
 			else:
 				close()
@@ -252,14 +337,25 @@ func stop_listening() -> void:
 
 func show_keys() -> void:
 	_main.visible = false
+	_credits.visible = false
 	_keys.visible = true
 	_refresh_keys()
+	_focus_first()
+
+
+func show_credits() -> void:
+	_fill_credits()
+	_main.visible = false
+	_keys.visible = false
+	_credits.visible = true
+	_credits_scroll.scroll_vertical = 0
 	_focus_first()
 
 
 func show_main() -> void:
 	waiting = &""
 	_keys.visible = false
+	_credits.visible = false
 	_main.visible = true
 	_focus_first()
 
@@ -270,6 +366,8 @@ func _focus_first() -> void:
 		return
 	if _keys.visible:
 		(_key_buttons[Keys.REBIND[0][0]] as Button).grab_focus()
+	elif _credits.visible:
+		_credits_back.grab_focus()
 	else:
 		_resume.grab_focus()
 
@@ -304,6 +402,7 @@ func open() -> void:
 	_captions.set_pressed_no_signal(Game.captions)
 	_text.set_value_no_signal(Game.text_scale)
 	_keys.visible = false
+	_credits.visible = false
 	_main.visible = true
 	_root.visible = true
 	get_tree().paused = true
