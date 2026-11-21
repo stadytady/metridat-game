@@ -7,5 +7,5 @@
 resource_name = "cypress"
 shader = ExtResource("1_s")
 shader_parameter/albedo_tex = ExtResource("2_t")
-shader_parameter/tint = Color(0.6039, 0.6275, 0.5412, 1)
+shader_parameter/tint = Color(0.3725, 0.4314, 0.2980, 1)
 shader_parameter/uv_scale = Vector2(0.8, 0.8)

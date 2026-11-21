@@ -648,6 +648,51 @@ static func earth_basket(kit: MeshKit) -> void:
 		kit.box("bark", Vector3(sx * 0.21, 0.405, 0), Vector3(0.022, 0.022, 0.132), [])
 
 
+## A tuft of dry grass: three narrow pointed blades fanned round, each leaning
+## a little, drawn from both sides (square cards read as dark boxes up close).
+## `shade` darkens the straw (0.7 .. 1) so a meadow is not one colour.
+static func tuft(kit: MeshKit, p: Vector3, s: float, yaw: float, shade: float) -> void:
+	kit.color = Color(shade, shade, shade * 0.92)
+	for k in 3:
+		var a := yaw + k * PI / 3.0
+		var side := Vector3(cos(a), 0, sin(a)) * s * 0.16
+		var out := Vector3(-sin(a), 0, cos(a)) * s * (0.15 + 0.12 * k)
+		var tip := p + Vector3(0, s * (0.8 + 0.1 * k), 0) + out
+		var uva := Vector2(0, 1)
+		var uvb := Vector2(0.3, 1)
+		var uvt := Vector2(0.15, 0)
+		kit.tri("steppe", p - side, p + side, tip, uva, uvb, uvt)
+		kit.tri("steppe", p + side, p - side, tip, uvb, uva, uvt)
+	kit.color = Color.WHITE
+
+
+## A stone woman on a steppe mound: the carved stelae that stand on kurgans,
+## a figure cut from one block - head, shoulders, the arms brought round to
+## the belly holding a horn, a belt below. Weathered limestone, about 1.7 m.
+## `yaw` turns her face (local -z) where she looks.
+static func stone_woman(kit: MeshKit, base: Vector3, yaw: float) -> void:
+	var was := kit.xform
+	kit.xform = Transform3D(Basis(Vector3.UP, yaw), base)
+	kit.color = Color(0.86, 0.84, 0.78)
+	kit.frustum("limestone", Vector3.ZERO, Vector2(0.46, 0.34), Vector2(0.4, 0.3), 1.2, ["bottom"])  # the body
+	kit.box("limestone", Vector3(0, 1.28, 0), Vector3(0.44, 0.16, 0.3), [])  # shoulders
+	kit.box("limestone", Vector3(0, 1.5, 0), Vector3(0.28, 0.32, 0.27), [])  # the head
+	kit.box("limestone", Vector3(0, 1.36, 0), Vector3(0.16, 0.08, 0.16), [])  # the neck
+	# the face, cut flat: brows, nose
+	kit.box("dark", Vector3(0, 1.55, -0.137), Vector3(0.18, 0.025, 0.006), [])
+	kit.box("limestone", Vector3(0, 1.48, -0.15), Vector3(0.05, 0.1, 0.04), [])
+	# the arms in relief, down the sides and round to the belly, the horn held across
+	for sx: float in [-1.0, 1.0]:
+		kit.box("limestone", Vector3(sx * 0.2, 1.0, -0.13), Vector3(0.07, 0.42, 0.06), [])
+	kit.box("limestone", Vector3(0, 0.78, -0.16), Vector3(0.34, 0.07, 0.06), [])
+	kit.xform = was * Transform3D(Basis(Vector3.UP, yaw), base) * Transform3D(Basis(Vector3.BACK, 0.5), Vector3(0.02, 0.86, -0.19))
+	kit.frustum("limestone", Vector3.ZERO, Vector2(0.03, 0.03), Vector2(0.075, 0.075), 0.28, [])  # the horn
+	kit.xform = Transform3D(Basis(Vector3.UP, yaw), base)
+	kit.box("dark", Vector3(0, 0.62, -0.16), Vector3(0.38, 0.04, 0.012), [])  # the belt
+	kit.color = Color.WHITE
+	kit.xform = was
+
+
 ## A bronze seal ring dropped on the shingle: the hoop and a flat bezel with an
 ## ear of wheat cut into it.
 static func seal_ring(kit: MeshKit) -> void:

@@ -26,9 +26,23 @@ static func apply_to(node: Node) -> void:
 			var src := mesh.surface_get_material(i)
 			if src == null:
 				continue
-			var key := src.resource_name.to_lower()
-			if ResourceLoader.exists("res://assets/materials/%s.tres" % key):
+			var key := material_key(src.resource_name)
+			if key != "":
 				mi.set_surface_override_material(i, get_mat(key))
+
+
+## Which of our materials a model's surface means. The glTF export renames a
+## material that clashes with a node ("cypress" became "cypress2"), so a
+## trailing number is dropped when the name itself is not one of ours; without
+## this the surface stayed the importer's plain white (the slope's cypresses).
+static func material_key(name: String) -> String:
+	var key := name.to_lower()
+	if ResourceLoader.exists("res://assets/materials/%s.tres" % key):
+		return key
+	var bare := key.rstrip("0123456789").trim_suffix("_").trim_suffix(".")
+	if bare != key and ResourceLoader.exists("res://assets/materials/%s.tres" % bare):
+		return bare
+	return ""
 
 
 static func clear() -> void:

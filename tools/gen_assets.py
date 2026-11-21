@@ -613,7 +613,8 @@ MATERIALS = {
     "steppe": ("psx_lit", "grass", "#cfa96a", (0.15, 0.15)),
     "rock": ("psx_lit", "rock", "#ffffff", (0.3, 0.3)),
     "foliage": ("psx_lit", "foliage", "#ffffff", (0.8, 0.8)),
-    "cypress": ("psx_lit", "foliage", "#9aa08a", (0.8, 0.8)),
+    # dark and green: a lighter grey-green went chalk-white in the low sun
+    "cypress": ("psx_lit", "foliage", "#5f6e4c", (0.8, 0.8)),
     "bark": ("psx_lit", "bark", "#ffffff", (1.0, 0.5)),
     "clay": ("psx_lit", "clay", "#ffffff", (1.0, 1.0)),
     "redfigure": ("psx_lit", "redfigure", "#ffffff", (1.0, 1.0)),

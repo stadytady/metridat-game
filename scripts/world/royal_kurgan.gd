@@ -475,12 +475,7 @@ func _growth() -> void:
 		var yaw := rng.randf() * PI
 		if h < 0.2:
 			continue
-		var p := Vector3(x, c.y + h - 0.02, z)
-		var d := Vector3(cos(yaw), 0, sin(yaw)) * s * 0.5
-		var e := Vector3(-d.z, 0, d.x)
-		var up := Vector3(0, s, 0)
-		kit.quad("steppe", p - d, p + d, p + d + up, p - d + up)
-		kit.quad("steppe", p - e, p + e, p + e + up, p - e + up)
+		Props.tuft(kit, Vector3(x, c.y + h - 0.02, z), s, yaw, 0.75 + 0.25 * fmod(float(t) * 0.618, 1.0))
 	for b in SCRUB:
 		var a := rng.randf() * TAU
 		var r := rng.randf_range(4.0, MOUND_R - 2.0)
