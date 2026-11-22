@@ -27,3 +27,27 @@ func test_meander_is_one_connected_hook() -> void:
 	# a hook, not a box: the right side above the rail stays open
 	for y in range(0, 5):
 		check(not seen.has(Vector2i(5, y)), "hook closed at (5, %d)" % y)
+
+
+## The opening plays on open; the first key only finishes it (it must not start
+## the walk under a half-drawn title), the next one starts.
+func test_the_first_key_finishes_the_opening() -> void:
+	var title: CanvasLayer = load("res://scripts/ui/title_screen.gd").new()
+	Engine.get_main_loop().root.add_child(title)
+	title.open(false)
+	check(title.intro_running(), "the opening does not play")
+	check(title._title.reveal < 0.01 and title._menu.modulate.a < 0.01, "the title is drawn before the opening")
+	var started := [false]
+	title.started.connect(func() -> void: started[0] = true)
+	var ev := InputEventAction.new()
+	ev.action = &"ui_accept"
+	ev.pressed = true
+	title._input(ev)
+	check(not started[0], "the first key starts the walk mid-opening")
+	check(not title.intro_running() and title._title.reveal == 1.0 and title._menu.modulate.a == 1.0, "the first key does not finish the opening")
+	title._input(ev)
+	check(started[0], "the second key does not start the walk")
+	check(title._quit.visible != OS.has_feature("web"), "quit shows in a browser or hides on desktop")
+	title.free()
+	Game.ui_blocking = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE

@@ -68,6 +68,8 @@ func _ready() -> void:
 		title.name = "TitleScreen"
 		add_child(title)
 		$HUD.set_visible_ui(false)
+		title.credits_requested.connect($PauseMenu.open_credits)
+		$PauseMenu.credits_closed.connect(title.back_from_credits)
 		title.started.connect(func() -> void:
 			$HUD.set_visible_ui(true)
 			# a new walk draws its weather: some afternoons a shower comes over the strait

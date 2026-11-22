@@ -36,3 +36,23 @@ func test_missing_reports_unknown_letters() -> void:
 func test_narrow_letters_take_less_room() -> void:
 	check(G.advance("Ι", 100.0) < G.advance("Π", 100.0), "iota is as wide as pi")
 	check(G.advance(" ", 100.0) < G.advance("Ι", 100.0), "a space is as wide as a letter")
+
+## The gap between one letter's ink and the next is the same all along the word:
+## the narrow iota gets the same air on both sides as Π or Ω (it used to sit on
+## a full-width base and leave a hole before it).
+func test_the_ink_is_evenly_spaced() -> void:
+	var word := "ΠΑΝΤΙΚΑΠΑΙΟΝ"
+	var spans: Array[Vector2] = G.ink_spans(word, 100.0, 20.0)
+	check(spans.size() == word.length(), "one span per letter")
+	# the right edge from the glyph's own ink, not from the span (which would
+	# only check ink_spans against itself)
+	var right := func(i: int) -> float:
+		var ink := G.glyph_span(word[i])
+		return spans[i].x + (ink.y - ink.x) / G.BOX * G.WIDE * 100.0
+	var first: float = spans[1].x - right.call(0)
+	for i in range(1, spans.size()):
+		var gap: float = spans[i].x - right.call(i - 1)
+		check(absf(gap - first) < 0.5, "the gap before %s is %.1f, the others %.1f" % [word[i], gap, first])
+	for i in spans.size():
+		var ink := G.glyph_span(word[i])
+		check(spans[i].y - spans[i].x > 0.0 and ink.y > ink.x, "%s has no ink" % word[i])

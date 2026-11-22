@@ -4,6 +4,8 @@ extends CanvasLayer
 ## game ships. Walked with the mouse, or with the stick and A on a pad.
 
 signal closed
+## The credits page opened from the title screen was closed: back to the title.
+signal credits_closed
 
 var _root: Control
 var _main: VBoxContainer
@@ -34,6 +36,8 @@ var _keys_back: Button
 ## press was taken for it: that Esc must not also close the menu.
 var waiting: StringName = &""
 var _taken_frame := -1
+## Opened from the title for the credits only: back and Esc return to the title.
+var _from_title := false
 
 
 func _ready() -> void:
@@ -216,7 +220,7 @@ func _build_credits() -> VBoxContainer:
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_credits_scroll.add_child(body)
 	_credits_back = UiStyle.button("UI_BACK")
-	_credits_back.pressed.connect(show_main)
+	_credits_back.pressed.connect(_credits_done)
 	col.add_child(_credits_back)
 	return col
 
@@ -301,7 +305,9 @@ func _process(delta: float) -> void:
 			_credits_scroll.scroll_vertical += int(dy * CREDITS_SCROLL * delta)
 	if _root.visible:
 		if Input.is_action_just_pressed(&"pause") or Input.is_action_just_pressed(&"back"):
-			if _keys.visible or _credits.visible:
+			if _credits.visible:
+				_credits_done()
+			elif _keys.visible:
 				show_main()
 			else:
 				close()
@@ -360,6 +366,14 @@ func show_credits() -> void:
 	_credits.visible = true
 	_credits_scroll.scroll_vertical = 0
 	_focus_first()
+
+
+## Back from the credits: to the menu, or to the title it was opened from.
+func _credits_done() -> void:
+	if _from_title:
+		close()
+	else:
+		show_main()
 
 
 func show_main() -> void:
@@ -427,9 +441,25 @@ func open() -> void:
 	_focus_first()
 
 
+## The credits alone, from the title screen's menu.
+func open_credits() -> void:
+	open()
+	_from_title = true
+	show_credits()
+	if not Game.pad:
+		_credits_back.grab_focus()
+
+
 func close() -> void:
 	waiting = &""
 	_root.visible = false
+	if _from_title:
+		# the title still holds the game: no captured mouse, no hand-over
+		_from_title = false
+		get_tree().paused = false
+		Game.mark_ui_closed()
+		credits_closed.emit()
+		return
 	get_tree().paused = false
 	Game.ui_blocking = false
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
