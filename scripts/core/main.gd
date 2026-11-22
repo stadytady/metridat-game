@@ -73,15 +73,16 @@ func _ready() -> void:
 			# a new walk draws its weather: some afternoons a shower comes over the strait
 			Game.weather_seed = randi_range(1, 999999)
 			# the evening before: off the ship, a word with Damon, then morning
+			# saving and the session log first, so the log sees the prologue begin
+			_start_saving("new")
 			var prologue := Prologue.new()
 			prologue.name = "Prologue"
 			add_child(prologue)
-			prologue.begin()
-			_start_saving())
+			prologue.begin())
 		title.continued.connect(func() -> void:
 			$HUD.set_visible_ui(true)
 			_restore(SaveGame.read())
-			_start_saving())
+			_start_saving("continued"))
 		title.open(SaveGame.exists())
 
 
@@ -144,9 +145,16 @@ func _restore(data: Dictionary) -> void:
 
 
 ## From the first step of a played walk on (never in automation): save on every
-## find, errand and lamp, every SaveGame.AUTOSAVE_SECONDS, and on quit.
-func _start_saving() -> void:
+## find, errand and lamp, every SaveGame.AUTOSAVE_SECONDS, and on quit; and keep
+## the session log.
+func _start_saving(how := "new") -> void:
 	_saving = true
+	# and a log of the walk for playtests (SessionLog), where a file can be kept
+	if SessionLog.supported():
+		var log := SessionLog.new()
+		log.name = "SessionLog"
+		add_child(log)
+		log.begin(how, player())
 	Game.discovered.connect(func(_d: Discovery, _new: bool) -> void: save_now())
 	Game.quest_changed.connect(func(_id: String, _s: int) -> void: save_now())
 	Game.lamp_lit.connect(func(_l: int, _t: int) -> void: save_now())

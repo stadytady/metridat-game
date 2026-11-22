@@ -79,6 +79,19 @@ func _ready() -> void:
 	_new.focus_mode = Control.FOCUS_ALL
 	_new.visible = false
 	col.add_child(_new)
+	# the build's number in the corner, so a playtester's notes say which one
+	var ver := Label.new()
+	ver.text = "v" + SessionLog.version()
+	ver.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	UiStyle.font(ver, 18)
+	ver.add_theme_color_override("font_color", Color(UiStyle.MUTED, 0.8))
+	ver.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+	ver.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	ver.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	ver.offset_right = -24
+	ver.offset_bottom = -16
+	ver.name = "Version"
+	_root.add_child(ver)
 	_root.visible = false
 
 
