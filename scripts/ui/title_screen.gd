@@ -1,7 +1,7 @@
 extends CanvasLayer
 ## Start screen over the live view from the hill: the name cut as an inscription
 ## between two bands of Greek key (meander), the name again in the player's
-## language below, and a menu of words - start (or continue), a new walk, quit -
+## language below, and a menu of words - start (or continue), a new walk, credits, quit -
 ## the chosen one gold between two lozenges. On opening the bands run out from
 ## the middle, the letters are cut one by one, the menu comes up. The world keeps
 ## moving behind (sea, ships); the HUD and the player wait. The cursor shows only
@@ -12,6 +12,8 @@ extends CanvasLayer
 signal started
 ## START on a saved walk: Main puts it back instead of running the prologue.
 signal continued
+## CREDITS: Main shows the pause menu's credits page over the title.
+signal credits_requested
 
 const GOLD := Color("#d9a75a")
 const SHADOW := Color(0.05, 0.03, 0.02, 0.9)
@@ -23,6 +25,9 @@ var _menu: VBoxContainer
 var _start: Button
 var _new: Button
 var _quit: Button
+var _credits: Button
+## The credits page is up over the title: hidden, but still open.
+var _away := false
 var _mark: Control
 var _intro: Tween
 ## A saved walk is waiting: START reads "Continue", and "New walk" starts over.
@@ -86,6 +91,8 @@ func _ready() -> void:
 	_new = _item("UI_NEW_GAME", 26)
 	_new.pressed.connect(start_over)
 	_new.visible = false
+	_credits = _item("UI_TITLE_CREDITS", 26)
+	_credits.pressed.connect(show_credits)
 	_quit = _item("UI_QUIT", 26)
 	_quit.pressed.connect(func() -> void: get_tree().quit())
 	# a browser tab is not quit from inside the page
@@ -167,7 +174,7 @@ func _label(b: Button, key: String) -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_TRANSLATION_CHANGED and _menu != null:
-		for b: Button in [_start, _new, _quit]:
+		for b: Button in [_start, _new, _credits, _quit]:
 			_label(b, String(b.get_meta(&"key")))
 
 
@@ -237,7 +244,27 @@ func _draw_meander(c: Control) -> void:
 
 
 func is_open() -> bool:
-	return _root.visible
+	return _root.visible or _away
+
+
+## CREDITS: step aside for the credits page; back_from_credits() returns.
+func show_credits() -> void:
+	if not _root.visible or _fading:
+		return
+	finish_intro()
+	_away = true
+	_root.visible = false
+	credits_requested.emit()
+
+
+func back_from_credits() -> void:
+	if not _away:
+		return
+	_away = false
+	_root.visible = true
+	Game.ui_blocking = true
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	_credits.grab_focus()
 
 
 func open(saved := false) -> void:
@@ -338,15 +365,17 @@ func _input(event: InputEvent) -> void:
 	var item := _start
 	if click:
 		var at := (event as InputEventMouseButton).position
-		for b: Button in [_new, _quit]:
+		for b: Button in [_new, _credits, _quit]:
 			if b.visible and b.get_global_rect().has_point(at):
 				item = b
 	else:
 		var f := get_viewport().gui_get_focus_owner()
-		if f == _new or f == _quit:
+		if f == _new or f == _credits or f == _quit:
 			item = f
 	if item == _new:
 		start_over()
+	elif item == _credits:
+		show_credits()
 	elif item == _quit:
 		get_tree().quit()
 	else:

@@ -35,3 +35,38 @@ func test_the_page_carries_every_licence() -> void:
 		break
 	check(text.contains("UI_CREDITS_AUTHOR") or text.contains("stadytady"), "the game's own credits are missing")
 	menu.free()
+
+
+## CREDITS on the title opens this page alone; Back returns to the title, still
+## holding the game (no captured mouse, no START), with CREDITS chosen again.
+func test_the_title_opens_the_credits_and_gets_them_back() -> void:
+	var menu: CanvasLayer = PAUSE.new()
+	var title: CanvasLayer = load("res://scripts/ui/title_screen.gd").new()
+	var root: Window = (Engine.get_main_loop() as SceneTree).root
+	root.add_child(menu)
+	root.add_child(title)
+	title.credits_requested.connect(menu.open_credits)
+	menu.credits_closed.connect(title.back_from_credits)
+	var events := []
+	title.started.connect(func() -> void: events.append("started"))
+	menu.closed.connect(func() -> void: events.append("closed"))
+	title.open(false)
+	title.finish_intro()
+	title._credits.grab_focus()
+	var ev := InputEventAction.new()
+	ev.action = &"ui_accept"
+	ev.pressed = true
+	title._input(ev)
+	check(menu.is_open() and menu._credits.visible and not menu._main.visible, "CREDITS does not show the credits page alone")
+	check(title.is_open() and not title._root.visible, "the title shows through the credits or lets go of the game")
+	title._input(ev)
+	check(events.is_empty(), "a key behind the credits starts the walk")
+	menu._credits_done()
+	check(not menu.is_open() and title._root.visible, "Back does not return to the title")
+	check(Game.ui_blocking and not root.get_tree().paused, "the title no longer holds the game after the credits")
+	check(events.is_empty(), "closing the credits hands the game over: %s" % [events])
+	check(root.get_viewport().gui_get_focus_owner() == title._credits, "CREDITS is not chosen on return")
+	menu.free()
+	title.free()
+	Game.ui_blocking = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
