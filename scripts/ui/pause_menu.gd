@@ -141,6 +141,13 @@ func _build_main() -> VBoxContainer:
 	var credits := UiStyle.button("UI_CREDITS_LICENSES")
 	credits.pressed.connect(show_credits)
 	col.add_child(credits)
+	# playtests: the folder of session logs (SessionLog), where there is one
+	if SessionLog.supported():
+		var logs := UiStyle.button("UI_OPEN_LOGS")
+		logs.pressed.connect(func() -> void:
+			DirAccess.make_dir_recursive_absolute(SessionLog.DIR)
+			OS.shell_open(ProjectSettings.globalize_path(SessionLog.DIR)))
+		col.add_child(logs)
 	var quit := UiStyle.button("UI_QUIT")
 	quit.pressed.connect(func() -> void:
 		Game.save_requested.emit()
@@ -232,6 +239,9 @@ func _fill_credits() -> void:
 	head.call("UI_CREDITS_GAME")
 	for key: String in ["UI_CREDITS_1", "UI_CREDITS_AUTHOR", "UI_CREDITS_2", "UI_CREDITS_3", "UI_CREDITS_4", "UI_CREDITS_5"]:
 		line.call(key, 22, UiStyle.TEXT)
+	var ver := UiStyle.label(tr("UI_CREDITS_VERSION") % SessionLog.version(), 22, UiStyle.TEXT)
+	ver.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	body.add_child(ver)
 	head.call("UI_CREDITS_LIBS")
 	line.call("UI_CREDITS_LEGAL", 18, UiStyle.MUTED)
 	head.call("UI_CREDITS_ENGINE")
@@ -373,6 +383,12 @@ func _focus_first() -> void:
 
 
 func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and _credits_scroll:
+		# the credits hold a filled-in line (the version): built again on next open
+		var body: Node = _credits_scroll.get_child(0)
+		for c: Node in body.get_children():
+			body.remove_child(c)
+			c.queue_free()
 	if what == NOTIFICATION_TRANSLATION_CHANGED and _sens_label:
 		_labels()
 		_refresh_keys()

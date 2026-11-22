@@ -82,6 +82,9 @@ jobs:
         run: |
           tools/install-godot.sh --templates
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Stamp the version
+        # the title screen and the session log show config/version: the tag's number
+        run: sed -i "s/^config\/version=.*/config\/version=\"${TAG#v}\"/" project.godot && grep '^config/version' project.godot
       - name: Tests and walkthrough
         run: tools/test.sh
       - name: Export

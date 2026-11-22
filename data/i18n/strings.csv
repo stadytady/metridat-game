@@ -456,3 +456,5 @@ UI_CREDITS_ENGINE,Godot Engine (MIT licence),Движок Godot (лицензи�
 UI_CREDITS_THIRD,Inside Godot: third-party components and their licences,Внутри Godot: сторонние компоненты и их лицензии
 UI_CREDITS_LEGAL,"Licence texts are given in English, as published.","Тексты лицензий приведены на английском, как они опубликованы."
 UI_CREDITS_6,Credits and licences: pause menu,Авторы и лицензии — в меню паузы
+UI_OPEN_LOGS,Open the session logs folder,Открыть папку с логами прогулок
+UI_CREDITS_VERSION,Version %s,Версия %s
