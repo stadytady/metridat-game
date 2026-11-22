@@ -1140,6 +1140,7 @@ func _open_title() -> CanvasLayer:
 	title.name = "TitleScreen"
 	_main().add_child(title)
 	title.open()
+	title.finish_intro()  # a shot shows the title drawn, not its opening
 	return title
 
 

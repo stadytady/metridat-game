@@ -62,14 +62,24 @@ static func missing(word: String) -> String:
 	return out
 
 
-## The width a glyph actually covers, so narrow letters take less room than wide
-## ones: an even step for every letter is what made the first title look crooked.
-static func glyph_width(ch: String) -> float:
-	var m := 0.0
+## Where a glyph's ink starts and ends in its box (x, in box units). An iota is
+## drawn in the middle of its box: measuring only the right edge left a hole
+## before every iota (ΠΑΝΤ ΙΚΑΠΑ ΙΟΝ), so the ink is set from its left edge.
+static func glyph_span(ch: String) -> Vector2:
+	var lo := INF
+	var hi := -INF
 	for s: Array in GLYPHS.get(ch.to_upper(), []):
 		for p: Vector2 in s:
-			m = maxf(m, p.x)
-	return m / BOX * WIDE
+			lo = minf(lo, p.x)
+			hi = maxf(hi, p.x)
+	return Vector2(0.0, 0.0) if lo == INF else Vector2(lo, hi)
+
+
+## The width a glyph's ink covers, so narrow letters take less room than wide
+## ones: an even step for every letter is what made the first title look crooked.
+static func glyph_width(ch: String) -> float:
+	var span := glyph_span(ch)
+	return (span.y - span.x) / BOX * WIDE
 
 
 ## One letter's step, side bearings included.
@@ -87,28 +97,54 @@ static func width_of(word: String, height: float, gap: float) -> float:
 	return w
 
 
-## Draws the word with its top-left corner at `at`. `stroke` is the line weight in
-## pixels; `shadow` pushes a dark copy behind it, the way carved letters read in
-## low sun. Every corner is stamped so the joints do not thin out.
-static func draw(ci: CanvasItem, word: String, at: Vector2, height: float, gap: float,
-		color: Color, stroke: float, shadow := 0.0, shadow_color := Color(0.05, 0.03, 0.02, 0.9)) -> void:
-	var x := at.x
-	var half := stroke * 0.5
+## Where each letter's ink sits along the word, from `x0`: Vector2(left, right).
+## Every gap between two letters is then BEARING * height + gap, whatever the
+## letters - the test holds the setting to that.
+static func ink_spans(word: String, height: float, gap: float, x0 := 0.0) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	var x := x0
 	for i in word.length():
 		var ch := word[i].to_upper()
-		for s: Array in GLYPHS.get(ch, []):
-			var pts := PackedVector2Array()
-			for p: Vector2 in s:
-				pts.append(Vector2(x + p.x / BOX * WIDE * height, at.y + p.y * height))
-			if pts.size() < 2:
-				continue
-			if shadow > 0.0:
-				var sh := PackedVector2Array()
-				for p: Vector2 in pts:
-					sh.append(p + Vector2(shadow, shadow))
-				ci.draw_polyline(sh, shadow_color, stroke, false)
-			ci.draw_polyline(pts, color, stroke, false)
-			# square off the ends and the corners
-			for p: Vector2 in pts:
-				ci.draw_rect(Rect2(p - Vector2(half, half), Vector2(stroke, stroke)), color)
+		var left := x + BEARING * height * 0.5
+		out.append(Vector2(left, left + glyph_width(ch) * height))
 		x += advance(ch, height) + gap
+	return out
+
+
+## Draws the word with its top-left corner at `at`. `stroke` is the line weight in
+## pixels; `shadow` pushes a dark copy behind it, the way carved letters read in
+## low sun, and `light` a pale edge up and left, the lit lip of the cut. `serif`
+## (a fraction of the cap height) adds the small flared feet that letter cutters
+## of the 4th century left on the ends of their strokes, at cap line and base.
+## `count` draws only the first letters (an inscription appearing).
+static func draw(ci: CanvasItem, word: String, at: Vector2, height: float, gap: float,
+		color: Color, stroke: float, shadow := 0.0, shadow_color := Color(0.05, 0.03, 0.02, 0.9),
+		serif := 0.0, light := Color(0, 0, 0, 0), count := -1) -> void:
+	var spans := ink_spans(word, height, gap, at.x)
+	var n := word.length() if count < 0 else mini(count, word.length())
+	for pass_i in 3:
+		# shadow under, then the lit lip, then the letter itself
+		var off := Vector2(shadow, shadow) if pass_i == 0 else (Vector2(-1, -1) * maxf(1.0, stroke * 0.18) if pass_i == 1 else Vector2.ZERO)
+		var col := shadow_color if pass_i == 0 else (light if pass_i == 1 else color)
+		if (pass_i == 0 and shadow <= 0.0) or (pass_i == 1 and light.a <= 0.0):
+			continue
+		var w := stroke if pass_i != 1 else stroke * 0.6
+		for i in n:
+			var ch := word[i].to_upper()
+			var left: float = spans[i].x - glyph_span(ch).x / BOX * WIDE * height
+			for s: Array in GLYPHS.get(ch, []):
+				var pts := PackedVector2Array()
+				for p: Vector2 in s:
+					pts.append(Vector2(left + p.x / BOX * WIDE * height, at.y + p.y * height) + off)
+				if pts.size() < 2:
+					continue
+				ci.draw_polyline(pts, col, w, false)
+				# square off the corners so the joints do not thin out
+				for p: Vector2 in pts:
+					ci.draw_rect(Rect2(p - Vector2(w, w) * 0.5, Vector2(w, w)), col)
+				if serif > 0.0:
+					for e: Vector2 in [s[0], s[-1]]:
+						if e.y <= 0.02 or e.y >= 0.98:
+							var q := Vector2(left + e.x / BOX * WIDE * height, at.y + e.y * height) + off
+							var half := serif * height * 0.5
+							ci.draw_rect(Rect2(q - Vector2(half, w * 0.5), Vector2(half * 2.0, w)), col)

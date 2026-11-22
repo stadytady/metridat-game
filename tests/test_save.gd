@@ -77,9 +77,9 @@ func test_the_title_offers_continue_only_with_a_save() -> void:
 	var title: CanvasLayer = load("res://scripts/ui/title_screen.gd").new()
 	Engine.get_main_loop().root.add_child(title)
 	title.open(false)
-	var fresh: bool = title._start.text == "UI_START" and not title._new.visible
+	var fresh: bool = title._start.get_meta(&"key") == "UI_START" and not title._new.visible
 	title.open(true)
-	var saved: bool = title._start.text == "UI_CONTINUE" and title._new.visible
+	var saved: bool = title._start.get_meta(&"key") == "UI_CONTINUE" and title._new.visible
 	var which := [""]
 	title.started.connect(func() -> void: which[0] = "started")
 	title.continued.connect(func() -> void: which[0] = "continued")
@@ -100,6 +100,7 @@ func test_enter_on_new_walk_starts_over() -> void:
 	Engine.get_main_loop().root.add_child(title)
 	title.save_path = PATH
 	title.open(true)
+	title.finish_intro()  # the first key only finishes the opening
 	title._new.grab_focus()
 	var which := [""]
 	title.started.connect(func() -> void: which[0] = "started")
