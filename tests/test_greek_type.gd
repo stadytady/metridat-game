@@ -44,9 +44,14 @@ func test_the_ink_is_evenly_spaced() -> void:
 	var word := "ΠΑΝΤΙΚΑΠΑΙΟΝ"
 	var spans: Array[Vector2] = G.ink_spans(word, 100.0, 20.0)
 	check(spans.size() == word.length(), "one span per letter")
-	var first := spans[1].x - spans[0].y
+	# the right edge from the glyph's own ink, not from the span (which would
+	# only check ink_spans against itself)
+	var right := func(i: int) -> float:
+		var ink := G.glyph_span(word[i])
+		return spans[i].x + (ink.y - ink.x) / G.BOX * G.WIDE * 100.0
+	var first: float = spans[1].x - right.call(0)
 	for i in range(1, spans.size()):
-		var gap := spans[i].x - spans[i - 1].y
+		var gap: float = spans[i].x - right.call(i - 1)
 		check(absf(gap - first) < 0.5, "the gap before %s is %.1f, the others %.1f" % [word[i], gap, first])
 	for i in spans.size():
 		var ink := G.glyph_span(word[i])
