@@ -86,7 +86,7 @@
 
 ## Для разработчиков
 
-Godot 4.5.1, GDScript со статической типизацией, Forward+ (в браузере — Compatibility). Правила, инварианты и устройство каждой системы — в [AGENTS.md](AGENTS.md).
+Godot 4.5.1, GDScript со статической типизацией, Forward+ (в браузере — Compatibility). Правила, инварианты и устройство каждой системы — в [AGENTS.md](AGENTS.md). Обзор функционала и компонентов одной страницей — [docs/OVERVIEW.md](docs/OVERVIEW.md).
 
 ```sh
 tools/check.sh                # всё перед коммитом: lint, unit-тесты, QA-сценарии, проход ботом
