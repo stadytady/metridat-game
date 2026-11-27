@@ -8,7 +8,7 @@ extends District
 ## start, start heading (deg), scale, anchorage
 const SHIPS := [
 	[Vector3(260, 0, -70), 25.0, 1.0, Vector3(118, 0, -34)],
-	[Vector3(470, 0, 120), -40.0, 1.15, Vector3(128, 0, 10)],
+	[Vector3(470, 0, 120), -40.0, 1.15, Vector3(132, 0, 19)],  # clear of Arrival's way in
 	[Vector3(820, 0, -260), 70.0, 1.3, Vector3(146, 0, 46)],
 	[Vector3(380, 0, -190), 55.0, 1.05, Vector3(134, 0, -66)],
 	[Vector3(640, 0, 60), -15.0, 1.2, Vector3(156, 0, -12)],

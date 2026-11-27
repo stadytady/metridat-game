@@ -460,3 +460,14 @@ UI_OPEN_LOGS,Open the session logs folder,Открыть папку с лога�
 UI_CREDITS_VERSION,Version %s,Версия %s
 UI_TITLE_SUB,PANTICAPAEUM · ECHOES OF THE BOSPORUS,ПАНТИКАПЕЙ · ЭХО БОСПОРА
 UI_TITLE_CREDITS,Credits,Титры
+CAP_CREAK,Ship's timbers creak,Скрипят борта корабля
+CAP_HAIL,A sailor hails the pier,Моряк окликает пристань
+CAP_LINE,A mooring line lands on the planks,Швартов падает на доски
+LOC_SAILOR_CHOICE_SAIL,Whose sail is that coming in?,Чей это парус идёт к берегу?
+LOC_SAILOR_SAIL_1,"Not ours. A Rhodian, by the cut of her. She'll lie off until somebody on shore waves her in — nobody brings a ship alongside blind.","Не наш. Родосец, по обводам видно. Ляжет в дрейф, пока с берега не махнут — вслепую к пристани никто не подходит."
+LOC_SAILOR_CHOICE_SHIP,And the ship that just came in?,"А корабль, что сейчас пришёл?"
+LOC_SAILOR_SHIP_1,"Wine and oil from the south, by the jars. They'll unload till dark and sail on our wheat tomorrow, same as us.","Вино и масло с юга, по кувшинам видно. Будут разгружаться до темноты, а завтра пойдут с нашей пшеницей, как и мы."
+LOC_SAILOR_SHIP_2,"Their skipper owes me a cup from last spring. If he remembers, the evening's mine.","Их кормчий мне с прошлой весны должен чашу. Если вспомнит, вечер за ним."
+LOC_MEASURER_CHOICE_SHIP,Does the new ship concern you?,Новый корабль — твоя забота?
+LOC_MEASURER_SHIP_1,Everything that leaves this beach in a sack concerns me. What she brings is the customs man's; what she takes is mine.,"Всё, что уходит с этого берега в мешке, — моя забота. Что она привезла — дело таможенника, что увезёт — моё."
+LOC_MEASURER_SHIP_2,"Two holds, by the look of her. That's another heap like this by the day after tomorrow — and every measure of it struck level.","Два трюма, судя по ней. Значит, к послезавтра ещё одна такая куча — и каждая мера вровень с краем."

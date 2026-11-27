@@ -7,7 +7,7 @@ extends District
 
 const NPC := preload("res://scripts/npc/npc.gd")
 
-## The ship lies along the pier's south side, bow out to sea.
+## The ship lies along the pier's north side (-z), bow out to sea.
 const SHIP_GAP := 3.7  # the hull is 2.4 m either side of the keel, the yard about 3.5
 ## The hull rides low, like a laden merchantman: keel under the sea, rail well
 ## above it. The model's own floor is its bottom, so a laid deck goes over it at
@@ -25,17 +25,18 @@ const MOORING_SEGMENTS := 10
 const HULL_BOTTOM := 0.0
 const LANTERN_FROM := DayCycle.LAMPS_ON
 ## The carrier's round: [x, z, pose, pause s, facing yaw deg or NAN]. He takes
-## an amphora from the cargo, goes along the pier round the skipper, up the
+## an amphora from the cargo, goes along the pier behind the skipper (on the
+## Swallow's side: the south side is the arriving ship's dockers' lane), up the
 ## gangway, hands it over the ship's rail, and comes back for the next.
 const CARRIER_ROUTE := [
-	[81.0, -5.9, "pick", 2.0, 180.0],
-	[84.4, -5.95, "walk", 0.0, NAN],
-	[87.2, -5.75, "walk", 0.0, NAN],
-	[87.86, -6.9, "walk", 0.0, NAN],
+	[81.0, -6.3, "pick", 2.0, 180.0],
+	[84.4, -6.35, "walk", 0.0, NAN],
+	[85.3, -6.95, "walk", 0.0, NAN],
+	[87.86, -6.95, "walk", 0.0, NAN],
 	[87.86, -8.7, "pick", 1.6, 0.0],
-	[87.86, -6.9, "walk", 0.0, NAN],
-	[87.2, -5.75, "walk", 0.0, NAN],
-	[84.4, -5.95, "walk", 0.0, NAN],
+	[87.86, -6.95, "walk", 0.0, NAN],
+	[85.3, -6.95, "walk", 0.0, NAN],
+	[84.4, -6.35, "walk", 0.0, NAN],
 ]
 const CARRIER_TAKE := 0
 const CARRIER_HAND := 4
@@ -64,7 +65,7 @@ static func ship_pos() -> Vector3:
 
 ## Where the skipper stands: by the gangway, facing the land.
 static func skipper_pos() -> Vector3:
-	return Vector3(ship_pos().x + 3.6, Topo.PIER_H, Topo.PIER_Z - 0.5)
+	return Vector3(ship_pos().x + 3.6, Topo.PIER_H, Topo.PIER_Z - 0.3)
 
 
 func _ready() -> void:
@@ -130,7 +131,9 @@ func _cargo(kit: MeshKit) -> void:
 		var p := Vector3(base - 1.2 - i * 0.5, y, z + Topo.PIER_HALF - 0.45)
 		kit.blob("cloth", p + Vector3(0, 0.2, 0), Vector3(0.28, 0.22, 0.24), 0.2, rng)  # sacks
 	kit.add_collider(Vector3(base - 1.95, y + 0.2, z + Topo.PIER_HALF - 0.45), Vector3(2.2, 0.4, 0.55))
-	var coil := Vector3(base + 3.0, y, z + 0.7)
+	# the coil and the two jars ready to go aboard keep to the south edge, out of
+	# the lane the dockers of the arriving ship walk (Arrival.DOCKER_ROUTE)
+	var coil := Vector3(base - 5.7, y, z + Topo.PIER_HALF - 0.35)
 	for i in 3:
 		kit.lathe("basket", PackedVector2Array([Vector2(0.3 - i * 0.05, i * 0.05), Vector2(0.3 - i * 0.05, i * 0.05 + 0.05)]), 9,
 				coil, 3.0, false, "dark", i == 2)
@@ -138,10 +141,10 @@ func _cargo(kit: MeshKit) -> void:
 		var a := Vector3(base + 0.4 * i - 0.6, y, z + Topo.PIER_HALF - 0.4)
 		place("amphora", a, rng.randf_range(0, 360), Vector3.ONE * 0.9)
 	kit.add_collider(Vector3(base + 0.2, y + 0.4, z + Topo.PIER_HALF - 0.4), Vector3(2.2, 0.8, 0.5))
-	# two laid on their sides, ready to go aboard
+	# two laid on their sides along the south edge, ready to go aboard
 	for i in 2:
-		var lying := place("amphora", Vector3(base + 1.6 + i * 0.45, y + 0.18, z - 0.1), 0.0, Vector3.ONE * 0.9)
-		lying.rotate_object_local(Vector3.RIGHT, PI / 2.0)
+		var lying := place("amphora", Vector3(base + 1.95 + i * 0.9, y + 0.18, z + Topo.PIER_HALF - 0.32), 0.0, Vector3.ONE * 0.9)
+		lying.rotate_object_local(Vector3.BACK, PI / 2.0)
 
 
 ## A plank from the pier's edge to the ship's foredeck.

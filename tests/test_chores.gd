@@ -257,7 +257,7 @@ func test_the_pier_carrier_keeps_to_planks_and_gangway() -> void:
 	var ship: Vector3 = HARBOUR.ship_pos()
 	var gang_x := ship.x + 5.4
 	var skipper := HARBOUR.skipper_pos()
-	var coil := Vector2(ship.x - 2.0 + 3.0, Topo.PIER_Z + 0.7)
+	var coil := Vector2(ship.x - 2.0 - 5.7, Topo.PIER_Z + Topo.PIER_HALF - 0.35)
 	var cargo := Rect2(ship.x - 2.0 - 3.05 - 0.2, Topo.PIER_Z + Topo.PIER_HALF - 0.75, 5.5, 0.6)
 	for p: Vector2 in _round_points(_pier_points(), 0.1):
 		var on_gangway := absf(p.x - gang_x) < 0.2 and p.y <= Topo.PIER_Z - Topo.PIER_HALF + 0.3 and p.y > ship.z + 2.0
