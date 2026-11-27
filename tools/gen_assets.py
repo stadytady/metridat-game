@@ -1638,6 +1638,10 @@ def main() -> None:
     # the storm (Weather): thunder after the bolts, and the gale under the rain
     thunder(np.random.default_rng(553))
     gale(np.random.default_rng(554))
+    # the ship that comes in to the pier (Arrival): timbers, a line landing, a hail
+    creak(np.random.default_rng(555))
+    line_thrown(np.random.default_rng(556))
+    hail(np.random.default_rng(557))
     print(f"textures: {len(TEXTURES)}, materials: {len(MATERIALS)}, audio: {len(list(AUD.glob('*.wav')))}")
 
 
@@ -1786,6 +1790,68 @@ def gale(rng):
     whistle = bandpass(noise, 500, 1300)
     gusts = 0.45 + 0.55 * periodic_env(n, 2, rng, 1.5)
     write_wav("gale", norm(roar * 1.4 * (0.6 + 0.4 * gusts) + whistle * 0.5 * gusts, 0.6))
+
+
+def creak(rng):
+    """A hull working against her lines: two or three slow groans of wet timber,
+    a rubbed tone that wanders in pitch under a dry grain of friction. Played now
+    and then by Arrival, never looped, so the pier does not drone."""
+    dur = 2.4
+    n = int(SR * dur)
+    t = np.arange(n) / SR
+    out = np.zeros(n)
+    for at, ln in ((0.05, 0.7), (0.9 + rng.uniform(0, 0.2), 0.55), (1.6 + rng.uniform(0, 0.2), 0.6)):
+        i0, i1 = int(at * SR), min(n, int((at + ln) * SR))
+        tt = t[i0:i1] - at
+        f0 = rng.uniform(70, 110) * (1 + 0.35 * np.sin(np.pi * tt / ln) + 0.05 * np.sin(2 * np.pi * 9 * tt))
+        ph = 2 * np.pi * np.cumsum(f0) / SR
+        # friction: a sawtooth-ish rub, its grain from noise bursts at the stick-slip rate
+        rub = np.sign(np.sin(ph)) * 0.5 + np.sin(2 * ph) * 0.3
+        grain = 0.6 + 0.4 * (rng.standard_normal(i1 - i0) > 0.8)
+        env = np.sin(np.pi * tt / ln) ** 1.5
+        out[i0:i1] += rub * grain * env
+    write_wav("creak", norm(bandpass(out, 90, 1500), 0.5))
+
+
+def line_thrown(rng):
+    """A mooring line coming ashore: the swish of the coil through the air, the
+    heavy wet slap of the rope on the planks, and a splash where its tail drops
+    in the water."""
+    dur = 1.4
+    n = int(SR * dur)
+    t = np.arange(n) / SR
+    swish = bandpass(rng.standard_normal(n), 700, 3500) * np.exp(-((t - 0.25) / 0.12) ** 2) * 0.5
+    slap_t = t - 0.48
+    slap = lowpass(rng.standard_normal(n), 900) * np.exp(-np.maximum(slap_t, 0) * 30) * (slap_t > 0)
+    thud = np.sin(2 * np.pi * 85 * t) * np.exp(-np.maximum(slap_t, 0) * 18) * (slap_t > 0)
+    sp_t = t - 0.75
+    splash = bandpass(rng.standard_normal(n), 400, 5000) * np.exp(-np.maximum(sp_t, 0) * 8) * (sp_t > 0) * 0.45
+    write_wav("line_thrown", norm(swish + slap * 1.1 + thud * 0.6 + splash, 0.8))
+
+
+def hail(rng):
+    """A sailor's call across the water as the ship comes alongside: a long
+    vowel on a falling pitch, "ho-o-e", a man's voice through formants, and a
+    second shorter answer further off."""
+    dur = 2.6
+    n = int(SR * dur)
+    t = np.arange(n) / SR
+    out = np.zeros(n)
+    for at, ln, f_hi, f_lo, gain in ((0.05, 1.2, 190.0, 140.0, 1.0), (1.5, 0.8, 170.0, 150.0, 0.55)):
+        i0, i1 = int(at * SR), min(n, int((at + ln) * SR))
+        tt = t[i0:i1] - at
+        f0 = f_hi + (f_lo - f_hi) * (tt / ln) ** 1.3
+        f0 = f0 * (1 + 0.012 * np.sin(2 * np.pi * 5.5 * tt))
+        ph = 2 * np.pi * np.cumsum(f0) / SR
+        # a buzzy glottal source, shaped by "o" then "e" formant bands
+        src = sum(np.sin(k * ph) / k for k in range(1, 16))
+        o = bandpass(src, 400, 900)
+        e = bandpass(src, 1700, 2600)
+        mix = np.clip((tt - ln * 0.55) / (ln * 0.3), 0, 1)
+        voice = o * (1 - mix * 0.6) + e * mix * 0.7 + lowpass(src, 400) * 0.6
+        env = np.minimum(1, tt / 0.08) * np.minimum(1, (ln - tt) / 0.3)
+        out[i0:i1] += voice * env * gain
+    write_wav("hail", norm(lowpass(out, 3000), 0.55))
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 # Damon, skipper of the Swallow, on the pier. Four questions: the cargo, the
 # strait, where they spend the night (the light beyond the ships), and passage
-# out of the city. No question names what he has not said.
+# out of the city; the ship coming in (Arrival) while she is on the strait
+# and once she is alongside. No question names what he has not said.
 # Text is a key: the panel translates it, so EN/RU stay in strings.csv.
 # Indent with tabs: DM's INDENT_REGEX is ^\t+.
 
@@ -19,6 +20,11 @@ Damon: NPC_SAILOR_1
 - LOC_SAILOR_CHOICE_4
 	Damon: NPC_SAILOR_5
 	Damon: LOC_SAILOR_LEAVE_1
+- LOC_SAILOR_CHOICE_SAIL [if Game.ship_coming()]
+	Damon: LOC_SAILOR_SAIL_1
+- LOC_SAILOR_CHOICE_SHIP [if Game.ship_in()]
+	Damon: LOC_SAILOR_SHIP_1
+	Damon: LOC_SAILOR_SHIP_2
 - LOC_SAILOR_CHOICE_SAW [if Game.has_found("anchor_stock")]
 	Damon: LOC_SAILOR_SAW_1
 	Damon: LOC_SAILOR_SAW_2

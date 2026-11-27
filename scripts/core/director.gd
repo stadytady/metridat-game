@@ -89,6 +89,12 @@ func _shots() -> void:
 			var watch: WallWatch = _main().world.find_child("WallWatch", true, false)
 			if watch != null and watch.lit:
 				watch.clock = WATCH_SHOT_CLOCK
+		if name.begins_with("arrival"):
+			# the ship coming in: mid-glide, lines going ashore, unloading
+			var arr: Arrival = _main().world.find_child("Arrival", true, false)
+			var c := Arrival.SAIL_IN
+			var b: float = {"arrival_in": Arrival.GLIDE * 0.45, "arrival_lines": Arrival.GLIDE + 3.5}.get(name, Arrival.UNLOAD_AT + 45.0)
+			arr.set_clock(c + b, c)
 		await _frames(8)
 		var img := get_viewport().get_texture().get_image()
 		var path := _out.path_join("%s.png" % name)
@@ -1244,6 +1250,14 @@ func _check_night() -> void:
 	if silent > 0:
 		_fail.append("%d of %d lit lamps are silent" % [silent, Game.lamps.size()])
 	print("lamps: %d of %d burning" % [Game.lamps.size() - silent, Game.lamps.size()])
+	# The ship that came in during the day lies alongside, her dockers gone home.
+	var arr: Arrival = _main().world.find_child("Arrival", true, false)
+	if arr == null or arr.stage() != Arrival.Stage.MOORED:
+		_fail.append("the arriving ship is not alongside by night: stage %d" % (arr.stage() if arr else -1))
+	elif arr.dockers().any(func(d: Npc) -> bool: return d.visible):
+		_fail.append("the dockers still carry after dusk")
+	else:
+		print("arrival: alongside, %d jars ashore" % arr.stacked())
 	# The square's braziers and column lamps follow the same dusk.
 	var night_fires := get_tree().get_nodes_in_group(&"night_fire")
 	if night_fires.size() < 10:

@@ -74,6 +74,9 @@ var talks := {}
 ## Errands (Quests): id -> Quests.NONE / TAKEN / FOUND / DONE.
 var quests := {}
 signal quest_changed(id: String, state: int)
+## The ship coming in to the pier (Arrival): 0 not yet sighted, 1 on the
+## strait or coming alongside, 2 alongside. Arrival keeps it; dialogue reads it.
+var harbour_ship := 0
 ## True from lying down in the abaton until waking: the hour is DayCycle.DREAM.
 var dreaming := false
 ## The arrival at the pier the evening before, until the morning on the hill.
@@ -224,6 +227,16 @@ func found_count() -> int:
 
 ## Whether the player has found this (dialogues ask it: people remark on what
 ## the player found elsewhere in the town).
+## A sail on the strait coming in, not yet alongside (sailor.dialogue).
+func ship_coming() -> bool:
+	return harbour_ship == 1
+
+
+## The arrived ship lies alongside the pier (sailor, measurer dialogues).
+func ship_in() -> bool:
+	return harbour_ship == 2
+
+
 func has_found(id: String) -> bool:
 	return found.has(StringName(id))
 
