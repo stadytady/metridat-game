@@ -22,14 +22,19 @@ func run() -> void:
 	arr.set_clock(Arrival.SAIL_IN - 3.0)
 	await frames(2)
 	check(arr.stage() == Arrival.Stage.INBOUND and Game.ship_coming(), "she is not coming in: stage %d" % arr.stage())
-	var t0 := Time.get_ticks_msec()
-	while arr.stage() < Arrival.Stage.BERTHING and Time.get_ticks_msec() - t0 < 20000:
+	# her clock is game time: wait in game seconds, not on the wall (a rendering
+	# CI runner steps game time far slower than the clock on the wall)
+	var waited := 0.0
+	while arr.stage() < Arrival.Stage.BERTHING and waited < 15.0:
 		await seconds(0.5)
+		waited += 0.5
 	check(arr.stage() == Arrival.Stage.BERTHING, "the player on the beach does not call her in: stage %d" % arr.stage())
 	await seconds(Arrival.GLIDE * 0.5)
 	await shot("coming_alongside")
-	while arr.stage() < Arrival.Stage.MOORED and Time.get_ticks_msec() - t0 < 90000:
+	waited = 0.0
+	while arr.stage() < Arrival.Stage.MOORED and waited < Arrival.GLIDE:
 		await seconds(0.5)
+		waited += 0.5
 	check(arr.stage() == Arrival.Stage.MOORED, "she never comes alongside")
 	var berth := Arrival.berth()
 	var at := arr.ship().global_position
@@ -49,8 +54,9 @@ func run() -> void:
 	step("the dockers bring her jars ashore")
 	var before := arr.stacked()
 	check(arr.dockers().all(func(d: Npc) -> bool: return d.visible), "the dockers are not at work")
-	t0 = Time.get_ticks_msec()
-	while arr.stacked() <= before and Time.get_ticks_msec() - t0 < 60000:
+	waited = 0.0
+	while arr.stacked() <= before and waited < 120.0:
 		await seconds(1.0)
+		waited += 1.0
 	check(arr.stacked() > before, "no jar came ashore (%d on the beach)" % arr.stacked())
 	check(harbour.ship().global_position.distance_to(swallow) < 1.0, "the Swallow moved")
