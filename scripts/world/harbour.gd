@@ -43,6 +43,11 @@ const CARRIER_HAND := 4
 
 var _carrier: Npc
 var _carrier_jar: Node3D
+## The splicer on the edge, and the same man up at the stern bollard minding the
+## line while a storm blows (Weather.storm_on).
+var _splicer: Npc
+var _minder: Npc
+var _storm := 0.0
 
 ## Where the anchor stock lies (a find): on the planks by the pier's north edge.
 const ANCHOR_FIND := Vector2(76.0, -6.95)
@@ -214,6 +219,32 @@ func _crew() -> void:
 	splicer.position = Vector3(ship_pos().x + 1.5, Topo.PIER_H - Figure.SEAT["mender"] + 0.05, Topo.PIER_Z + Topo.PIER_HALF - 0.1)
 	splicer.rotation.y = PI  # faces +z, the open water
 	add_child(splicer)
+	_splicer = splicer
+	var minder: Npc = NPC.new()
+	minder.npc_id = "minder"
+	minder.name_key = "NPC_SAILOR_NAME"
+	minder.pose = "pick"
+	minder.body_mat = "chiton"
+	minder.look = Figure.look_for("splicer")
+	minder.talkable = false
+	minder.solid = false
+	var mp := minder_pos()
+	minder.position = mp
+	minder.rotation.y = 0.0  # faces -z, the Swallow and her line
+	minder.visible = false
+	add_child(minder)
+	_minder = minder
+
+
+## Where the man minding the stern line stands in a storm: by its bollard,
+## clear of the carrier's lane and the skipper.
+static func minder_pos() -> Vector3:
+	return Vector3(ship_pos().x + 6.0, Topo.PIER_H, Topo.PIER_Z - Topo.PIER_HALF + 0.75)
+
+
+## How far the lines sag: hauled in hard while a storm works her against them.
+static func line_sag(storm: float) -> float:
+	return lerpf(MOORING_SAG, 0.12, clampf(storm, 0.0, 1.0))
 
 
 ## The carrier's round as a patrol. Static so the test can walk it.
@@ -310,7 +341,7 @@ func _lay_lines() -> void:
 	var kit := MeshKit.new()
 	for e: Array in mooring_ends():
 		var b: Vector3 = _ship.global_transform * (e[1] as Vector3)
-		var pts := mooring_line(e[0], b)
+		var pts := mooring_line(e[0], b, line_sag(_storm))
 		for i in pts.size() - 1:
 			var p := pts[i]
 			var q := pts[i + 1]
@@ -318,6 +349,18 @@ func _lay_lines() -> void:
 			kit.box("basket", Vector3.ZERO, Vector3(0.035, 0.035, p.distance_to(q) + 0.02), [])
 	kit.xform = Transform3D.IDENTITY
 	_lines.mesh = kit.commit()
+
+
+func splicer() -> Npc:
+	return _splicer
+
+
+func minder() -> Npc:
+	return _minder
+
+
+func carrier() -> Npc:
+	return _carrier
 
 
 func _process(delta: float) -> void:
@@ -342,3 +385,10 @@ func _process(delta: float) -> void:
 		_lay_lines()
 	var hour: float = _atm.t if _atm else 0.0
 	_lantern.visible = hour >= LANTERN_FROM
+	# a storm: the carrier stops carrying, the splicer gets up to mind the line
+	var w := Weather.now(hour)
+	_storm = w.y
+	var storm := Weather.storm_on(w)
+	Weather.duty(_carrier, true, storm)
+	var minding := Weather.duty(_splicer, true, storm)
+	_minder.visible = minding

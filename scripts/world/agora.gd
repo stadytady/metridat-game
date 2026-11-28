@@ -22,6 +22,11 @@ var _t := 0.0
 var _night_fires: Array[CornerFire] = []
 var _night_on := false
 var _atm: Node
+## The cloth between the columns, on its own copy of the banner material so the
+## storm can blow it harder; and the cover thrown over the stall's goods in rain.
+var _banner_mat: ShaderMaterial
+var _stall_cover: Node3D
+var _storm := -1.0
 
 
 func _ready() -> void:
@@ -132,7 +137,10 @@ func _ribbons(cols: Array, xf: Transform3D) -> void:
 			pivot.add_child(kit.build("Ribbon"))
 			add_child(pivot)
 			_sway.append(pivot)
-	add_child(banner(xf * (cols[2] as Vector3), xf * (cols[3] as Vector3)))
+	var b := banner(xf * (cols[2] as Vector3), xf * (cols[3] as Vector3))
+	_banner_mat = (b.mesh.surface_get_material(0) as ShaderMaterial).duplicate()
+	b.material_override = _banner_mat
+	add_child(b)
 
 
 ## The cloth between two columns: tied along its top edge, just in front of the
@@ -173,6 +181,12 @@ static func banner_offset(uv: Vector2, t: float, swell := 0.32, ripple := 0.04, 
 	var hang := pow(clampf(uv.y, 0.0, 1.0), 1.3)
 	var gust := 0.6 + 0.4 * sin(t * speed + uv.x * 2.5)
 	return hang * (swell * gust + ripple * sin(uv.x * 8.0 + t * speed * 2.1))
+
+
+## How hard the storm blows the cloth: its swell and pace (banner_offset's
+## swell and speed) at this much storm. The hem still never reaches 0.5 m out.
+static func banner_wind(storm: float) -> Vector2:
+	return Vector2(lerpf(0.32, 0.42, storm), lerpf(1.3, 2.6, storm))
 
 
 ## A pot of something hot by the stall, with steam coming off it.
@@ -270,10 +284,20 @@ func _fire(pos: Vector3, kind: String, quiet: bool) -> void:
 func _process(delta: float) -> void:
 	_t += delta
 	var q := floorf(_t * 15.0) / 15.0
+	var hour: float = _atm.t if _atm != null else Game.time_target()
+	var w := Weather.now(hour)
+	# the ribbons fly and the cloth blows harder in a storm
+	var k := 1.0 + 1.5 * w.y
 	for i in _sway.size():
 		var n := _sway[i]
-		n.rotation.z = sin(q * 1.7 + i * 1.3) * 0.10
-		n.rotation.x = sin(q * 1.1 + i * 0.7) * 0.05
+		n.rotation.z = sin(q * 1.7 * k + i * 1.3) * 0.10 * k
+		n.rotation.x = sin(q * 1.1 * k + i * 0.7) * 0.05 * k
+	if not is_equal_approx(w.y, _storm) and _banner_mat != null:
+		_storm = w.y
+		var bw := banner_wind(w.y)
+		_banner_mat.set_shader_parameter("swell", bw.x)
+		_banner_mat.set_shader_parameter("speed", bw.y)
+	Weather.settle(_stall_cover, Weather.sheltering(w))
 	for i in _flies_nodes.size():
 		var a := q * 2.4 + i * 2.1
 		_flies_nodes[i].position = _fly_centre + Vector3(cos(a) * 0.45, sin(q * 5.0 + i) * 0.1 + i * 0.04, sin(a) * 0.35)
@@ -291,6 +315,15 @@ func _stall_goods(p: Vector3) -> void:
 	place("krater", p + Vector3(-0.3, 0.89, 0.15), 80.0, Vector3.ONE * 0.6)
 	for i in 4:
 		place("amphora", p + Vector3(-1.9 + i * 0.3, 0, -0.9 + (i % 2) * 0.2), rng.randf_range(0, 360), Vector3.ONE, 0.17, 0.8)
+	# a cloth thrown over the kraters on the counter and the jars below when it
+	# rains (clear of the coin at the counter's other end)
+	var cover := MeshKit.new()
+	cover.box("cloth", p + Vector3(-0.75, 1.07, 0.05), Vector3(1.25, 0.36, 0.75), ["bottom"])
+	cover.box("cloth", p + Vector3(-1.45, 0.45, -0.75), Vector3(1.5, 0.9, 0.7), ["bottom"])
+	_stall_cover = cover.build("StallCover")
+	_stall_cover.set_meta(&"focus", p)
+	_stall_cover.visible = false
+	add_child(_stall_cover)
 	var kit := MeshKit.new()
 	for b: Vector3 in [p + Vector3(1.9, 0, -0.4), p + Vector3(2.3, 0, 0.2), p + Vector3(-1.2, 0.89, 0.1)]:
 		var r := 0.22 if b.y < p.y + 0.5 else 0.14

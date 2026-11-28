@@ -1304,3 +1304,8 @@ static func wall_towers() -> Array[Vector3]:
 			x += WALL_SEG
 			seg += 1
 	return out
+
+
+## The hearth plumes (WeatherTown thins them in the rain).
+func smokes() -> Array[GPUParticles3D]:
+	return _smoke

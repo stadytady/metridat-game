@@ -259,8 +259,24 @@ func _process(delta: float) -> void:
 	if _rope != null:
 		_rope.visible = _carrier.pose_now() == "draw"
 	var q := floorf(_t * 15.0) / 15.0
+	var hour := Game.time_target()
+	var atm := get_parent().get_node_or_null("Atmosphere")
+	if atm != null:
+		hour = float(atm.t)
+	var out := washing_out(Weather.wet_now(hour))
 	for i in _cloths.size():
 		_cloths[i].rotation.x = sin(q * 1.3 + i * 1.7) * 0.12
+		# taken in at the first drops, hung out again once the yard has dried
+		Weather.settle(_cloths[i], out)
+
+
+## Whether the washing hangs on the line: not while the yard is wet.
+static func washing_out(wet: float) -> bool:
+	return wet < 0.1
+
+
+func cloths() -> Array[Node3D]:
+	return _cloths
 
 
 ## The pen as data, so the fence can be checked without building it: posts around

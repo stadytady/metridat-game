@@ -29,8 +29,11 @@ func run() -> void:
 		await seconds(0.5)
 		waited += 0.5
 	check(arr.stage() == Arrival.Stage.BERTHING, "the player on the beach does not call her in: stage %d" % arr.stage())
-	await seconds(Arrival.GLIDE * 0.5)
+	await seconds(3.0)
 	await shot("coming_alongside")
+	# the glide itself is test_arrival's (pose is pure): here, skip to its last
+	# seconds, so a rendering CI runner does not spend minutes on it
+	arr.set_clock(arr.called + Arrival.GLIDE - 2.0, arr.called)
 	waited = 0.0
 	while arr.stage() < Arrival.Stage.MOORED and waited < Arrival.GLIDE:
 		await seconds(0.5)

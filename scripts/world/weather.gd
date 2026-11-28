@@ -122,6 +122,101 @@ static func now(hour: float) -> Vector2:
 	return Vector2(rain_at(hour, Game.weather_seed), storm_at(hour, Game.weather_seed))
 
 
+## How wet the town is: the rain itself while it falls, then lingering and
+## drying for DRY_AFTER of the hour once it has stopped (puddles, drips). Pure:
+## sampled back along the hour, no memory.
+const DRY_AFTER := 0.06
+## People take cover from this much rain, and the harbour and the steppe give
+## way to the storm from this much of it.
+const SHELTER_AT := 0.35
+const STORM_ON := 0.5
+
+
+static func wet_at(hour: float, seed: int) -> float:
+	var w := 0.0
+	for i in 9:
+		var back := DRY_AFTER * i / 8.0
+		w = maxf(w, rain_at(hour - back, seed) * (1.0 - float(i) / 8.0))
+	return w
+
+
+## The wetness now: the menu's shower or storm soaks at once, its dry dries at once.
+static func wet_now(hour: float) -> float:
+	if Game.dreaming or Game.prologue:
+		return 0.0
+	match Game.weather_override:
+		DRY:
+			return 0.0
+		SHOWER, STORM:
+			return 1.0
+	return wet_at(hour, Game.weather_seed)
+
+
+## Whether people go under cover in this weather (Vector2(rain, storm) from now()).
+static func sheltering(w: Vector2) -> bool:
+	return w.x >= SHELTER_AT
+
+
+## Whether the storm has the harbour and the steppe: work there stops.
+static func storm_on(w: Vector2) -> bool:
+	return w.y >= STORM_ON
+
+
+## Whether a person or a thing can change state (go under cover, come back, be
+## carried in) without the player seeing it pop: far off, or out of view. The
+## town then catches up with the weather wherever the player is not looking.
+static func unseen(n: Node3D, far := 28.0) -> bool:
+	if not n.is_inside_tree():
+		return true
+	var cam := n.get_viewport().get_camera_3d()
+	if cam == null:
+		return true
+	# a MeshKit-built node sits at the origin with its mesh in world space: it
+	# names where it really is in its "focus" meta
+	var p: Vector3 = n.get_meta(&"focus", n.global_position) + Vector3(0, 1.0, 0)
+	return cam.global_position.distance_to(p) > far or not cam.is_position_in_frustum(p)
+
+
+## Shows or hides `n` for the weather, but only once the player cannot see it
+## happen (unseen()); a hidden Npc stops walking too. Returns whether it is now
+## as wanted.
+static func settle(n: Node3D, want: bool, far := 28.0) -> bool:
+	if n.visible == want:
+		return true
+	if not unseen(n, far):
+		return false
+	n.visible = want
+	if n is Npc:
+		_wake(n as Npc, want)
+	return true
+
+
+## Someone whose day (on_duty: at work by the hour) and the weather (take_cover)
+## decide where they are. The hour acts at once, as it always has; going under
+## cover and coming back out wait until the player is not looking (unseen()),
+## so nobody vanishes in front of them. Returns whether they are under cover.
+static func duty(n: Node3D, on_duty: bool, take_cover: bool, far := 28.0) -> bool:
+	var covered := bool(n.get_meta(&"cover", false))
+	if not on_duty:
+		covered = false
+	elif take_cover != covered and unseen(n, far):
+		covered = take_cover
+	n.set_meta(&"cover", covered)
+	var want := on_duty and not covered
+	if n.visible != want:
+		n.visible = want
+		if n is Npc:
+			_wake(n as Npc, want)
+	return covered
+
+
+## A person put away is gone altogether: not walking, and no body left behind
+## to bump into.
+static func _wake(n: Npc, on: bool) -> void:
+	n.process_mode = Node.PROCESS_MODE_INHERIT if on else Node.PROCESS_MODE_DISABLED
+	n.collision_layer = 3 if on and n.solid else 0
+
+
 ## A number in 0..1 drawn from a bolt window's index: the same window always
 ## draws the same, so light and thunder agree without being told.
 static func _draw(n: int, salt: int) -> float:

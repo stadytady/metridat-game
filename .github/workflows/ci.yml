@@ -158,7 +158,7 @@ jobs:
     # one adds the pictures to its report and uploads it as -full.
     needs: test
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    timeout-minutes: 45  # 19 scenarios rendered on lavapipe ran past 35
     steps:
       - uses: actions/checkout@v5
       - name: Cache Godot

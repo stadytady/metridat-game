@@ -481,11 +481,11 @@ func _apply(p: Dictionary, _delta: float) -> void:
 		var dir := Vector3.UP.slerp(down, smoothstep(0.0, 1.0, g)).normalized()
 		_gangway.global_transform = Transform3D(Basis.looking_at(dir, Vector3.FORWARD if absf(dir.y) > 0.99 else Vector3.UP), e[1])
 	var working := at_work(_hour(), float(p.unload))
+	# a storm sends the dockers under cover (once nobody is looking) and stops the hand at the rail
+	var storm := Weather.storm_on(Weather.now(_hour()))
 	for d: Npc in _dockers:
-		if d.visible != working:
-			d.visible = working
-			d.process_mode = Node.PROCESS_MODE_INHERIT if working else Node.PROCESS_MODE_DISABLED
-	_hand_jar.visible = working
+		Weather.duty(d, working, storm)
+	_hand_jar.visible = working and not storm
 
 
 func _lay_lines(thrown: float, taut: float) -> void:
