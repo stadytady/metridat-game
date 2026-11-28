@@ -107,6 +107,8 @@ func _rack(kit: MeshKit) -> void:
 		var h := bar_y + 0.12 - g
 		kit.solid_box("wood", Vector3(p.x, g + h / 2.0, p.y), Vector3(0.1, h, 0.1), ["bottom"])
 	kit.box("wood", Vector3((a.x + b.x) / 2.0, bar_y, a.y), Vector3(b.x - a.x + 0.3, 0.07, 0.07), [])
+	# the net itself is its own node: a storm has it taken in (WeatherTown)
+	var nk := MeshKit.new()
 	var n := NET_COLUMNS
 	for side: float in [-1.0, 1.0]:
 		for i in n:
@@ -120,9 +122,12 @@ func _rack(kit: MeshKit) -> void:
 			var f1 := Vector3(x1, bar_y - net_drop(u1), a.y + side * NET_SPLAY)
 			# the outer face of each side, wound outwards (cutout, seen from both)
 			if side > 0.0:
-				kit.quad("net", f0, f1, t1, t0)
+				nk.quad("net", f0, f1, t1, t0)
 			else:
-				kit.quad("net", f1, f0, t0, t1)
+				nk.quad("net", f1, f0, t0, t1)
+	_net = nk.build("DryingNet")
+	_net.set_meta(&"focus", Vector3((a.x + b.x) / 2.0, bar_y - 1.0, a.y))
+	add_child(_net)
 	kit.add_collider(Vector3((a.x + b.x) / 2.0, bar_y - NET_HANG / 2.0, a.y), Vector3(b.x - a.x, NET_HANG, 0.1 + NET_SPLAY * 2.0))
 
 
@@ -234,6 +239,7 @@ func _fire() -> void:
 
 
 var _fisher: Npc
+var _net: Node3D
 var _board_fish: MeshInstance3D
 var _hand_fish: MeshInstance3D
 var _gutted: Array[MeshInstance3D] = []
@@ -445,3 +451,8 @@ func _cormorants() -> void:
 		b.home = Vector3(CORMORANT_SAND.x, Topo.terrain(CORMORANT_SAND.x, CORMORANT_SAND.y), CORMORANT_SAND.y)
 		b.radius = CORMORANT_SAND_R
 		add_child(b)
+
+
+## The net on the drying rack (WeatherTown takes it in for a storm).
+func net() -> Node3D:
+	return _net

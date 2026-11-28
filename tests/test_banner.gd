@@ -7,13 +7,21 @@ const AGORA := preload("res://scripts/world/agora.gd")
 
 
 func test_the_top_edge_stays_tied_and_the_hem_moves() -> void:
+	# calm and in the full storm (Agora.banner_wind): never into the columns, never torn off
+	for storm: float in [0.0, 1.0]:
+		var bw := AGORA.banner_wind(storm)
+		_blows(bw.x, bw.y)
+	check(AGORA.banner_wind(1.0).x > AGORA.banner_wind(0.0).x, "the storm does not blow the cloth harder")
+
+
+func _blows(swell: float, speed: float) -> void:
 	var t := 0.0
 	var hem_moved := false
 	while t < 20.0:
 		for i in 11:
 			var u := i / 10.0
-			check(is_zero_approx(AGORA.banner_offset(Vector2(u, 0.0), t)), "the tied edge comes loose at u %.1f" % u)
-			var hem := AGORA.banner_offset(Vector2(u, 1.0), t)
+			check(is_zero_approx(AGORA.banner_offset(Vector2(u, 0.0), t, swell, 0.04, speed)), "the tied edge comes loose at u %.1f" % u)
+			var hem := AGORA.banner_offset(Vector2(u, 1.0), t, swell, 0.04, speed)
 			check(hem >= 0.0, "the hem swings back into the columns: %.3f at u %.1f, t %.1f" % [hem, u, t])
 			check(hem < 0.5, "the hem flies %.2f m out" % hem)
 			if hem > 0.15:

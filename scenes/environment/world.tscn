@@ -1,4 +1,4 @@
-[gd_scene load_steps=36 format=3]
+[gd_scene load_steps=37 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/world.gd" id="1_world"]
 [ext_resource type="Script" path="res://scripts/world/atmosphere.gd" id="2_atm"]
@@ -35,6 +35,7 @@
 [ext_resource type="Script" path="res://scripts/world/weather.gd" id="33_weather"]
 [ext_resource type="Script" path="res://scripts/world/royal_kurgan.gd" id="34_kurgan"]
 [ext_resource type="Script" path="res://scripts/world/arrival.gd" id="35_arrival"]
+[ext_resource type="Script" path="res://scripts/world/weather_town.gd" id="36_wtown"]
 
 [node name="World" type="Node3D"]
 script = ExtResource("1_world")
@@ -122,6 +123,9 @@ script = ExtResource("31_grain")
 
 [node name="Arrival" type="Node3D" parent="."]
 script = ExtResource("35_arrival")
+
+[node name="WeatherTown" type="Node3D" parent="."]
+script = ExtResource("36_wtown")
 
 [node name="TheatrePlay" type="Node3D" parent="."]
 script = ExtResource("32_play")

@@ -1642,6 +1642,9 @@ def main() -> None:
     creak(np.random.default_rng(555))
     line_thrown(np.random.default_rng(556))
     hail(np.random.default_rng(557))
+    # the town in the rain (WeatherTown): rain on the tiles, drips after it
+    rain_roof(np.random.default_rng(558))
+    drips(np.random.default_rng(559))
     print(f"textures: {len(TEXTURES)}, materials: {len(MATERIALS)}, audio: {len(list(AUD.glob('*.wav')))}")
 
 
@@ -1852,6 +1855,52 @@ def hail(rng):
         env = np.minimum(1, tt / 0.08) * np.minimum(1, (ln - tt) / 0.3)
         out[i0:i1] += voice * env * gain
     write_wav("hail", norm(lowpass(out, 3000), 0.55))
+
+
+def rain_roof(rng):
+    """Rain on a tiled roof heard from under it: a dense patter of small hard
+    ticks on fired clay over the hiss of the shower, and the run-off gurgling
+    at the eaves. Six seconds, looped (the hiss and the gurgle cross-faded at
+    the join, the ticks scattered evenly round it)."""
+    dur = 6.0
+    n = int(SR * dur)
+    fade = int(SR * 0.5)
+    noise = rng.standard_normal(n + fade)
+    noise[:fade] = noise[:fade] * np.linspace(0, 1, fade) + noise[n:] * np.linspace(1, 0, fade)
+    noise = noise[:n]
+    hiss = bandpass(noise, 1800, 7000) * 0.25
+    ticks = np.zeros(n)
+    for _ in range(int(dur * 140)):
+        at = int(rng.uniform(0, n))
+        ln = int(SR * 0.012)
+        tt = np.arange(ln) / SR
+        tick = np.sin(2 * np.pi * rng.uniform(1800, 4200) * tt) * np.exp(-tt * 600) * rng.uniform(0.3, 1.0)
+        idx = (at + np.arange(ln)) % n
+        ticks[idx] += tick
+    gurgle = lowpass(noise, 500) * (0.6 + 0.4 * periodic_env(n, 3, rng, 1.5)) * 0.5
+    write_wav("rain_roof", norm(hiss + ticks * 0.6 + gurgle, 0.6))
+
+
+def drips(rng):
+    """After the rain: water dripping off the eaves into puddles, irregular
+    plinks with a short bubble of resonance, now near, now further. Eight
+    seconds, looped (no drip across the join)."""
+    dur = 8.0
+    n = int(SR * dur)
+    out = np.zeros(n)
+    t_at = 0.2
+    while t_at < dur - 0.5:
+        ln = int(SR * 0.25)
+        tt = np.arange(ln) / SR
+        f = rng.uniform(900, 2200)
+        # a drop into water: a pitch that rises as the bubble closes
+        sweep = f * (1 + 0.8 * tt / 0.25)
+        ph = 2 * np.pi * np.cumsum(sweep) / SR
+        plink = np.sin(ph) * np.exp(-tt * rng.uniform(25, 45)) * rng.uniform(0.3, 1.0)
+        i0 = int(t_at * SR)
+        out[i0:i0 + ln] += plink[: max(0, min(ln, n - i0))]
+        t_at += rng.uniform(0.25, 1.1)
+    write_wav("drips", norm(lowpass(out, 5000), 0.5))
 
 
 if __name__ == "__main__":

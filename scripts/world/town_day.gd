@@ -26,6 +26,10 @@ const MARKET_FOLK := [
 	[Vector2(22.0, 9.6), Vector2(13.0, 9.0), 0.6, {"beard": 0, "hair": 1, "cloth": "chiton"}],
 	[Vector2(29.0, -6.4), Vector2(29.0, 1.8), 0.46, {"woman": true, "kerchief": "chiton_dark", "skirt": "long", "cloth": "chiton_red"}],
 ]
+## Where the people crossing the square stand out of the rain: inside the stoa,
+## on its floor (a step up), between the columns and the back wall, looking out.
+const SHELTER_SPOTS := [Vector2(15.5, -7.4), Vector2(19.3, -8.1), Vector2(24.6, -7.3), Vector2(28.2, -7.9)]
+const STOA_FLOOR := 0.32
 ## Two old men on the stoa step, between its columns, facing the square.
 const SHADE_SEATS := [Vector2(17.6, -4.86), Vector2(18.7, -4.86)]
 
@@ -49,6 +53,8 @@ const DOLPHIN_LEAP := 0.95  # s out of the water
 var _atm: Node
 var _walkers: Array[Npc] = []
 var _sitters: Array[Npc] = []
+## The same people, standing in the stoa while it rains.
+var _sheltering: Array[Npc] = []
 var _party_light: OmniLight3D
 var _party_door: MeshInstance3D
 var _party_sound: AudioStreamPlayer3D
@@ -111,6 +117,18 @@ func _market() -> void:
 		n.patrol_poses = PackedStringArray(["stand", "stand"])
 		add_child(n)
 		_walkers.append(n)
+		var s: Vector2 = SHELTER_SPOTS[i]
+		var c: Npc = NPC.new()
+		c.name = "Sheltering%d" % i
+		c.talkable = false
+		c.solid = false
+		c.look = f[3]
+		c.pose = "stand"
+		c.position = Vector3(s.x, y + STOA_FLOOR, s.y)
+		c.rotation.y = PI + (0.4 if i % 2 == 0 else -0.4)  # out at the rain, a little to each other
+		c.visible = false
+		add_child(c)
+		_sheltering.append(c)
 	for i in SHADE_SEATS.size():
 		var s: Vector2 = SHADE_SEATS[i]
 		var n: Npc = NPC.new()
@@ -263,12 +281,40 @@ func _process(delta: float) -> void:
 	step(delta)
 
 
+## One person on the square or in the stoa: the hour decides at once whether
+## they are out at all; the rain moves them in and out only while neither
+## place is in the player's view.
+static func _shelter(walker: Npc, twin: Npc, out: bool, cover: bool) -> void:
+	var covered := bool(walker.get_meta(&"cover", false))
+	if not out:
+		covered = false
+	elif cover != covered and Weather.unseen(walker) and Weather.unseen(twin):
+		covered = cover
+	walker.set_meta(&"cover", covered)
+	var walking := out and not covered
+	if walker.visible != walking:
+		walker.visible = walking
+		walker.process_mode = Node.PROCESS_MODE_INHERIT if walking else Node.PROCESS_MODE_DISABLED
+	twin.visible = out and covered
+
+
+func walkers() -> Array[Npc]:
+	return _walkers
+
+
+func sheltering() -> Array[Npc]:
+	return _sheltering
+
+
 func step(delta: float) -> void:
 	_t += delta
 	var hour := float(_atm.t) if _atm != null else Game.time_target()
 	var n := market_folk(hour)
+	# in the rain they go into the stoa: the one crossing the square is the one
+	# standing in it, and the swap waits until the player looks away (Weather.duty)
+	var cover := Weather.sheltering(Weather.now(hour))
 	for i in _walkers.size():
-		_walkers[i].visible = i < n
+		_shelter(_walkers[i], _sheltering[i], i < n, cover)
 	var sit := shade_sitters(hour)
 	for s in _sitters:
 		s.visible = sit

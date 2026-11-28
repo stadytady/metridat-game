@@ -203,12 +203,11 @@ func _process(_delta: float) -> void:
 
 func step(hour: float) -> void:
 	var home := not at_work(hour)
-	if home == _home and not _porters.is_empty() and _porters[0].visible == not home:
-		return
 	_home = home
+	# home at lamplight at once; under cover from a storm once nobody is looking
+	var storm := Weather.storm_on(Weather.now(hour))
 	for p: Npc in _porters:
-		p.visible = not home
-		p.process_mode = Node.PROCESS_MODE_DISABLED if home else Node.PROCESS_MODE_INHERIT
+		Weather.duty(p, not home, storm)
 
 
 func measurer() -> Npc:
