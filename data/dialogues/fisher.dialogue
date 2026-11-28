@@ -25,6 +25,9 @@ Glaukos: NPC_FISHER_2
 	Glaukos: LOC_Q_HOOK_1
 	Glaukos: LOC_Q_HOOK_2
 	do Game.take_quest("hook")
+- LOC_FISHER_CHOICE_LINE [if Game.quest_done("hook")]
+	Glaukos: LOC_FISHER_LINE_1
+	Glaukos: LOC_FISHER_LINE_2
 - LOC_FISHER_CHOICE_SAW [if Game.has_found("salt_fish")]
 	Glaukos: LOC_FISHER_SAW_1
 => END

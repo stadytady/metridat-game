@@ -83,7 +83,8 @@ func _ready() -> void:
 	joints = Figure.build(body, body_mat, look if not look.is_empty() else Figure.look_for(key))
 	Figure.apply_pose(joints, pose)
 	if not solid:
-		collision_layer = 0
+		# no body to bump into; a talkable one keeps layer 2, the ray's alone
+		collision_layer = 2 if talkable else 0
 	var cs := CollisionShape3D.new()
 	var shape := BoxShape3D.new()
 	shape.size = Vector3(0.6, 1.3 if pose != "stand" else 1.75, 0.7) * figure_scale

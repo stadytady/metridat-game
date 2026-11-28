@@ -37,12 +37,34 @@ const BAKER_ROUTE := [
 	[28.65, 18.6, "baker", 14.0, -90.0],
 	[28.15, 19.45, "pick", 2.0, -90.0],
 ]
+## Once her loom weight is back (the errand), she goes to the loom between
+## breads: through the workroom door, round the lamp stand to the weaver's
+## stool, weaves a while sitting at it, and back to the oven. Appended after
+## BAKER_ROUTE, so the bread's waypoints (0, 1) stay where they are.
+const LOOM_ROUTE := [
+	[29.1, 21.2, "walk", 0.0, NAN],
+	[29.1, 22.8, "walk", 0.0, NAN],
+	[29.85, 23.5, "walk", 0.0, NAN],
+	[29.75, 24.6, "walk", 0.0, NAN],
+	[29.2, 24.6, "weave", 24.0, 180.0],
+	[29.75, 24.6, "walk", 0.0, NAN],
+	[29.85, 23.5, "walk", 0.0, NAN],
+	[29.1, 22.8, "walk", 0.0, NAN],
+	[29.1, 21.2, "walk", 0.0, NAN],
+]
+const LOOM_SEAT := 6  # BAKER_ROUTE.size() + 4
+## The cloth she weaves: bands added below the old cloth on the loom, one per
+## sitting, up to this many.
+const BANDS := 4
 ## Where the board's stack of finished bread tops out, and how many she adds
 ## before the household takes them in.
 const STACK_TOP := Vector3(29.17, 0.36, 19.45)
 const STACK_MAX := 4
 
 var _baker_npc: Npc
+var _weaving := false
+var _bands: Array[Node3D] = []
+var _woven := 0
 var _bread: Node3D
 var _stack: Array[Node3D] = []
 var _stacked := 0
@@ -102,6 +124,7 @@ func _ready() -> void:
 	add_child(kit.build("House"))
 	_oven_fire(y)
 	_baker(y)
+	_loom_bands(y)
 	# spare weights at the foot of the loom; the lamp on the stool by the hearth
 	spawn_inspectable("loom_weights", Vector3(LOOM_WEIGHTS.x, y + 0.01, LOOM_WEIGHTS.y), 0.0)
 	spawn_inspectable("oil_lamp", Vector3(LAMP_STOOL.x, y + 0.44, LAMP_STOOL.y), 120.0)
@@ -263,13 +286,18 @@ func _oven_fire(y: float) -> void:
 
 
 ## Myrto's round as a patrol. Static so the test can walk it.
-static func set_baker_round(b: Npc) -> void:
+## Her round: baking, and once the errand is done, the loom too.
+static func baker_route(weaving: bool) -> Array:
+	return BAKER_ROUTE + LOOM_ROUTE if weaving else BAKER_ROUTE
+
+
+static func set_baker_round(b: Npc, weaving := false) -> void:
 	var home := Vector3(BAKER_ROUTE[0][0], 0, BAKER_ROUTE[0][1])
 	var pts := PackedVector3Array()
 	var poses := PackedStringArray()
 	var pauses := PackedFloat32Array()
 	var faces := PackedFloat32Array()
-	for r: Array in BAKER_ROUTE:
+	for r: Array in baker_route(weaving):
 		pts.append(Vector3(r[0], 0, r[1]) - home)
 		poses.append(r[2])
 		pauses.append(r[3])
@@ -281,6 +309,55 @@ static func set_baker_round(b: Npc) -> void:
 	b.patrol_speed = 0.45
 	# she keeps baking while she is watched; a talk holds the world anyway
 	b.stops_for_player = false
+
+
+## The cloth she weaves now that the loom has all its weights: bands of new
+## weave under the old cloth, one per sitting (weaving on these looms runs
+## from the top down). Same lean and frame as the loom in _workroom.
+func _loom_bands(y: float) -> void:
+	var zb := bounds().end.y - WALL_T - 0.45
+	var c := Vector3((27.8 + 30.6) / 2.0, y, zb)
+	var hw := (30.6 - 27.8) / 2.0 - 0.1
+	for i in BANDS:
+		var k := MeshKit.new()
+		k.xform = Transform3D(Basis(Vector3.RIGHT, -0.12), c)
+		var top := 1.3 - 0.1 * i
+		var bot := top - 0.1
+		k.quad("chiton_red", Vector3(-hw, bot, -0.025), Vector3(hw, bot, -0.025), Vector3(hw, top, -0.025), Vector3(-hw, top, -0.025))
+		k.quad("chiton_red", Vector3(hw, bot, -0.015), Vector3(-hw, bot, -0.015), Vector3(-hw, top, -0.015), Vector3(hw, top, -0.015))
+		var band := k.build("NewCloth%d" % i)
+		band.visible = false
+		add_child(band)
+		_bands.append(band)
+
+
+## How many bands of new cloth hang on the loom after this many sittings.
+static func bands_woven(sittings: int) -> int:
+	return clampi(sittings, 0, BANDS)
+
+
+func _process(_delta: float) -> void:
+	var weaving := Game.quest_done("loom_weight")
+	if weaving == _weaving:
+		return
+	_weaving = weaving
+	set_baker_round(_baker_npc, weaving)
+	# a walk restored with the errand done has her cloth already begun
+	_set_woven(1 if weaving else 0)
+
+
+func _set_woven(n: int) -> void:
+	_woven = bands_woven(n)
+	for i in _bands.size():
+		_bands[i].visible = i < _woven
+
+
+func baker() -> Npc:
+	return _baker_npc
+
+
+func woven() -> int:
+	return _woven
 
 
 static func _loaf() -> MeshInstance3D:
@@ -301,6 +378,9 @@ func _baker(y: float) -> void:
 	b.pose = "baker"
 	b.body_mat = "chiton_dark"
 	b.position = Vector3(OVEN.x - 0.95, y, OVEN.y)
+	# no body to bump into (she walks through the rooms once she weaves again);
+	# still talkable: the ray's layer only
+	b.solid = false
 	b.rotation.y = deg_to_rad(-90.0)  # faces +x, the oven
 	set_baker_round(b)
 	add_child(b)
@@ -321,6 +401,8 @@ func _baker(y: float) -> void:
 			_bread.visible = true
 			_baker_npc.carrying = true)
 	b.reached.connect(func(i: int) -> void:
+		if i == LOOM_SEAT:
+			_set_woven(_woven + 1)
 		if i == 1:
 			_bread.visible = false
 			_baker_npc.carrying = false

@@ -45,6 +45,13 @@ const PORTERS := [
 	[{"beard": 1, "hair": 0, "cloth": "chiton_ochre"}, 3],
 ]
 
+## With his seal ring back (the errand), Nikon seals what he measures: he
+## bends over each filled sack to press the ring into the clay on its tie, and
+## the sacks in the stack and on the pier carry their seals.
+const SEAL_PAUSE := 9.0
+const PRESS_PAUSE := 3.0
+var _sealing := false
+var _seals: Node3D
 var _porters: Array[Npc] = []
 var _sacks: Array[Node3D] = []
 var _atm: Node
@@ -115,6 +122,7 @@ func _measurer() -> void:
 	# a figure faces its local -z: turn from the heap towards him
 	var d := MEASURER - HEAP
 	n.rotation.y = atan2(d.x, d.y)
+	n.solid = false  # talkable on the ray's layer; nothing to bump into on the shingle
 	add_child(n)
 
 
@@ -199,6 +207,13 @@ func _hour() -> float:
 
 func _process(_delta: float) -> void:
 	step(_hour())
+	var sealing := Game.quest_done("seal")
+	if sealing != _sealing:
+		_sealing = sealing
+		if _seals == null:
+			_make_seals()
+		set_sealing(measurer(), sealing)
+		_seals.visible = sealing
 
 
 func step(hour: float) -> void:
@@ -208,6 +223,48 @@ func step(hour: float) -> void:
 	var storm := Weather.storm_on(Weather.now(hour))
 	for p: Npc in _porters:
 		Weather.duty(p, not home, storm)
+
+
+## Nikon's round once he seals again: standing over the measure, then bent to
+## press the ring (a hair's step, so the patrol has two waypoints to keep).
+static func set_sealing(n: Npc, on: bool) -> void:
+	if not on:
+		n.patrol = PackedVector3Array()
+		return
+	n.patrol = PackedVector3Array([Vector3.ZERO, Vector3(0.01, 0, 0)])
+	n.patrol_poses = PackedStringArray(["stand", "pick"])
+	n.patrol_pauses = PackedFloat32Array([SEAL_PAUSE, PRESS_PAUSE])
+	var yaw := rad_to_deg(n.rotation.y)
+	n.patrol_faces = PackedFloat32Array([yaw, yaw])
+	n.patrol_speed = 0.3
+	n.stops_for_player = false
+
+
+## Where the clay seals sit: on the tie of every sack in the stack and on the pier.
+static func seal_spots() -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	var s := Vector3(STACK.x, ground(STACK), STACK.y)
+	for o: Vector3 in [Vector3(-0.3, 0.42, 0.0), Vector3(0.28, 0.42, 0.05), Vector3(0.0, 0.42, -0.38), Vector3(0.0, 0.77, -0.15)]:
+		out.append(s + o)
+	var y := Topo.PIER_H
+	for i in 4:
+		out.append(Vector3(PILE.x - 0.5 + i * 0.34, y + 0.42, PILE.y))
+	out.append(Vector3(PILE.x - 0.1, y + 0.72, PILE.y))
+	return out
+
+
+func _make_seals() -> void:
+	var k := MeshKit.new()
+	k.color = Color(0.78, 0.32, 0.24, 1.0)
+	for p: Vector3 in seal_spots():
+		k.lathe("clay", PackedVector2Array([Vector2(0.045, 0.0), Vector2(0.045, 0.025)]), 6, p, 1.0, false, "clay", true)
+	_seals = k.build("Seals")
+	_seals.visible = false
+	add_child(_seals)
+
+
+func seals() -> Node3D:
+	return _seals
 
 
 func measurer() -> Npc:

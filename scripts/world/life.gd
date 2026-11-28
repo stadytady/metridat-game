@@ -70,6 +70,10 @@ var _rope: MeshInstance3D
 var _hydria: Node3D
 var _head_jar: Node3D
 var _hand_jar: Node3D
+## Agathe's lamp, once it is back (the errand): on the mouth of her storage
+## jar by the well, lit at dusk with the town.
+var _home_lamp: Node3D
+var _home_light: OmniLight3D
 
 
 ## Stretches of the street paved as a smooth ramp (Arch.path builds stairs
@@ -264,6 +268,10 @@ func _process(delta: float) -> void:
 	if atm != null:
 		hour = float(atm.t)
 	var out := washing_out(Weather.wet_now(hour))
+	if _home_lamp != null:
+		var done := Game.quest_done("lamp")
+		_home_lamp.visible = done
+		_home_light.visible = home_lamp_lit(done, hour)
 	for i in _cloths.size():
 		_cloths[i].rotation.x = sin(q * 1.3 + i * 1.7) * 0.12
 		# taken in at the first drops, hung out again once the yard has dried
@@ -479,6 +487,55 @@ func _well() -> void:
 	lamp_at.y = Topo.surface(lamp_at.x, lamp_at.z)
 	spawn_quest_item("lamp", lamp_at, 200.0)
 	woman.departed.connect(_on_carrier_departed)
+	_lamp_home(w)
+
+
+## Where Agathe keeps the lamp once it is back: on the mouth of the storage jar
+## by her door (the pithos at STORE_AT, 0.7 of its 1.3 m).
+static func home_lamp_pos() -> Vector3:
+	var w := well_pos()
+	var s := Vector3(w.x + STORE_AT.x, 0, w.z + STORE_AT.z)
+	return Vector3(s.x, Topo.surface(s.x, s.z) + 1.3 * 0.7 + 0.01, s.z)
+
+
+## Whether her lamp burns: back home, and the town's own dusk.
+static func home_lamp_lit(done: bool, hour: float) -> bool:
+	return done and hour >= DayCycle.LAMPS_ON
+
+
+func _lamp_home(_w: Vector3) -> void:
+	var at := home_lamp_pos()
+	var mi := MeshInstance3D.new()
+	mi.name = "AgatheLamp"
+	mi.mesh = Props.build("oil_lamp").commit()
+	mi.position = at
+	mi.rotation.y = deg_to_rad(200.0)
+	mi.visible = false
+	add_child(mi)
+	_home_lamp = mi
+	var o := OmniLight3D.new()
+	o.position = at + Vector3(0, 0.12, 0)
+	o.light_color = Color(1, 0.62, 0.3)
+	o.omni_range = 3.5
+	o.set_script(preload("res://scripts/world/flicker.gd"))
+	o.base_energy = 0.9
+	o.amount = 0.3
+	o.visible = false
+	var fk := MeshKit.new()
+	fk.box("flame", Vector3.ZERO, Vector3(0.03, 0.06, 0.03), [])
+	var flame := MeshInstance3D.new()
+	flame.mesh = fk.commit()
+	o.add_child(flame)
+	add_child(o)
+	_home_light = o
+
+
+func home_lamp() -> Node3D:
+	return _home_lamp
+
+
+func home_light() -> OmniLight3D:
+	return _home_light
 
 
 ## The water carrier's round as a patrol. Static so the test can walk it.
