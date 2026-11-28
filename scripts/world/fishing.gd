@@ -29,6 +29,17 @@ const FISHER_ROUTE := [
 ]
 const FISHER_BOARD := 0
 const FISHER_CATCH := 1
+## With his hook back (the errand) he rigs the long line for the night's
+## fishing: between catches he goes to the boat's landward side and works the
+## line over her gunwale, and the coiled line, hooks baited, waits in a basket
+## by her bow. Appended after FISHER_ROUTE, so the fish's waypoints stay put.
+const RIG_ROUTE := [
+	[68.2, 14.2, "walk", 0.0, NAN],
+	[69.2, 15.0, "pick", 18.0, 180.0],
+	[68.2, 14.2, "walk", 0.0, NAN],
+]
+const FISHER_RIG := 3
+const LONGLINE := Vector2(70.9, 15.0)
 ## Cormorants on the beach some fifty metres south of the Swallow, above the
 ## surf: a patch of sand they walk, and two rocks they dry their wings on.
 ## Glaukos's errand: a hook dropped behind his boat, on the sea side of the
@@ -331,13 +342,17 @@ func _salter() -> void:
 
 
 ## His round as Npc patrol data, home at the stone.
-static func set_fisher_round(f: Npc) -> void:
+static func fisher_route(rigging: bool) -> Array:
+	return FISHER_ROUTE + RIG_ROUTE if rigging else FISHER_ROUTE
+
+
+static func set_fisher_round(f: Npc, rigging := false) -> void:
 	var home := Vector3(FISHER_ROUTE[0][0], 0, FISHER_ROUTE[0][1])
 	var pts := PackedVector3Array()
 	var poses := PackedStringArray()
 	var pauses := PackedFloat32Array()
 	var faces := PackedFloat32Array()
-	for r: Array in FISHER_ROUTE:
+	for r: Array in fisher_route(rigging):
 		pts.append(Vector3(r[0], 0, r[1]) - home)
 		poses.append(r[2])
 		pauses.append(r[3])
@@ -360,6 +375,8 @@ func _fisherman() -> void:
 	f.body_mat = "chiton_dark"
 	f.position = Vector3(SEAT.x, ground(SEAT), SEAT.y)
 	f.rotation.y = deg_to_rad(90.0)  # faces west, up the beach towards the city
+	# no body to bump into once he walks to the boat; talkable on the ray's layer
+	f.solid = false
 	set_fisher_round(f)
 	add_child(f)
 	_fisher = f
@@ -456,3 +473,36 @@ func _cormorants() -> void:
 ## The net on the drying rack (WeatherTown takes it in for a storm).
 func net() -> Node3D:
 	return _net
+
+
+var _rigging := false
+var _longline: Node3D
+
+
+## The coiled long line in its basket by the boat's bow, once he rigs it.
+func _make_longline() -> void:
+	var k := MeshKit.new()
+	var b := Vector3(LONGLINE.x, ground(LONGLINE), LONGLINE.y)
+	k.lathe("basket", PackedVector2Array([Vector2(0.2, 0.0), Vector2(0.26, 0.22)]), 8, b, 2.0, true, "dark", true)
+	for i in 3:
+		k.lathe("cloth", PackedVector2Array([Vector2(0.18 - i * 0.04, 0.2 + i * 0.03), Vector2(0.18 - i * 0.04, 0.23 + i * 0.03)]), 8,
+				b, 3.0, false, "dark", i == 2)
+	_longline = k.build("Longline")
+	_longline.set_meta(&"focus", b)
+	_longline.visible = false
+	add_child(_longline)
+
+
+func _process(_delta: float) -> void:
+	var rigging := Game.quest_done("hook")
+	if rigging == _rigging:
+		return
+	_rigging = rigging
+	if _longline == null:
+		_make_longline()
+	set_fisher_round(_fisher, rigging)
+	_longline.visible = rigging
+
+
+func longline() -> Node3D:
+	return _longline

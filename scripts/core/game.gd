@@ -172,6 +172,15 @@ func request_mint() -> void:
 	mint_requested.emit()
 
 
+## The potter's boy, his knucklebone back (the errand), asks for a game:
+## Knucklebones opens the table once the talk has closed.
+signal astragal_requested
+
+
+func request_astragal() -> void:
+	astragal_requested.emit()
+
+
 func quest_state(id: String) -> int:
 	return int(quests.get(id, Quests.NONE))
 
@@ -183,6 +192,13 @@ func quest_offered(id: String) -> bool:
 
 func quest_ready(id: String) -> bool:
 	return quest_state(id) == Quests.FOUND
+
+
+## The errand is done: the giver's life goes on differently (their round, a
+## thing in its place, a word in the talk). Saved with the quests, so it
+## comes back with a restored walk and is gone on a new one.
+func quest_done(id: String) -> bool:
+	return quest_state(id) == Quests.DONE
 
 
 func take_quest(id: String) -> void:

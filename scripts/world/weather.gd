@@ -214,7 +214,7 @@ static func duty(n: Node3D, on_duty: bool, take_cover: bool, far := 28.0) -> boo
 ## to bump into.
 static func _wake(n: Npc, on: bool) -> void:
 	n.process_mode = Node.PROCESS_MODE_INHERIT if on else Node.PROCESS_MODE_DISABLED
-	n.collision_layer = 3 if on and n.solid else 0
+	n.collision_layer = (3 if n.solid else (2 if n.talkable else 0)) if on else 0
 
 
 ## A number in 0..1 drawn from a bolt window's index: the same window always

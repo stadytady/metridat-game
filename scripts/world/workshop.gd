@@ -25,6 +25,20 @@ const BOY_ROUTE := [
 ]
 const PICK := 4
 const STOKE := 6
+## With his knucklebone back (the errand), between rounds he runs across the
+## square to the children's game and sits in with them a while, round the
+## statue base and clear of the stall. Appended after BOY_ROUTE.
+const PLAY_ROUTE := [
+	[14.4, 7.85, "walk", 0.0, NAN],
+	[15.5, 4.0, "walk", 0.0, NAN],
+	[24.6, 2.6, "walk", 0.0, NAN],
+	[24.8, 0.4, "sit", 20.0, -45.0],
+	[24.6, 2.6, "walk", 0.0, NAN],
+	[15.5, 4.0, "walk", 0.0, NAN],
+	[14.4, 7.85, "walk", 0.0, NAN],
+	[12.75, 8.0, "walk", 0.0, NAN],
+]
+const PLAY := 12  # BOY_ROUTE.size() + 3
 ## The logs go into the fire this long after he kneels.
 const FEED_AFTER := 1.3
 const WHEEL_SPEED := 5.5
@@ -159,6 +173,8 @@ func _people(y: float) -> void:
 	boy.dialogue = load("res://data/dialogues/turner.dialogue") as DialogueResource
 	boy.position = Vector3(BOY_HOME.x, y, BOY_HOME.y)
 	boy.rotation.y = deg_to_rad(-90.0)
+	# no body to bump into once he runs across the square; talkable on the ray's layer
+	boy.solid = false
 	set_round(boy)
 	add_child(boy)
 	_boy = boy
@@ -183,12 +199,16 @@ func _people(y: float) -> void:
 ## Gives a Npc the boy's round: waypoints as offsets from his home, with the
 ## pose, pause and facing of each. Static so the test can walk it without the
 ## workshop.
-static func set_round(boy: Npc) -> void:
+static func boy_route(playing: bool) -> Array:
+	return BOY_ROUTE + PLAY_ROUTE if playing else BOY_ROUTE
+
+
+static func set_round(boy: Npc, playing := false) -> void:
 	var pts := PackedVector3Array()
 	var poses := PackedStringArray()
 	var pauses := PackedFloat32Array()
 	var faces := PackedFloat32Array()
-	for w: Array in BOY_ROUTE:
+	for w: Array in boy_route(playing):
 		pts.append(Vector3(float(w[0]) - BOY_HOME.x, 0, float(w[1]) - BOY_HOME.y))
 		poses.append(w[2])
 		pauses.append(w[3])
@@ -213,6 +233,7 @@ func _on_boy_reached(i: int) -> void:
 
 
 func _process(delta: float) -> void:
+	_process_errand()
 	# A hand-turned wheel: fast and a little uneven while the boy turns it; when
 	# he goes for wood it runs down on its own weight and stands.
 	var turning := _boy.pose_now() == "turner"
@@ -222,3 +243,17 @@ func _process(delta: float) -> void:
 	var quiet := _wheel_speed < 0.6
 	if _wheel_sound.stream_paused != quiet:
 		_wheel_sound.stream_paused = quiet
+
+
+var _playing := false
+
+
+func _process_errand() -> void:
+	var playing := Game.quest_done("astragal")
+	if playing != _playing:
+		_playing = playing
+		set_round(_boy, playing)
+
+
+func boy() -> Npc:
+	return _boy

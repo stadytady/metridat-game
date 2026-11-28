@@ -22,6 +22,8 @@ Nikon: NPC_MEASURER_1
 	Nikon: LOC_Q_SEAL_1
 	Nikon: LOC_Q_SEAL_2
 	do Game.take_quest("seal")
+- LOC_MEASURER_CHOICE_SEAL [if Game.quest_done("seal")]
+	Nikon: LOC_MEASURER_SEAL_1
 - LOC_MEASURER_CHOICE_SHIP [if Game.ship_in()]
 	Nikon: LOC_MEASURER_SHIP_1
 	Nikon: LOC_MEASURER_SHIP_2

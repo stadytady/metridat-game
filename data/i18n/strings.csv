@@ -472,3 +472,16 @@ LOC_MEASURER_CHOICE_SHIP,Does the new ship concern you?,Новый корабл�
 LOC_MEASURER_SHIP_1,Everything that leaves this beach in a sack concerns me. What she brings is the customs man's; what she takes is mine.,"Всё, что уходит с этого берега в мешке, — моя забота. Что она привезла — дело таможенника, что увезёт — моё."
 LOC_MEASURER_SHIP_2,"Two holds, by the look of her. That's another heap like this by the day after tomorrow — and every measure of it struck level.","Два трюма, судя по ней. Значит, к послезавтра ещё одна такая куча — и каждая мера вровень с краем."
 CAP_DRIP,Water drips from the eaves,С карнизов капает вода
+LOC_BAKER_CHOICE_LOOM,Is the loom going again?,Станок снова работает?
+LOC_BAKER_LOOM_1,"Every weight on its thread, so the warp hangs straight and the cloth comes out even. See the red at the top? That's this week's.","Каждый грузик на своей нити — основа висит ровно, и ткань выходит гладкая. Видишь красное наверху? Это за эту неделю."
+LOC_BAKER_LOOM_2,"A cloak for the little one by winter, if the bread leaves me the time.","К зиме будет плащ малому, если хлеб оставит мне время."
+LOC_CARRIER_CHOICE_LAMP,Is the lamp back where it belongs?,Светильник вернулся на место?
+LOC_CARRIER_LAMP_1,"On the jar by my door, where my husband sees it from the end of the street when he comes up from the boats.","На кувшине у двери: муж видит его с конца улицы, когда поднимается от лодок."
+LOC_CARRIER_LAMP_2,"When the town lights up I light it too. One wick, a little oil — but it is ours.","Когда город зажигает огни, зажигаю и я. Один фитиль, немного масла — но свой."
+LOC_FISHER_CHOICE_LINE,What are you doing at the boat?,Что ты делаешь у лодки?
+LOC_FISHER_LINE_1,"Rigging the long line. Forty hooks, each with its bait, coiled so it runs out clean when I pay it over the stern.","Снаряжаю перемёт. Сорок крючков, на каждом наживка, свёрнут так, чтобы чисто ушёл за корму."
+LOC_FISHER_LINE_2,"With the hook you found it's forty and not thirty-nine. Fish don't count, but I do.","С крючком, что ты нашёл, их сорок, а не тридцать девять. Рыба не считает, а я считаю."
+LOC_BOY_CHOICE_PLAY,Want to throw the bones?,Сыграем в кости?
+LOC_BOY_PLAY_1,"With my own bone back? Yes! The others are on the square — come on, I'll show you a dog and an Aphrodite.","Теперь, когда моя косточка вернулась? Да! Ребята на площади — пошли, покажу тебе «собаку» и «Афродиту»."
+LOC_MEASURER_CHOICE_SEAL,So the ring is at work again?,"Значит, перстень снова в деле?"
+LOC_MEASURER_SEAL_1,Every sack I fill gets my mark in the clay on its tie. Whoever opens it on the other side of the sea knows it left here full.,"На завязке каждого мешка, что я наполнил, — мой знак в глине. Кто вскроет его за морем, знает: отсюда он ушёл полным."

@@ -113,6 +113,7 @@ static func bone_home(n: int, i: int) -> Vector3:
 
 
 func _ready() -> void:
+	Game.astragal_requested.connect(func() -> void: _wants_table = true)
 	for i in 2:
 		_child(i)
 	var mesh := _bone_mesh()
@@ -171,7 +172,13 @@ func _child(i: int) -> void:
 	_shells.append(shell)
 
 
+var _wants_table := false
+
+
 func _process(delta: float) -> void:
+	if _wants_table and Game.can_interact_now():
+		_wants_table = false
+		interact()
 	if _atm == null:
 		_atm = _find_atmosphere()
 	var hour: float = _atm.t if _atm != null else 0.0
